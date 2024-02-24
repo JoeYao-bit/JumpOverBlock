@@ -6,7 +6,7 @@
 #define FREENAV_LOS_JUMP_BETWEEN_BLOCK_H
 
 #include "block_detect.h"
-namespace freeNav::RimJump {
+namespace freeNav::JOB {
 
     // return: current in the block or not
     // for a line that cross a block, find the point on it and leave obstacle

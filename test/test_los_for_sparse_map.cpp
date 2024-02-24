@@ -2,34 +2,25 @@
 // Created by yaozhuo on 2023/4/17.
 //
 
-#include "rim_jump/los_check_for_sparse/map_down_sampler.h"
-#include "rim_jump/los_check_for_sparse/block_detect.h"
-#include "rim_jump/los_check_for_sparse/block_detector_greedy.h"
 
-#include "2d_grid/text_map_loader.h"
 
 #include "gtest/gtest.h"
-#include "canvas/canvas.h"
-#include "dependencies/test_data.h"
-#include "rim_jump/los_check_for_sparse/line_of_sight_jump_between_block.h"
-
-//#include <CGAL/Simple_cartesian.h>
-//#include <CGAL/Quadtree.h>
-//#include <CGAL/Random.h>
 #include "octomap/octomap.h"
-#include "dependencies/random_map_generator.h"
 
-#include "rim_jump/basic_elements/distance_map_update.h"
+#include "../freeNav-base/visualization/canvas/canvas.h"
+#include "../freeNav-base/test/test_data.h"
+#include "../freeNav-base/dependencies/random_map_generator.h"
+#include "../freeNav-base/basic_elements/distance_map_update.h"
+#include "../freeNav-base/basic_elements/map_down_sampler.h"
+#include "../freeNav-base/dependencies/2d_grid/text_map_loader.h"
+#include "../freeNav-base/dependencies/thread_pool.h"
 
-// https://github.com/PathPlanning/3D-AStar-ThetaStar
+#include "../algorithm/block_detect.h"
+#include "../algorithm/block_detector_greedy.h"
+#include "../algorithm/line_of_sight_jump_between_block.h"
 
-// Type Declarations
-//typedef CGAL::Simple_cartesian<int> Kernel;
-//typedef Kernel::Point_2 Point_2;
-//typedef std::vector<Point_2> Point_vector;
-//typedef CGAL::Quadtree<Kernel, Point_vector> Quadtree;
 
-using namespace freeNav::RimJump;
+using namespace freeNav::JOB;
 using namespace freeNav;
 
 auto is_grid_occupied1 = [](const cv::Vec3b& color) -> bool {
@@ -110,8 +101,8 @@ bool set_pt1 = true;
 bool new_pair = false;
 bool plan_finish = false;
 
-GridPtr<2> sg1 = std::make_shared<freeNav::RimJump::Grid<2>>(),
-                             sg2 = std::make_shared<freeNav::RimJump::Grid<2>>();
+GridPtr<2> sg1 = std::make_shared<freeNav::Grid<2>>(),
+                             sg2 = std::make_shared<freeNav::Grid<2>>();
 
 Pointi<2> pt1, pt2;
 
@@ -411,7 +402,7 @@ TEST(RandomSampleMap, RandomSampleMap2D) {
 
 TEST(DistanceMapUpdate, test) {
 
-    zoom_rate = min(2560/dimension[0], 1280/dimension[1]);
+    zoom_rate = std::min(2560/dimension[0], 1280/dimension[1]);
 
     Canvas canvas("RimJump::BlockDetector",
                   dimension[0],

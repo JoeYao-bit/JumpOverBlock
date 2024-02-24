@@ -5,9 +5,9 @@
 #ifndef FREENAV_LOCAL_DISTANCE_MAP_H
 #define FREENAV_LOCAL_DISTANCE_MAP_H
 
-#include "rim_jump/basic_elements/point.h"
+#include "freeNav-base/basic_elements/point.h"
 
-namespace freeNav {
+namespace freeNav::JOB {
 
     // assume all path point range from 0 to MAX<int>
     template<Dimension N>

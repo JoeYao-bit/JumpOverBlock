@@ -2,66 +2,34 @@
 // Created by yaozhuo on 2022/2/26.
 //
 
-#include "3d_viewer/3d_viewer.h"
-#include "rim_jump/online_search/search_path_with_edge.h"
-#include "rim_jump/constraints/edge_transfer_constraints.h"
-#include "rim_jump/constraints/iteration_constraints.h"
-#include "rim_jump/constraints/point_to_point_constraints.h"
-#include "dependencies/test_data.h"
-
-#include "rim_jump/online_search/search_path_with_node.h"
-#include "rim_jump/online_search/breadth_first_search_with_node.h"
-#include "rim_jump/online_search/depth_first_search_with_node.h"
-#include "rim_jump/online_search/create_initial_paths_with_node.h"
-
-#include "sampling_path_planning.h"
-
-
-#include "jps_planner/jps_planner/jps_planner.h"
-#include "jps_planner/distance_map_planner/distance_map_planner.h"
-#include <jps_basis/data_utils.h>
 
 #include "octomap/octomap.h"
-#include "bridge_3d.h"
+#include <sys/time.h>
 
-#include "rim_jump/los_check_for_sparse/block_detect.h"
-#include "rim_jump/los_check_for_sparse/line_of_sight_jump_between_block.h"
-#include "dependencies/color_table.h"
-#include "rim_jump/surface_processor/surface_process_jump_block.h"
+#include "../freeNav-base/dependencies/color_table.h"
+#include "../freeNav-base/dependencies/random_map_generator.h"
+#include "../freeNav-base/dependencies/3d_textmap/voxel_loader.h"
+#include "../freeNav-base/dependencies/thread_pool.h"
+#include "../freeNav-base/dependencies/massive_scene_loader/ScenarioLoader3D.h"
+#include "../freeNav-base/basic_elements/surface_process.h"
+#include "../freeNav-base/test/test_data.h"
 
-#include "dependencies/random_map_generator.h"
+#include "../freeNav-base/visualization/3d_viewer/3d_viewer.h"
 
-Viewer3D* viewer_3d;
+#include "../algorithm/block_detect.h"
+#include "../algorithm/line_of_sight_jump_between_block.h"
+#include "../algorithm/surface_process_jump_block.h"
+
 ThreadPool viewer_thread(1);
 
-using namespace freeNav::RimJump;
 using namespace freeNav;
+using namespace freeNav::JOB;
+
+Viewer3DBase* viewer_3d;
 
 struct timezone tz;
 struct timeval tv_pre;
 struct timeval tv_after;
-
-// node and edge constraints
-PointTransferConstraints<3> ptcs({
-                                         PTC_LocalCrossPartially // result fail
-                                 });
-
-PointTransferConstraints<3> ptcs_ordered;
-// edge transfer constraints
-EdgeTransferConstraints3<3> etcs({ETC_NotLookBack3 // ok
-                                         , ETC_NoUselessPoint3 // not ok ?
-                                         , ETC_IC_GetCloserToObstacle3
-                                 });
-
-IterationConstraints<3, freeNav::RimJump::GridPtr<3> > ics({});
-
-PointTransferConstraints<3> init_ptcs({});
-// edge transfer constraints
-EdgeTransferConstraints3<3> init_etcs({ETC_NotLookBack3
-                                              , ETC_NoUselessPoint3
-                                              , ETC_IC_GetCloserToObstacle3
-                                      });
-
 
 #define OCTO_MAP 0
 #if OCTO_MAP
@@ -70,23 +38,16 @@ OctoMapLoader* oml_ = nullptr;
 TextMapLoader_3D* oml_ = nullptr;
 #endif
 
-std::shared_ptr<RoadMapGraphBuilder<3> > tgb = nullptr;
-
-//bool (*f1)(const freeNav::RimJump::Pointi<3>&) = is_occupied;
-//void (*f2)(const freeNav::RimJump::Pointi<3>&) = set_occupied;
 
 
 bool plan_finish = false;
 
 Pointi<3> pt1, pt2;
-freeNav::RimJump::GridPtr<3> sg1 = std::make_shared<Grid<3>>(), sg2 = std::make_shared<Grid<3>>();
+GridPtr<3> sg1 = std::make_shared<Grid<3>>(), sg2 = std::make_shared<Grid<3>>();
 
-RoadMapEdgeTraitPtrss<3> pps;
 
 std::vector<Path<3> > paths;
 Path<3> path_rrt, path_jps, path_astar;
-GridPtrs<3> visible_points_start;
-GridPtrs<3> visible_points_target;
 
 // MapTestConfig_Full4 // run out of space, shrink space 4
 // MapTestConfig_Simple // success
@@ -97,12 +58,15 @@ GridPtrs<3> visible_points_target;
 // MapTestConfig_FA2
 // MapTestConfig_A5
 // MapTestConfig_EB2
-auto config = MapTestConfig_Complex;
+auto config = MapTestConfig_A1;
 
 std::string file_path = "/home/yaozhuo/code/free-nav/resource/binary/fr_campus.vis";
 std::string map_path = config.at("map_path");
 
 TextMapLoader_3D* oml_shrink = nullptr;
+
+GridPtrs<3> visible_points_start;
+GridPtrs<3> visible_points_target;
 
 int main() {
 #if OCTO_MAP
@@ -137,10 +101,6 @@ int main() {
     IS_OCCUPIED_FUNC<3> is_occupied_func = is_occupied;
     SET_OCCUPIED_FUNC<3> set_occupied_func = set_occupied;
 
-//    auto is_occupied_shrink = [](const Pointi<3> & pt) -> bool { return oml_shrink->isOccupied(pt); };
-//    auto set_occupied_shrink = [](const Pointi<3> & pt) { oml_shrink->setOccupied(pt); };
-//    IS_OCCUPIED_FUNC<3> is_occupied_func_shrink = is_occupied_shrink;
-//    SET_OCCUPIED_FUNC<3> set_occupied_func_shrink = set_occupied_shrink;
 
     gettimeofday(&tv_pre, &tz);
 //    auto surface_processor_shrink = std::make_shared<SurfaceProcessorSparseWithJumpBlockGreedy<3> >(oml_shrink->getDimensionInfo(),
@@ -205,50 +165,8 @@ int main() {
 
     std::vector<Pointi<3> > visited_pts;
     Pointis<2> neighbor = GetNeightborOffsetGrids<2>();
-//    tgb = new RoadMapGraphBuilder<3>(surface_processor,
-//                                     ptcs,
-//                                     ptcs_ordered,
-//                                     etcs,
-//                                     file_path
-//            , false
-//            , false
-//            ,6
-//    );
-
-#if WITH_EDGE
-    //tgb = std::make_shared<RoadMapGraphBuilder<2> >(surface_processor, ptcs, ptcs_ordered, etcs, vis_file_path, false, true, 1);
-    tgb = std::make_shared<RoadMapGraphBuilder<2> >(surface_processor, init_ptcs, ptcs_ordered, init_etcs, vis_file_path, false, true, 1);
-    tgb = std::make_shared<RoadMapGraphBuilder<3> >(surface_processor, init_ptcs, ptcs_ordered, init_etcs, file_path,
-                                                    false, true, 6);
-#else
-    //tgb = std::make_shared<RoadMapGraphBuilder<3> >(surface_processor, init_ptcs, ptcs_ordered, init_etcs, file_path, false, false, 5;
-#endif
 
     gettimeofday(&tv_after, &tz);
-//    freeNav::RimJump::RoadMapGraphPtr<3> tangent_graph = tgb->getRoadMapGraph();
-//    std::cout << "the tangent graph has " << tangent_graph->edges_.size() << " edges " << std::endl;
-//    std::cout << "the tangent graph has " << tangent_graph->nodes_.size() << " nodes " << std::endl;
-//    double build_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-//    std::cout << "-- build graph end in " << build_cost << "ms" << std::endl << std::endl;
-
-    /* init OMPL */
-    SamplingPlannerEnvironment<og::RRTConnect, 3> ompl_path_planner(oml_->getDimensionInfo(), is_occupied_func, set_occupied_func);
-
-    /* end OMPL */
-
-    /* init JPS map */
-    //JPS::MapReader<Vec2i, Vec2f> reader(argv[1], true); // Map read from a given file
-    std::shared_ptr<JPS::VoxelMapUtil_RJ> map_util = std::make_shared<JPS::VoxelMapUtil_RJ>();
-    map_util->setMap(oml_->getDimensionInfo(), is_occupied_func);
-
-    std::unique_ptr<JPSPlanner3D> JPS_planner_ptr(new JPSPlanner3D(false)); // Declare a planner
-    JPS_planner_ptr->setMapUtil(map_util); // Set collision checking function
-    JPS_planner_ptr->updateMap();
-    /* end JPS map */
-
-    /* init 3D AstarThetaStar */
-    MyMap my_map(oml_->getDimensionInfo(), is_occupied_func, set_occupied_func);
-    /* end 3D AstarThetaStar */
 
 
 //    freeNav::RimJump::GeneralGraphPathPlannerWithEdge<3> g2p2(tangent_graph);
@@ -272,7 +190,7 @@ int main() {
     // start (857, 74, 25) target(85, 327, 121) A5 los
     // 38, 130, 204)->(138, 26, 0 Complex Los
     // set viewer
-    viewer_3d = new Viewer3D();
+    viewer_3d = new Viewer3DBase();
     viewer_3d->start_[0] = 38;
     viewer_3d->start_[1] = 130;
     viewer_3d->start_[2] = 204;
@@ -384,7 +302,7 @@ int main() {
                     //visible_points = g2p2.tg_.surface_processor_->getLocalVisibleSurfaceGrids(viewer_3d->start_);
                     visible_points_start  = surface_processor->getVisibleTangentCandidates(viewer_3d->start_);
                     std::cout << " before local cross size: " << visible_points_start.size() << std::endl;
-                    freeNav::RimJump::GridPtrs<3> buffer;
+                    freeNav::GridPtrs<3> buffer;
                     for(const auto& visible_grid : visible_points_start) {
                         if(LineCrossObstacleLocal(viewer_3d->start_, visible_grid, is_occupied_func)) {
                             buffer.push_back(visible_grid);
@@ -438,7 +356,6 @@ int main() {
                     std::cout << "-- start RimJump " << std::endl;
                     std::cout << "start " << viewer_3d->start_ << " target" << viewer_3d->target_ << std::endl;
                     plan_finish = false;
-                    global_minimum_path_length = std::numeric_limits<double>::max();
                     sg1->pt_ = viewer_3d->start_;
                     sg1->id_ = PointiToId<3>(sg1->pt_, oml_->getDimensionInfo());
                     sg2->pt_ = viewer_3d->target_;
@@ -476,7 +393,7 @@ int main() {
                     path_rrt = {};//ompl_path_planner.plan(sg1->pt_, sg2->pt_);
                     gettimeofday(&tv_after, &tz);
                     double cost_rrt = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-                    cout << "-*-*- RRT path length = " << calculatePathLength(path_rrt) << ", cost " << cost_rrt << "ms" << endl;
+                    std::cout << "-*-*- RRT path length = " << calculatePathLength(path_rrt) << ", cost " << cost_rrt << "ms" << std::endl;
                     //std::cout << " RRT Path " << path_rrt << std::endl;
                     /* end OMPL */
 
@@ -486,7 +403,7 @@ int main() {
                     path_jps  = {};//JPS_planner_ptr->plan(sg1->pt_, sg2->pt_, 1, true); // Plan from start to goal using JPS
                     gettimeofday(&tv_after, &tz);
                     double cost_jps = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-                    cout << "-*-*- JPS path length = " << calculatePathLength(path_jps)  << ", cost " << cost_jps << "ms" <<  endl;
+                    std::cout << "-*-*- JPS path length = " << calculatePathLength(path_jps)  << ", cost " << cost_jps << "ms" <<  std::endl;
                     //std::cout << " JPS Path " << path_jps << std::endl;
                     /* end JPS */
 
@@ -496,7 +413,7 @@ int main() {
                     path_astar  = {};//AstarThetaStar_3D(my_map, sg1->pt_, sg2->pt_, CN_SP_ST_ASTAR); // Plan from start to goal using JPS
                     gettimeofday(&tv_after, &tz);
                     double cost_astar = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-                    cout << "-*-*- 3D astar path length = " << calculatePathLength(path_astar)  << ", cost " << cost_jps << "ms" <<  endl;
+                    std::cout << "-*-*- 3D astar path length = " << calculatePathLength(path_astar)  << ", cost " << cost_jps << "ms" <<  std::endl;
                     std::cout << " 3D Astar Path " << path_astar << std::endl;
                     /* end 3D astar */
 
@@ -508,7 +425,6 @@ int main() {
             if(menu_set_state) viewer_3d->viewer_set_start = true;
             else viewer_3d->viewer_set_start = false;
 
-            if(menu_tangent_graph && tgb != nullptr) viewer_3d->DrawTangentGraph(tgb->getRoadMapGraph());
             if(menu_tangent_candidate_grid) {
                 for(const auto& grid_ptr : surface_processor->getTangentCandidates()) {
                     viewer_3d->DrawPoint(grid_ptr->pt_[0], grid_ptr->pt_[1], grid_ptr->pt_[2]);

@@ -1,37 +1,19 @@
 //
 // Created by yaozhuo on 2023/5/18.
 //
+#include "gtest/gtest.h"
 
-#include "rim_jump/online_search/search_path_with_edge.h"
-#include "rim_jump/constraints/edge_transfer_constraints.h"
-#include "rim_jump/constraints/iteration_constraints.h"
-#include "rim_jump/constraints/point_to_point_constraints.h"
-#include "dependencies/test_data.h"
-
-#include "rim_jump/online_search/search_path_with_node.h"
-#include "rim_jump/online_search/breadth_first_search_with_node.h"
-#include "rim_jump/online_search/depth_first_search_with_node.h"
-#include "rim_jump/online_search/create_initial_paths_with_node.h"
-
-#include "sampling_path_planning.h"
-
-
-#include "jps_planner/jps_planner/jps_planner.h"
-#include "jps_planner/distance_map_planner/distance_map_planner.h"
-#include <jps_basis/data_utils.h>
+#include "../freeNav-base/test/test_data.h"
 
 #include "octomap/octomap.h"
-#include "bridge_3d.h"
 
-#include "rim_jump/los_check_for_sparse/block_detect.h"
-#include "rim_jump/los_check_for_sparse/line_of_sight_jump_between_block.h"
-#include "dependencies/color_table.h"
-#include "rim_jump/surface_processor/surface_process_jump_block.h"
-#include "gtest/gtest.h"
-#include "3d_textmap/voxel_loader.h"
+#include "../algorithm/block_detect.h"
+#include "../algorithm/line_of_sight_jump_between_block.h"
+#include "../algorithm/surface_process_jump_block.h"
+#include "../freeNav-base/dependencies/3d_textmap/voxel_loader.h"
 
-using namespace freeNav::RimJump;
 using namespace freeNav;
+using namespace freeNav::JOB;
 
 // MapTestConfig_Full4 // run out of space, shrink space 4
 // MapTestConfig_Simple // success

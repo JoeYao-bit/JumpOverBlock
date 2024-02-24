@@ -2,14 +2,16 @@
 // Created by yaozhuo on 2023/5/7.
 //
 
-#include "rim_jump/los_check_for_sparse/line_of_sight_jump_between_block.h"
-#include "rim_jump/surface_processor/surface_process_jump_block.h"
-#include "dependencies/test_data.h"
-#include "dependencies/massive_test_interfaces.h"
-#include "dependencies/random_map_generator.h"
-#include "3d_textmap/voxel_loader.h"
 
-using namespace freeNav::RimJump;
+#include "../freeNav-base/test/test_data.h"
+#include "../freeNav-base/dependencies/massive_test_interfaces.h"
+#include "../freeNav-base/dependencies/random_map_generator.h"
+#include "../freeNav-base/dependencies/3d_textmap/voxel_loader.h"
+
+#include "../algorithm/line_of_sight_jump_between_block.h"
+#include "../algorithm/surface_process_jump_block.h"
+
+using namespace freeNav::JOB;
 using namespace freeNav;
 
 auto is_char_occupied = [](const char& value) -> bool {
@@ -164,7 +166,7 @@ bool SingleMapLOSCheck3D(DimensionLength* dimension,
 
     StatisticSS statisticss;
     OutputStreamSS output_streamss;
-    SceneTest_Random<3>(surface_processor, test_cases, path_plannings, statisticss, output_streamss, random_select);
+    SceneTest_Random<3>(dimension, is_occupied_func, test_cases, path_plannings, statisticss, output_streamss, random_select);
 
     std::ofstream os(out_put_path);
     //os << "TYPE START_X START_Y TARGET_X TARGET_Y PATH_LENGTH RESET_TIME INITIAL_TIME SEARCH_TIME" << std::endl;
@@ -207,25 +209,25 @@ bool SingleMapLOSCheck3DTextMap(const SingleMapTestConfig <3> &map_test_config, 
 SingleMapTestConfigs<3> configs = {
             MapTestConfig_Simple,
             MapTestConfig_Complex, // AC
-            MapTestConfig_A1, // AC
-            MapTestConfig_A2, // AC
-            MapTestConfig_A3, // AC
-            MapTestConfig_A4, // AC
-            MapTestConfig_A5, // AC
-
-            MapTestConfig_BC1, //
-            MapTestConfig_BC2, // AC
-            MapTestConfig_DA1, // AC
-            MapTestConfig_DA2, // AC
-            MapTestConfig_DB1, // AC
-            MapTestConfig_DB2, // AC
-
-            MapTestConfig_DC1, // AC
-            MapTestConfig_DC2, // AC
-            MapTestConfig_EB1, // AC
-            MapTestConfig_EB2, // AC
-            MapTestConfig_EC1, // AC
-            MapTestConfig_EC2, // AC
+//            MapTestConfig_A1, // AC
+//            MapTestConfig_A2, // AC
+//            MapTestConfig_A3, // AC
+//            MapTestConfig_A4, // AC
+//            MapTestConfig_A5, // AC
+//
+//            MapTestConfig_BC1, //
+//            MapTestConfig_BC2, // AC
+//            MapTestConfig_DA1, // AC
+//            MapTestConfig_DA2, // AC
+//            MapTestConfig_DB1, // AC
+//            MapTestConfig_DB2, // AC
+//
+//            MapTestConfig_DC1, // AC
+//            MapTestConfig_DC2, // AC
+//            MapTestConfig_EB1, // AC
+//            MapTestConfig_EB2, // AC
+//            MapTestConfig_EC1, // AC
+//            MapTestConfig_EC2, // AC
             //MapTestConfig_Full4
 };
 

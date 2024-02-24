@@ -7,7 +7,7 @@
 
 #include "block_detect.h"
 
-namespace freeNav::RimJump {
+namespace freeNav::JOB {
 
 
     template<Dimension N>
