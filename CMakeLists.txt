@@ -38,3 +38,6 @@ target_link_libraries(test_massive_los_check_with_jump_block freeNav-base)# ${CG
 #
 add_executable(test_detect_best_block_width test/test_detect_best_block_width.cpp)
 target_link_libraries(test_detect_best_block_width freeNav-base)
+
+add_executable(test_massive_los_check_with_random_map test/test_massive_los_check_with_random_map.cpp)
+target_link_libraries(test_massive_los_check_with_random_map freeNav-base)

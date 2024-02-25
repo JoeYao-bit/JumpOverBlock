@@ -2,15 +2,13 @@
 // Created by yaozhuo on 2023/5/18.
 //
 #include "gtest/gtest.h"
-
-#include "../freeNav-base/test/test_data.h"
-
 #include "octomap/octomap.h"
 
 #include "../algorithm/block_detect.h"
 #include "../algorithm/line_of_sight_jump_between_block.h"
 #include "../algorithm/surface_process_jump_block.h"
 #include "../freeNav-base/dependencies/3d_textmap/voxel_loader.h"
+#include "../test/test_data.h"
 
 using namespace freeNav;
 using namespace freeNav::JOB;

@@ -8,7 +8,7 @@
 #include "octomap/octomap.h"
 
 #include "../freeNav-base/visualization/canvas/canvas.h"
-#include "../freeNav-base/test/test_data.h"
+#include "../test/test_data.h"
 #include "../freeNav-base/dependencies/random_map_generator.h"
 #include "../freeNav-base/basic_elements/distance_map_update.h"
 #include "../freeNav-base/basic_elements/map_down_sampler.h"
@@ -161,7 +161,6 @@ TEST(BlockDetector, initAllDirectionLocalMoves) {
 }
 
 
-// TODO: considering detect block via machine learning ?
 TEST(BlockDetector, BlockDetectorFull) {
 
     //MapDownSampler<2> down_sampled_map(is_occupied, dimension, total_sample_level - 1);

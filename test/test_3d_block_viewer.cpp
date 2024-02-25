@@ -12,7 +12,7 @@
 #include "../freeNav-base/dependencies/thread_pool.h"
 #include "../freeNav-base/dependencies/massive_scene_loader/ScenarioLoader3D.h"
 #include "../freeNav-base/basic_elements/surface_process.h"
-#include "../freeNav-base/test/test_data.h"
+#include "../test/test_data.h"
 
 #include "../freeNav-base/visualization/3d_viewer/3d_viewer.h"
 
@@ -203,8 +203,8 @@ int main() {
     viewer_thread.Schedule([&]{
         viewer_3d->init();
 
-        pangolin::Var<bool> menu_octomap = pangolin::Var<bool>("menu.OctoMap",false, true);
-        pangolin::Var<bool> menu_occupied_surface = pangolin::Var<bool>("menu.DrawOctomap",true, true);
+        pangolin::Var<bool> menu_octomap = pangolin::Var<bool>("menu.OctoMap",true, true);
+        pangolin::Var<bool> menu_occupied_surface = pangolin::Var<bool>("menu.DrawOctomap",false, true);
         pangolin::Var<bool> menu_tangent_graph("menu.TangentGraph",false, true);
         pangolin::Var<bool> menu_path = pangolin::Var<bool>("menu.DrawPath",true, true);
         //pangolin::Var<bool> menu_grid("menu.GridOn",false, true);
