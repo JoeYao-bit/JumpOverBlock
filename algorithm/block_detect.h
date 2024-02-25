@@ -2,8 +2,8 @@
 // Created by yaozhuo on 2023/4/18.
 //
 
-#ifndef FREENAV_BLOCK_DETECT_H
-#define FREENAV_BLOCK_DETECT_H
+#ifndef FREENAV_JOB_BLOCK_DETECT_H
+#define FREENAV_JOB_BLOCK_DETECT_H
 
 #include "../freeNav-base/basic_elements/map_down_sampler.h"
 #include "../freeNav-base/basic_elements/point.h"

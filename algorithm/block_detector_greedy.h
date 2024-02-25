@@ -2,8 +2,8 @@
 // Created by yaozhuo on 2023/7/19.
 //
 
-#ifndef FREENAV_BLOCK_DETECTOR_GREEDY_H
-#define FREENAV_BLOCK_DETECTOR_GREEDY_H
+#ifndef FREENAV_JOB_BLOCK_DETECTOR_GREEDY_H
+#define FREENAV_JOB_BLOCK_DETECTOR_GREEDY_H
 
 #include "block_detect.h"
 

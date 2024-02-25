@@ -2,10 +2,10 @@
 // Created by yaozhuo on 2023/9/25.
 //
 
-#ifndef FREENAV_LOCAL_DISTANCE_MAP_H
-#define FREENAV_LOCAL_DISTANCE_MAP_H
+#ifndef FREENAV_JOB_LOCAL_DISTANCE_MAP_H
+#define FREENAV_JOB_LOCAL_DISTANCE_MAP_H
 
-#include "freeNav-base/basic_elements/point.h"
+#include "../freeNav-base/basic_elements/point.h"
 
 namespace freeNav::JOB {
 

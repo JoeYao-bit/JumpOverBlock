@@ -2,8 +2,8 @@
 // Created by yaozhuo on 2022/9/6.
 //
 
-#ifndef FREENAV_BASE_TEST_DATA_H
-#define FREENAV_BASE_TEST_DATA_H
+#ifndef FREENAV_JOB_BASE_TEST_DATA_H
+#define FREENAV_JOB_BASE_TEST_DATA_H
 #include <iostream>
 #include <map>
 #include "../freeNav-base/basic_elements/point.h"

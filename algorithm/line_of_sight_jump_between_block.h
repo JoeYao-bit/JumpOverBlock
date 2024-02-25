@@ -2,8 +2,8 @@
 // Created by yaozhuo on 2023/4/29.
 //
 
-#ifndef FREENAV_LOS_JUMP_BETWEEN_BLOCK_H
-#define FREENAV_LOS_JUMP_BETWEEN_BLOCK_H
+#ifndef FREENAV_JOB_LOS_JUMP_BETWEEN_BLOCK_H
+#define FREENAV_JOB_LOS_JUMP_BETWEEN_BLOCK_H
 
 #include "block_detect.h"
 namespace freeNav::JOB {

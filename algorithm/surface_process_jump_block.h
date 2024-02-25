@@ -2,8 +2,8 @@
 // Created by yaozhuo on 2023/5/17.
 //
 
-#ifndef FREENAV_SURFACE_PROCESS_JUMP_BLOCK_H
-#define FREENAV_SURFACE_PROCESS_JUMP_BLOCK_H
+#ifndef FREENAV_JOB_SURFACE_PROCESS_JUMP_BLOCK_H
+#define FREENAV_JOB_SURFACE_PROCESS_JUMP_BLOCK_H
 
 #include "../freeNav-base/basic_elements/surface_process.h"
 #include "../algorithm/line_of_sight_jump_between_block.h"
