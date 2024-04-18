@@ -24,7 +24,7 @@ massive 2D and 3D LOS check and comparison:
 massive 2D, 3D and 4D LOS check of JOB, under random maps: 
 ~/test/test_massive_los_check_with_random_map.cpp
 
-4, If you found its useful, please cite in
+4, If you found it is useful, please cite in
 
 @ARTICLE{10266687,
 
