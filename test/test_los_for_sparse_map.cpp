@@ -468,3 +468,7 @@ TEST(DistanceMapUpdate, test) {
         }
     }
 }
+
+TEST(test, test) {
+    std::cout << pow(2, 16) << std::endl; // 65536
+}
