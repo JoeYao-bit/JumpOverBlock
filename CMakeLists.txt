@@ -40,3 +40,6 @@ target_link_libraries(test_detect_best_block_width freeNav-base)
 
 add_executable(test_massive_los_check_with_random_map test/test_massive_los_check_with_random_map.cpp)
 target_link_libraries(test_massive_los_check_with_random_map freeNav-base)
+
+add_executable(test_space_binary_tree test/test_space_binary_tree.cpp)
+target_link_libraries(test_space_binary_tree freeNav-base)
