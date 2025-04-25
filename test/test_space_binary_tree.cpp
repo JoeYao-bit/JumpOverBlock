@@ -22,6 +22,16 @@
 using namespace freeNav::JOB;
 using namespace freeNav;
 
+
 TEST(space_binary_tree, test) {
-    //
+
+    DimensionLength dim[2];
+    dim[0] = 3, dim[1] = 5;
+
+    auto is_occupied = [](const Pointi<2> & pt) -> bool {
+        return true;
+    };
+
+    SpaceBinaryTree<2> sbt(is_occupied, dim);
+
 }
