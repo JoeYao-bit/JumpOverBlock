@@ -35,8 +35,10 @@ namespace freeNav::JOB {
             }
         }
 
-        // all leaf node's all_child_null_ = true
-        bool all_child_null_ = true;
+        // all leaf node's are occupied or unpassable, mixed_state = false
+        // otherwise, mixed_state = true
+        // when a node is mixed state, it's occ_ = true or false is meaningless
+        bool mixed_state_ = false;
 
         TreeNodePtr<N> parent_ = nullptr;
 
@@ -44,11 +46,10 @@ namespace freeNav::JOB {
 
         // location of pose and and depth can be get from accumulation of index of children and depth
 
-        // occ_ = true if any of its child is occupied, occ = free means all_child_null_ = true;
-        // but
+        // if is not a mixed_state, but a leaf node, whether it is occupied
         bool occ_ = true;
 
-        int depth_ = 1; // for debug, should be removed when everything is okay
+        int depth_ = 0; // for debug, can be removed when everything is okay
 
     };
 
@@ -79,84 +80,80 @@ namespace freeNav::JOB {
                 }
             }
             std::cout << "max_depth = " << max_depth_ << std::endl;
+            Id total_index = getTotalIndexOfSpace<N>(dim_);
+            for(Id id=0; id<total_index; id++) {
+                Pointi<N> pt = IdToPointi<N>(id, dim_);
+                setOccupiedState(pt, isoc_(pt));
+            }
         }
 
         // update state of node, do not update isoc
         // set passable to unpassable may result new tree node and erase existing node
-        void setOccupied(const Pointi<N>& pt) {
-            // if already occupied, do nothing
-            if(isOccupied(pt)) { return; }
-
+        void setOccupiedState(const Pointi<N>& pt, bool is_occupied) {
             TreeNodePtr<N> buffer = root_;
-            for(int dp=1; dp<=max_depth_; dp++) {
-                if(buffer->all_child_null_) {
-                    // if current block is all passable, create 2^N - 1 passable node and a single unpassable node
-                    // till max depth
-
-                    return;
-                }
-                // if current block is partly passable and partly unpassable, no need to change
-                size_t index = getIndex(pt, dp);
-
-            }
-        }
-
-        // update state of node, do not update isoc
-        // d the leaf node that contain pt and set it till max depth
-        void setPassable(const Pointi<N>& pt) {
-            TreeNodePtr<N> buffer = root_;
-            int key[max_depth_]; // store block index of current pt at all level
-            for(int dp=1; dp < max_depth_; dp++) {
-                // if current block is partly passable and partly unpassable, no need to change
-                if(!buffer->occ) {
-                    // if current block is already passable, do nothing
-                    return;
-                } else {
-                    if(buffer->all_child_null_) {
-                        // reach a leaf node, and its unpassable
-                        for(; dp<max_depth_; dp++) {
-                            for(int i=0; i<pow(2, N); i++) {
-                                buffer->children_[i] = std::make_shared<TreeNode<N> >(buffer);
-                                buffer->children_[i]->occ_ = buffer->occ_;
-                            }
-                            size_t index = getIndex(pt, dp);
-                            buffer->children_[index]->occ_ = false;
-                        }
-                        buffer = buffer->children_[index];
-                        break;
+            for(int dp=0; dp <= max_depth_; dp++) {
+                //std::cout << "buffer->depth_ = " << buffer->depth_ << std::endl;
+                if(!buffer->mixed_state_) {
+                    // if reach a leaf node
+                    if(buffer->occ_ == is_occupied) {
+                        // if current block is already the same state, do nothing
+//                        std::cout << "leaf node has the same state, do nothing" << std::endl;
+                        return;
                     }
-                }
-                size_t index = getIndex(pt, dp);
-                buffer = buffer->children_[index];
-                if(dp == max_depth_ - 1) {
-                    std::cout << "reach deepest level" << std::endl;
-                    buffer->occ_ = false;
+                    // reach a leaf node, and its not the same state
+                    //std::cout << "reach a leaf node, and its not the same state" << std::endl;
+                    buffer->mixed_state_ = true;
+                    for(; dp<max_depth_; dp++) {
+                        for(int i=0; i<pow(2, N); i++) {
+                            buffer->children_[i] = std::make_shared<TreeNode<N> >(buffer);
+                            buffer->children_[i]->occ_ = !is_occupied;
+                            buffer->children_[i]->mixed_state_ = false;
+                        }
+                        size_t index = getIndex(pt, dp);
+                        buffer = buffer->children_[index];
+                        buffer->mixed_state_ = true;
+                    }
+                    buffer->occ_ = is_occupied;
+                    buffer->mixed_state_ = false; // last node is leaf node, it is not mixed state
                     break;
+                } else {
+                    size_t index = getIndex(pt, dp);
+                    buffer = buffer->children_[index];
                 }
             }
+            //printTree();
             // if a node's all children node is passable, set all it's children node to nullptr
             TreeNodePtr<N> parent = buffer->parent_;
+            recurAndUpdate(parent);
+        }
+
+        // set mixed_state to false and all children to nullptr if all child are occupied or unpassable
+        void recurAndUpdate(TreeNodePtr<N> parent) {
+            //std::cout << "recurAndUpdate" << std::endl;
             assert(parent->depth_ == max_depth_ - 1);
             // remove child node if all child are passable
-            for(int dp=max_depth_-1; dp>=1; dp--) {
+            for(int dp=max_depth_-1; dp>=0; dp--) {
                 assert(parent != nullptr);
-                bool all_passable = true;
-                // check whether all child is passable
+                bool all_same_state = true;
+                // check whether all child is the same state,
+                // if is the same state, set all child to nullptr and mixed_state to false
                 for(int i=0; i<pow(2, N); i++) {
-                    if(parent->children_[i]->occ_) {
-                        all_passable = false;
+                    if((parent->children_[0]->occ_ ^ parent->children_[i]->occ_)
+                    || parent->children_[i]->mixed_state_) {
+                        all_same_state = false;
                         break;
                     }
                 }
-                if(!all_passable) {
-                    // if not all passable, continue
-                    break;
-                } else {
-                    // if all is passable, remove all child node
+                if(all_same_state) {
+                    //std::cout << "detect all same state" << std::endl;
+                    parent->occ_ = parent->children_[0]->occ_;
+                    parent->mixed_state_ = false;
+                    // if all the same state, remove all child node
                     for(int i=0; i<pow(2, N); i++) {
                         parent->children_[i] = nullptr;
                     }
-                    parent->all_child_null_ = true;
+                } else {
+                    parent->mixed_state_ = true;
                 }
                 parent = parent->parent_;
             }
@@ -165,42 +162,51 @@ namespace freeNav::JOB {
         // find the leaf node that contain current pt, and return its occ
         bool isOccupied(const Pointi<N>& pt) const {
             TreeNodePtr<N> buffer = root_;
-            for(int dp=1; dp<max_depth_; dp++) {
-                if(buffer->all_child_null_) {
+            for(int dp=0; dp<=max_depth_; dp++) {
+                if(!buffer->mixed_state_) {
                     return buffer->occ_;
                 }
                 size_t index = getIndex(pt, dp);
                 buffer = buffer->children_[index];
             }
+            std::cout << "find no leaf node, shouldn't reach here" << std::endl;
+            exit(0);
             return true;
         }
 
         // given current pt's depth, get which child node contain pt
         // the top level's depth is 1, the deepest level's depth is max_depth
         size_t getIndex(const Pointi<N>& pt, int depth) const {
-            assert(depth >= 1 && depth < max_depth_);
+            assert(depth >= 0 && depth < max_depth_);
             size_t index = 0;
+            int val1 = pow(2, max_depth_-depth-1), val2 = pow(2, max_depth_ - depth);
+            //std::cout << "val1 = " << val1 << ", val2 = " << val2 << std::endl;
             for(int i=0; i<N; i++) {
-                index = index + (pt[i] / pow(2, max_depth_ - depth)) * pow(2, i);
+                int indicator = (pt[i] % val2 / val1);
+                //std::cout << "indicator = " << indicator << std::endl;
+                assert(indicator == 1 || indicator == 0);
+                index = index + indicator * pow(2, i);
+                //std::cout << "index = " << index << std::endl;
             }
+            //std::cout << "pt = " << pt << ", depth = " << depth << ", index = " << index << std::endl;
             return index;
         }
 
         void printTree() const {
             TreeNodePtrs<N> nodes = { root_ }, next_nodes;
-            int dp = 1;
+            int dp = 0;
             while (!nodes.empty()) {
                 std::cout << " depth = " << dp << ": " << std::endl;
                 for(int i=0; i<nodes.size(); i++) {
                     assert(nodes[i]->depth_ == dp);
                     assert(nodes[i]->children_.size() == pow(2, N));
                     std::cout << nodes[i] << "(occ:" << nodes[i]->occ_
-                                    << ", all_null:" << nodes[i]->all_child_null_ << ")" << "->";
+                              << ", mixed_state:" << nodes[i]->mixed_state_ << ")" << "->";
                     for(int j=0; j<pow(2, N); j++) {
                         if(nodes[i]->children_[j] != nullptr) {
                             std::cout << nodes[i]->children_[j]
-                                << "(occ:" << nodes[i]->children_[j]->occ_
-                          << ", all_null:" << nodes[i]->children_[j]->all_child_null_ << ") / ";
+                                      << "(occ:" << nodes[i]->children_[j]->occ_
+                                      << ", mixed_state:" << nodes[i]->children_[j]->mixed_state_ << ") / ";
                             next_nodes.push_back(nodes[i]->children_[j]);
                         }
                     }
