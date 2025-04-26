@@ -21,11 +21,16 @@
 //#include "../algorithm/line_of_sight_jump_between_block.h"
 
 #include "../algorithm/space_binary_tree/space_binary_tree.h"
+#include "../freeNav-base/dependencies/3d_textmap/voxel_loader.h"
 
 using namespace freeNav::JOB;
 using namespace freeNav;
 
 DimensionLength dim[2];
+
+struct timezone tz;
+struct timeval tv_pre;
+struct timeval tv_after;
 
 TEST(getIndex, test) {
 
@@ -102,14 +107,19 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
 int zoom_rate = 1;
 
-TEST(SpaceBinaryTree, test) {
+TEST(SpaceBinaryTree2D, test) {
     auto dimension = loader.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
 
-    IS_OCCUPIED_FUNC<2> is_occupied_func = is_occupied;
+    gettimeofday(&tv_pre, &tz);
 
     SpaceBinaryTree<2> sbt(is_occupied, dimension);
+
+    gettimeofday(&tv_after, &tz);
+
+    double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+    std::cout << "SpaceBinaryTree2D take " << time_cost << " ms to initialize" << std::endl;
 
     Id total_index = getTotalIndexOfSpace<2>(dimension);
 
@@ -117,25 +127,31 @@ TEST(SpaceBinaryTree, test) {
         Pointi<2> pt = IdToPointi<2>(id, dimension);
         assert(is_occupied(pt) == sbt.isOccupied(pt));
     }
+}
 
-//    Canvas canvas("SpaceBinaryTree", dimension[0], dimension[1], .05, zoom_rate);
-//
-//    while(1) {
-//        canvas.resetCanvas();
-//        canvas.drawEmptyGrid();
-//        canvas.drawGridMap(dimension, is_occupied_func);
-//
-//        //canvas.drawGridMap(down_sampled_map.dimension_infos_.back(), is_occupied_downsample_func);
-//
-//        char key = canvas.show(300);
-//        switch (key) {
-//            case 'w':
-//                break;
-//            case 's':
-//                break;
-//            default:
-//                break;
-//        }
-//        //break;
-//    }
+auto map_test_config_3D = MapTestConfig_Complex;
+
+TextMapLoader_3D loader3D(map_test_config_3D.at("map_path"));
+
+
+TEST(SpaceBinaryTree3D, test) {
+    auto dimension = loader3D.getDimensionInfo();
+
+    auto is_occupied = [](const Pointi<3> & pt) -> bool { return loader3D.isOccupied(pt); };
+
+    gettimeofday(&tv_pre, &tz);
+
+    SpaceBinaryTree<3> sbt(is_occupied, dimension);
+
+    gettimeofday(&tv_after, &tz);
+
+    double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+    std::cout << "SpaceBinaryTree3D take " << time_cost << " ms to initialize" << std::endl;
+
+    Id total_index = getTotalIndexOfSpace<3>(dimension);
+
+    for(Id id=0; id<total_index; id++) {
+        Pointi<3> pt = IdToPointi<3>(id, dimension);
+        assert(is_occupied(pt) == sbt.isOccupied(pt));
+    }
 }
