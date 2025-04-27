@@ -12,7 +12,7 @@ namespace freeNav::JOB {
     // for a line that cross a block, find the point on it and leave obstacle
     // update inner index of line
     template<Dimension N>
-    int findExitPointOfBlock(Line<N>& line, const Pointi<N>& current_pt, int& index, const BlockPtr<N>& block_ptr) {
+    int findExitPointOfBlock(Line<N>& line, const Pointi<N>& current_pt, const int& index, const BlockPtr<N>& block_ptr) {
         // check whether the line reach end of line
         if(index >= line.step - 1) {return 0; }
         //Pointi<N> current_pt = line.GetPoint(index);
