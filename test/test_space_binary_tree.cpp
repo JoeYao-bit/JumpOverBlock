@@ -149,13 +149,14 @@ TEST(SpaceBinaryTree2D, test) {
     }
 
     Canvas canvas("SpaceBinaryTree2D",dimension[0],dimension[1], .05, zoom_rate);
-    bool draw_block_ptr = true;
+    bool draw_free_leaf = true,
+         draw_block = false;
     while(1) {
         canvas.resetCanvas();
         canvas.drawEmptyGrid();
         canvas.drawGridMap(dimension, is_occupied);
 
-        if(draw_block_ptr) {
+        if(draw_free_leaf) {
             //canvas.draw_DistMap(block_detect.dimension_info_, block_detect.dist_map_);
             int total_count = getTotalIndexOfSpace<2>(dimension);
             for(int i=0; i<block_ptrs.size(); i++) {
@@ -169,11 +170,21 @@ TEST(SpaceBinaryTree2D, test) {
                 //break;
             }
         }
-
+        if(draw_block) {
+            for(int id=0; id<sbt.block_ptr_map_.size(); id++) {
+                if(sbt.block_ptr_map_[id] == nullptr) { continue; }
+                Pointi<2> pt = IdToPointi<2>(id, dimension);
+                Id indicator = PointiToId<2>(sbt.block_ptr_map_[id]->min_, dimension);
+                canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
+            }
+        }
         char key = canvas.show(30);
         switch (key) {
+            case 'f':
+                draw_free_leaf = !draw_free_leaf;
+                break;
             case 'b':
-                draw_block_ptr = !draw_block_ptr;
+                draw_block = !draw_block;
                 break;
             default:
                 break;
@@ -272,7 +283,9 @@ TEST(LineOfSightChek, test) {
             continue;
         }
         bool isoc1 = LineCrossObstacle<2>(pt1, pt2, is_occupied, neighbor);
-        bool isoc2 = sbt.lineCrossObstacle(pt1, pt2);
+        Pointis<2> visited_pt;
+        int count_of_block;
+        bool isoc2 = sbt.lineCrossObstacle(pt1, pt2, visited_pt, count_of_block);
         if(isoc1 != isoc2) {
             std::cout << i << " th test failed, pt1/pt2 = " << pt1 << " / " << pt2 << std::endl;
             // assert classic LOS check and SBT's LOS check have the same result

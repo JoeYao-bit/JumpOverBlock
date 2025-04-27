@@ -97,6 +97,29 @@ namespace freeNav::JOB {
                 Pointi<N> pt = IdToPointi<N>(id, dim_);
                 setOccupiedState(pt, isoc_(pt));
             }
+            // initialize of block_ptr_map_, need test
+            block_ptr_map_.resize(total_index, nullptr);
+            std::vector<TreeNodePtr<N> > free_leaf_nodes = getAllPassableLeafNodes();
+            for(const auto& leaf_node : free_leaf_nodes) {
+                if(leaf_node->depth_ >= max_depth_ - min_block_depth_width_) { continue; } // limit minimum size of blocks
+                BlockPtr<N> block_ptr = std::make_shared<Block<N> >();
+                block_ptr->min_ = leaf_node->base_pt_;
+                Pointi<N> offset; offset.setAll(pow_2_[max_depth_-leaf_node->depth_]-1);
+                block_ptr->max_ = leaf_node->base_pt_ + offset;
+
+                // construct local space and update local block ptr
+                DimensionLength local_dim[N];
+                for(int d=0; d<N; d++) { local_dim[d] = offset[d]+1; }
+                Id local_total_index = getTotalIndexOfSpace<N>(local_dim), global_id;
+                Pointi<N> local_pt, global_pt;
+                for(Id id=0; id<local_total_index; id++) {
+                    local_pt = IdToPointi<N>(id, local_dim);
+                    global_pt = leaf_node->base_pt_ + local_pt;
+                    global_id = PointiToId(global_pt, dim_);
+                    assert(block_ptr_map_[global_id] == nullptr); // there shouldn't be overlap between different blocks
+                    block_ptr_map_[global_id] = block_ptr;
+                }
+            }
         }
 
         // update state of node, do not update isoc
@@ -142,7 +165,7 @@ namespace freeNav::JOB {
         }
 
         // set mixed_state to false and all children to nullptr if all child are occupied or unpassable
-        void recurAndUpdate(TreeNodePtr<N> parent) {
+        void recurAndUpdate(TreeNodePtr<N> parent) const {
             //std::cout << "recurAndUpdate" << std::endl;
             assert(parent->depth_ == max_depth_ - 1);
             // remove child node if all child are passable
@@ -202,32 +225,59 @@ namespace freeNav::JOB {
             return true;
         }
 
-        // TODO: need test
-        bool lineCrossObstacle(const Pointi<N>& pt1, const Pointi<N>& pt2) const {
+        // do not use block_ptr_map_, efficient in memory space but more time consuming
+//        bool lineCrossObstacle(const Pointi<N>& pt1, const Pointi<N>& pt2) const {
+//            Line<N> line(pt1, pt2);
+//            int check_step = line.step;
+//            Pointi<N> pt;
+//            int jump_step = 0;
+//            for(int i=1; i<check_step; i++) {
+//                pt = line.GetPoint(i);
+//                TreeNodePtr<N> leaf_node = getLeafNode(pt);
+//                if(leaf_node->occ_) {
+//                    return true;
+//                } else {
+//                    // if come across a passable block, get its width and boundary,
+//                    // construct a local BlockPtr and jump
+//                    BlockPtr<N> block_ptr = std::make_shared<Block<N> >();
+//                    block_ptr->min_ = leaf_node->base_pt_;
+//                    Pointi<N> offset; offset.setAll(pow_2_[max_depth_-leaf_node->depth_]-1);
+//                    block_ptr->max_ = leaf_node->base_pt_ + offset;
+//
+//                    jump_step = findExitPointOfBlock(line, pt, i, block_ptr);
+//                    //std::cout << " jump step " << jump_step << std::endl;
+//                    i = i + jump_step;
+//                }
+//            }
+//            return false;
+//        }
+
+        bool lineCrossObstacle(const Pointi<N>& pt1, const Pointi<N>& pt2,
+                               Pointis<N>& visited_pt,
+                               int& count_of_block) const {
+            if(pt1 == pt2) return true;
+            visited_pt.clear();
+            count_of_block = 0;
             Line<N> line(pt1, pt2);
             int check_step = line.step;
             Pointi<N> pt;
+            Id current_id;
             int jump_step = 0;
             for(int i=1; i<check_step; i++) {
                 pt = line.GetPoint(i);
-                TreeNodePtr<N> leaf_node = getLeafNode(pt);
-                if(leaf_node->occ_) {
+                visited_pt.push_back(pt);
+                if(isoc_(pt)) {
                     return true;
-                } else {
-                    // ignore small block that have no significant mean in improve efficiency
-                    // what is small block is adjustable
-                    if(leaf_node->depth_ >= max_depth_-2) { continue; }
-
-                    // if come across a passable block, get its width and boundary,
-                    // TODO: construct a local BlockPtr and jump
-                    BlockPtr<N> block_ptr = std::make_shared<Block<N> >();
-                    block_ptr->min_ = leaf_node->base_pt_;
-                    Pointi<N> offset; offset.setAll(pow_2_[max_depth_-leaf_node->depth_]-1);
-                    block_ptr->max_ = leaf_node->base_pt_ + offset;
-
+                }
+                //if(is_occupied(pt)) { return true; }
+                current_id = PointiToId(pt, dim_);
+                const auto& block_ptr = block_ptr_map_[current_id];
+                // if in block, jump over current block
+                if(block_ptr != nullptr) {
                     jump_step = findExitPointOfBlock(line, pt, i, block_ptr);
                     //std::cout << " jump step " << jump_step << std::endl;
                     i = i + jump_step;
+                    count_of_block ++;
                 }
             }
             return false;
@@ -286,7 +336,7 @@ namespace freeNav::JOB {
             TreeNodePtrs<N> nodes = { root_ }, next_nodes, retv;
             int dp = 0;
             while (!nodes.empty()) {
-                std::cout << " depth = " << dp << ": " << std::endl;
+                //std::cout << " depth = " << dp << ": " << std::endl;
                 for(int i=0; i<nodes.size(); i++) {
                     assert(nodes[i]->depth_ == dp);
                     assert(nodes[i]->children_.size() == pow_2_[N]);
@@ -298,7 +348,7 @@ namespace freeNav::JOB {
                             next_nodes.push_back(nodes[i]->children_[j]);
                         }
                     }
-                    std::cout << std::endl;
+                    //std::cout << std::endl;
                 }
                 nodes.clear();
                 std::swap(nodes, next_nodes);
@@ -315,11 +365,13 @@ namespace freeNav::JOB {
 
         int max_depth_ = 0;
 
+        int min_block_depth_width_ = 2; // the minimum block width is pow(2, min_block_depth_width_)
+
         std::vector<int> pow_2_; // precomputation of pow(2, x)
 
         Pointis<N> flag_pts_; // precomputation of all flag points
 
-        //TreeNodePtrs<N> all_nodes_; // need lots space
+        BlockPtrs<N> block_ptr_map_; // need lots space
 
     };
 
