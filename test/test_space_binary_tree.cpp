@@ -62,7 +62,7 @@ TEST(getIndex, test) {
 
 TEST(setOccupiedState, test) {
 
-    dim[0] = 13, dim[1] = 11;
+    dim[0] = 16, dim[1] = 16;
 
     auto is_occupied = [](const Pointi<2> & pt) -> bool {
         if(pt[0] >= dim[0] || pt[0] < 0) {
@@ -75,23 +75,32 @@ TEST(setOccupiedState, test) {
     };
 
     SpaceBinaryTree<2> sbt(is_occupied, dim);
+
+    sbt.printTree();
+
+
     Pointi<2> pt = Pointi<2>{0, 0};
 
-    sbt.setOccupiedState(pt, false);
-    //sbt.printTree();
-    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
     sbt.setOccupiedState(pt, true);
-    //sbt.printTree();
+    sbt.printTree();
     std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
 
-    pt = Pointi<2>{0, 1};
     sbt.setOccupiedState(pt, false);
-    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
-    sbt.setOccupiedState(Pointi<2>{0, 1}, true);
+    sbt.printTree();
     std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
 
-    pt = Pointi<2>{0, 0};
-    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
+    Id total_index = getTotalIndexOfSpace<2>(dim);
+    for(Id id=0; id<total_index; id++) {
+        Pointi<2> pt = IdToPointi<2>(id, dim);
+        sbt.setOccupiedState(pt, true);
+    }
+    sbt.printTree();
+
+    for(Id id=0; id<total_index; id++) {
+        Pointi<2> pt = IdToPointi<2>(id, dim);
+        sbt.setOccupiedState(pt, false);
+    }
+    sbt.printTree();
 
 }
 
@@ -129,7 +138,10 @@ TEST(SpaceBinaryTree2D, test) {
     }
 }
 
-auto map_test_config_3D = MapTestConfig_Complex;
+//MapTestConfig_Complex 7796.59 ms 4277.9 ms
+//MapTestConfig_A1 109404 ms
+
+auto map_test_config_3D = MapTestConfig_A1;
 
 TextMapLoader_3D loader3D(map_test_config_3D.at("map_path"));
 
@@ -138,6 +150,9 @@ TEST(SpaceBinaryTree3D, test) {
     auto dimension = loader3D.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<3> & pt) -> bool { return loader3D.isOccupied(pt); };
+
+    std::cout << "SpaceBinaryTree3D start initialize" << std::endl;
+
 
     gettimeofday(&tv_pre, &tz);
 
