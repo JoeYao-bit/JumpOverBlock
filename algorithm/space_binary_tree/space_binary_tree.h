@@ -80,6 +80,11 @@ namespace freeNav::JOB {
                 }
             }
             std::cout << "max_depth = " << max_depth_ << std::endl;
+            // precomputation of pow(2, x)
+            for(int dp=0; dp<=std::max(max_depth_, (int)N); dp++) {
+                pow_2_.push_back(pow(2, dp));
+            }
+
             Id total_index = getTotalIndexOfSpace<N>(dim_);
             for(Id id=0; id<total_index; id++) {
                 Pointi<N> pt = IdToPointi<N>(id, dim_);
@@ -104,7 +109,7 @@ namespace freeNav::JOB {
                     //std::cout << "reach a leaf node, and its not the same state" << std::endl;
                     buffer->mixed_state_ = true;
                     for(; dp<max_depth_; dp++) {
-                        for(int i=0; i<pow(2, N); i++) {
+                        for(int i=0; i<pow_2_[N]; i++) {
                             buffer->children_[i] = std::make_shared<TreeNode<N> >(buffer);
                             buffer->children_[i]->occ_ = !is_occupied;
                             buffer->children_[i]->mixed_state_ = false;
@@ -137,7 +142,7 @@ namespace freeNav::JOB {
                 bool all_same_state = true;
                 // check whether all child is the same state,
                 // if is the same state, set all child to nullptr and mixed_state to false
-                for(int i=0; i<pow(2, N); i++) {
+                for(int i=0; i<pow_2_[N]; i++) {
                     if((parent->children_[0]->occ_ ^ parent->children_[i]->occ_)
                     || parent->children_[i]->mixed_state_) {
                         all_same_state = false;
@@ -149,7 +154,7 @@ namespace freeNav::JOB {
                     parent->occ_ = parent->children_[0]->occ_;
                     parent->mixed_state_ = false;
                     // if all the same state, remove all child node
-                    for(int i=0; i<pow(2, N); i++) {
+                    for(int i=0; i<pow_2_[N]; i++) {
                         parent->children_[i] = nullptr;
                     }
                 } else {
@@ -179,13 +184,13 @@ namespace freeNav::JOB {
         size_t getIndex(const Pointi<N>& pt, int depth) const {
             assert(depth >= 0 && depth < max_depth_);
             size_t index = 0;
-            int val1 = pow(2, max_depth_-depth-1), val2 = pow(2, max_depth_ - depth);
+            int val1 = pow_2_[max_depth_-depth-1], val2 = pow_2_[max_depth_ - depth];
             //std::cout << "val1 = " << val1 << ", val2 = " << val2 << std::endl;
             for(int i=0; i<N; i++) {
                 int indicator = (pt[i] % val2 / val1);
                 //std::cout << "indicator = " << indicator << std::endl;
                 assert(indicator == 1 || indicator == 0);
-                index = index + indicator * pow(2, i);
+                index = index + indicator * pow_2_[i];
                 //std::cout << "index = " << index << std::endl;
             }
             //std::cout << "pt = " << pt << ", depth = " << depth << ", index = " << index << std::endl;
@@ -193,16 +198,17 @@ namespace freeNav::JOB {
         }
 
         void printTree() const {
+            std::cout << "-- " << __FUNCTION__ << std::endl;
             TreeNodePtrs<N> nodes = { root_ }, next_nodes;
             int dp = 0;
             while (!nodes.empty()) {
                 std::cout << " depth = " << dp << ": " << std::endl;
                 for(int i=0; i<nodes.size(); i++) {
                     assert(nodes[i]->depth_ == dp);
-                    assert(nodes[i]->children_.size() == pow(2, N));
+                    assert(nodes[i]->children_.size() == pow_2_[N]);
                     std::cout << nodes[i] << "(occ:" << nodes[i]->occ_
-                              << ", mixed_state:" << nodes[i]->mixed_state_ << ")" << "->";
-                    for(int j=0; j<pow(2, N); j++) {
+                              << ", mixed_state:" << nodes[i]->mixed_state_ << ", depth:" << nodes[i]->depth_ << ",)" << "->";
+                    for(int j=0; j<pow_2_[N]; j++) {
                         if(nodes[i]->children_[j] != nullptr) {
                             std::cout << nodes[i]->children_[j]
                                       << "(occ:" << nodes[i]->children_[j]->occ_
@@ -225,6 +231,8 @@ namespace freeNav::JOB {
         TreeNodePtr<N> root_ = nullptr;
 
         int max_depth_ = 0;
+
+        std::vector<int> pow_2_; // precomputation of pow(2, x)
 
         //TreeNodePtrs<N> all_nodes_; // need lots space
 
