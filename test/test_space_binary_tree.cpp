@@ -62,7 +62,7 @@ TEST(getIndex, test) {
 
 TEST(setOccupiedState, test) {
 
-    dim[0] = 16, dim[1] = 16;
+    dim[0] = 8, dim[1] = 8;
 
     auto is_occupied = [](const Pointi<2> & pt) -> bool {
         if(pt[0] >= dim[0] || pt[0] < 0) {
@@ -79,28 +79,28 @@ TEST(setOccupiedState, test) {
     sbt.printTree();
 
 
-    Pointi<2> pt = Pointi<2>{0, 0};
+    Pointi<2> pt = Pointi<2>{7, 7};
 
     sbt.setOccupiedState(pt, true);
     sbt.printTree();
-    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
-
-    sbt.setOccupiedState(pt, false);
-    sbt.printTree();
-    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
-
-    Id total_index = getTotalIndexOfSpace<2>(dim);
-    for(Id id=0; id<total_index; id++) {
-        Pointi<2> pt = IdToPointi<2>(id, dim);
-        sbt.setOccupiedState(pt, true);
-    }
-    sbt.printTree();
-
-    for(Id id=0; id<total_index; id++) {
-        Pointi<2> pt = IdToPointi<2>(id, dim);
-        sbt.setOccupiedState(pt, false);
-    }
-    sbt.printTree();
+//    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
+//
+//    sbt.setOccupiedState(pt, false);
+//    sbt.printTree();
+//    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
+//
+//    Id total_index = getTotalIndexOfSpace<2>(dim);
+//    for(Id id=0; id<total_index; id++) {
+//        Pointi<2> pt = IdToPointi<2>(id, dim);
+//        sbt.setOccupiedState(pt, true);
+//    }
+//    sbt.printTree();
+//
+//    for(Id id=0; id<total_index; id++) {
+//        Pointi<2> pt = IdToPointi<2>(id, dim);
+//        sbt.setOccupiedState(pt, false);
+//    }
+//    sbt.printTree();
 
 }
 
@@ -136,6 +136,53 @@ TEST(SpaceBinaryTree2D, test) {
         Pointi<2> pt = IdToPointi<2>(id, dimension);
         assert(is_occupied(pt) == sbt.isOccupied(pt));
     }
+
+    std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
+    BlockPtrs<2> block_ptrs;
+    for(const auto& leaf_node : free_leaf_nodes) {
+        BlockPtr<2> block_ptr = std::make_shared<Block<2> >();
+        block_ptr->min_ = leaf_node->base_pt_;
+        Pointi<2> offset; offset.setAll(sbt.pow_2_[sbt.max_depth_-leaf_node->depth_]-1);
+        block_ptr->max_ = leaf_node->base_pt_ + offset;
+        assert((!is_occupied(block_ptr->min_)) && (!is_occupied(block_ptr->max_)));
+        block_ptrs.push_back(block_ptr);
+    }
+
+    Canvas canvas("SpaceBinaryTree2D",dimension[0],dimension[1], .05, zoom_rate);
+
+    bool draw_block_ptr = true;
+
+
+    while(1) {
+        canvas.resetCanvas();
+        canvas.drawEmptyGrid();
+        canvas.drawGridMap(dimension, is_occupied);
+
+        if(draw_block_ptr) {
+            //canvas.draw_DistMap(block_detect.dimension_info_, block_detect.dist_map_);
+            int total_count = getTotalIndexOfSpace<2>(dimension);
+            for(int i=0; i<block_ptrs.size(); i++) {
+                const auto& block_ptr = block_ptrs[i];
+                const Pointi<2> pt1 = block_ptr->min_, pt2 = block_ptr->max_;
+                //const Pointi<2> pt1 = Pointi<2>{0, 0}, pt2 = Pointi<2>{100, 100};
+                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, false,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, false,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, false,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, false,COLOR_TABLE[i%30]);
+                //break;
+            }
+        }
+
+        char key = canvas.show(30);
+        switch (key) {
+            case 'b':
+                draw_block_ptr = !draw_block_ptr;
+                break;
+            default:
+                break;
+        }
+    }
+
 }
 
 //MapTestConfig_Complex 7796.59 ms 4277.9 ms
@@ -168,5 +215,12 @@ TEST(SpaceBinaryTree3D, test) {
     for(Id id=0; id<total_index; id++) {
         Pointi<3> pt = IdToPointi<3>(id, dimension);
         assert(is_occupied(pt) == sbt.isOccupied(pt));
+    }
+}
+
+TEST(GetFloorOrCeilFlag, test) {
+    Pointis<2> offsets = GetFloorOrCeilFlag<2>();
+    for(const auto& offset : offsets) {
+        std::cout << offset << std::endl;
     }
 }
