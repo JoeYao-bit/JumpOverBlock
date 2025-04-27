@@ -149,10 +149,7 @@ TEST(SpaceBinaryTree2D, test) {
     }
 
     Canvas canvas("SpaceBinaryTree2D",dimension[0],dimension[1], .05, zoom_rate);
-
     bool draw_block_ptr = true;
-
-
     while(1) {
         canvas.resetCanvas();
         canvas.drawEmptyGrid();
@@ -223,4 +220,64 @@ TEST(GetFloorOrCeilFlag, test) {
     for(const auto& offset : offsets) {
         std::cout << offset << std::endl;
     }
+}
+
+
+TEST(LineOfSightChek, test) {
+    auto dimension = loader.getDimensionInfo();
+
+    auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
+
+    gettimeofday(&tv_pre, &tz);
+
+    SpaceBinaryTree<2> sbt(is_occupied, dimension);
+
+    gettimeofday(&tv_after, &tz);
+
+    double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+    std::cout << "SpaceBinaryTree2D take " << time_cost << " ms to initialize" << std::endl;
+
+    Id total_index = getTotalIndexOfSpace<2>(dimension);
+    Pointis<1> neighbor = GetNeightborOffsetGrids<1>();
+    srand(time(0));
+
+    for(int i=0; i<1e4; i++) {
+        // random pick two passable point
+        Id id1 = 0, id2 = 0;
+        Pointi<2> pt1, pt2;
+        int count = 1000;
+        while(count >= 0) {
+            id1 = rand() % total_index;
+            pt1 = IdToPointi<2>(id1, dimension);
+            if (!is_occupied(pt1)) {
+                break;
+            } else {
+                count --;
+            }
+        }
+        if (is_occupied(pt1)) {
+            continue;
+        }
+        count = 1000;
+        while(count >= 0) {
+            id2 = rand() % total_index;
+            pt2 = IdToPointi<2>(id2, dimension);
+            if (!is_occupied(pt2)) {
+                break;
+            } else {
+                count --;
+            }
+        }
+        if (is_occupied(pt2)) {
+            continue;
+        }
+        bool isoc1 = LineCrossObstacle<2>(pt1, pt2, is_occupied, neighbor);
+        bool isoc2 = sbt.lineCrossObstacle(pt1, pt2);
+        if(isoc1 != isoc2) {
+            std::cout << i << " th test failed, pt1/pt2 = " << pt1 << " / " << pt2 << std::endl;
+            // assert classic LOS check and SBT's LOS check have the same result
+            assert(isoc1 == isoc2);
+        }
+    }
+
 }
