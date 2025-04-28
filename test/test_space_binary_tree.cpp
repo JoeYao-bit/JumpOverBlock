@@ -319,6 +319,9 @@ void LineOfSightTest(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<N>& isoc_
 
 }
 
+// MapTestConfig_Shanghai_0_512
+// 1000000 LOS test, mean raw LOS time cost = 0.00166777, mean SBT LOS time cost = 0.00124032
+
 TEST(LineOfSightCheck2D, test) {
     auto dimension = loader.getDimensionInfo();
 
