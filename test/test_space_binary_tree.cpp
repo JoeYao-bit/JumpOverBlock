@@ -148,6 +148,12 @@ TEST(SpaceBinaryTree2D, test) {
         block_ptrs.push_back(block_ptr);
     }
 
+    // set to reverse state
+//    for(Id id=0; id<total_index; id++) {
+//        Pointi<2> pt = IdToPointi<2>(id, dimension);
+//        sbt.setOccupiedState(pt, !is_occupied(pt));
+//    }
+
     Canvas canvas("SpaceBinaryTree2D",dimension[0],dimension[1], .05, zoom_rate);
     bool draw_free_leaf = true,
          draw_block = false;
@@ -195,8 +201,9 @@ TEST(SpaceBinaryTree2D, test) {
 
 //MapTestConfig_Complex 7796.59 ms 4277.9 ms
 //MapTestConfig_A1 109404 ms
-
-auto map_test_config_3D = MapTestConfig_A1;
+// A1 10000 LOS test, mean raw LOS time cost = 0.0077252, mean SBT LOS time cost = 0.0059969
+// Complex 1000000 LOS test, mean raw LOS time cost = 0.00199108, mean SBT LOS time cost = 0.00311197
+auto map_test_config_3D = MapTestConfig_Complex;
 
 TextMapLoader_3D loader3D(map_test_config_3D.at("map_path"));
 
@@ -233,64 +240,99 @@ TEST(GetFloorOrCeilFlag, test) {
     }
 }
 
-
-TEST(LineOfSightChek, test) {
-    auto dimension = loader.getDimensionInfo();
-
-    auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
+template<Dimension N>
+void LineOfSightTest(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<N>& isoc_temp) {
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTree<2> sbt(is_occupied, dimension);
+    SpaceBinaryTree<N> sbt(isoc_temp, temp_dim);
 
     gettimeofday(&tv_after, &tz);
 
     double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-    std::cout << "SpaceBinaryTree2D take " << time_cost << " ms to initialize" << std::endl;
+    std::cout << "SpaceBinaryTree" << N << "D take " << time_cost << " ms to initialize" << std::endl;
 
-    Id total_index = getTotalIndexOfSpace<2>(dimension);
-    Pointis<1> neighbor = GetNeightborOffsetGrids<1>();
+    Id total_index = getTotalIndexOfSpace<N>(temp_dim);
+    Pointis<N-1> neighbor = GetNeightborOffsetGrids<N-1>();
     srand(time(0));
 
-    for(int i=0; i<1e4; i++) {
+    for(Id id=0; id<total_index; id++) {
+        Pointi<N> pt = IdToPointi<N>(id, temp_dim);
+        assert(isoc_temp(pt) == sbt.isOccupied(pt));
+    }
+
+    double sum_1 = 0, sum_2 = 0;
+    int success_count = 0;
+    for(int i=0; i<1e6; i++) {
         // random pick two passable point
         Id id1 = 0, id2 = 0;
-        Pointi<2> pt1, pt2;
+        Pointi<N> pt1, pt2;
         int count = 1000;
         while(count >= 0) {
             id1 = rand() % total_index;
-            pt1 = IdToPointi<2>(id1, dimension);
-            if (!is_occupied(pt1)) {
+            pt1 = IdToPointi<N>(id1, temp_dim);
+            if (!isoc_temp(pt1)) {
                 break;
             } else {
                 count --;
             }
         }
-        if (is_occupied(pt1)) {
+        if (isoc_temp(pt1)) {
             continue;
         }
         count = 1000;
         while(count >= 0) {
             id2 = rand() % total_index;
-            pt2 = IdToPointi<2>(id2, dimension);
-            if (!is_occupied(pt2)) {
+            pt2 = IdToPointi<N>(id2, temp_dim);
+            if (!isoc_temp(pt2)) {
                 break;
             } else {
                 count --;
             }
         }
-        if (is_occupied(pt2)) {
+        if (isoc_temp(pt2)) {
             continue;
         }
-        bool isoc1 = LineCrossObstacle<2>(pt1, pt2, is_occupied, neighbor);
-        Pointis<2> visited_pt;
+        //std::cout << "do LOS between " << pt1 << ", " << pt2 <<  std::endl;
+        gettimeofday(&tv_pre, &tz);
+        bool isoc1 = LineCrossObstacle<N>(pt1, pt2, isoc_temp, neighbor);
+        gettimeofday(&tv_after, &tz);
+        double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+        sum_1 = sum_1 + time_cost1;
+        Pointis<N> visited_pt;
         int count_of_block;
+        gettimeofday(&tv_pre, &tz);
         bool isoc2 = sbt.lineCrossObstacle(pt1, pt2, visited_pt, count_of_block);
+        gettimeofday(&tv_after, &tz);
+        double time_cost2 = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+        sum_2 = sum_2 + time_cost2;
+        success_count ++;
         if(isoc1 != isoc2) {
             std::cout << i << " th test failed, pt1/pt2 = " << pt1 << " / " << pt2 << std::endl;
             // assert classic LOS check and SBT's LOS check have the same result
             assert(isoc1 == isoc2);
         }
     }
+
+    std::cout << success_count <<  " LOS test, mean raw LOS time cost = " << sum_1/(double)success_count
+              << ", mean SBT LOS time cost = " << sum_2/(double)success_count << std::endl;
+
+}
+
+TEST(LineOfSightCheck2D, test) {
+    auto dimension = loader.getDimensionInfo();
+
+    auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
+
+    LineOfSightTest<2>(dimension, is_occupied);
+}
+
+
+TEST(LineOfSightCheck3D, test) {
+    auto dimension = loader3D.getDimensionInfo();
+
+    auto is_occupied = [](const Pointi<3> & pt) -> bool { return loader3D.isOccupied(pt); };
+
+    LineOfSightTest<3>(dimension, is_occupied);
 
 }
