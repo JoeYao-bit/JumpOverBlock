@@ -5,9 +5,25 @@
 #ifndef JUMPOVERBLOCK_DYNAMIC_OBSTACLES_H
 #define JUMPOVERBLOCK_DYNAMIC_OBSTACLES_H
 
+#include <random>
 #include "freeNav-base/basic_elements/point.h"
 
 namespace freeNav::JOB {
+
+    float generateRandomFloat(float min, float max)
+    {
+        // 使用默认的随机设备创建种子
+        std::random_device rd;
+
+        // 使用种子初始化梅森旋转引擎
+        std::mt19937 mt(rd());
+
+        // 创建一个均匀分布，范围为[min, max]
+        std::uniform_real_distribution<float> dist(min, max);
+
+        // 生成一个位于范围内的随机浮点数
+        return dist(mt);
+    }
 
     template<Dimension N>
     struct Obstacle {
@@ -47,12 +63,34 @@ namespace freeNav::JOB {
             }
         }
 
+
         float radius_;
 
     };
 
     template<Dimension N>
     using CircleObstaclePtr = std::shared_ptr<CircleObstacle<N> >;
+
+    template<Dimension N>
+    using CircleObstaclePtrs = std::vector<CircleObstaclePtr<N> >;
+
+    template<Dimension N>
+    CircleObstaclePtr<N> generateRandomCircle(float min_radius, float max_radius) {
+        return std::make_shared<CircleObstacle<N> >(generateRandomFloat(min_radius, max_radius));
+    }
+
+
+    template<Dimension N>
+    CircleObstaclePtrs<N> generateRandomCircleObstacles(int count, float min_radius, float max_radius) {
+        assert(count >= 0);
+        CircleObstaclePtrs<N> retv;
+        for(int i=0; i<count; i++) {
+            retv.push_back(std::make_shared<CircleObstacle<N> >(generateRandomFloat(min_radius, max_radius)));
+        }
+        return retv;
+    }
+
+
 
     template<Dimension N>
     struct BlockObstacle : public Obstacle<N> {
@@ -75,6 +113,23 @@ namespace freeNav::JOB {
 
     template<Dimension N>
     using BlockObstaclePtr = std::shared_ptr<BlockObstacle<N> >;
+
+    template<Dimension N>
+    using BlockObstaclePtrs = std::vector<BlockObstaclePtr<N> >;
+
+    template<Dimension N>
+    BlockObstaclePtrs<N> generateRandomBlockObstacles(int count, const Pointi<N>& min_pt, const Pointi<N>& max_pt) {
+        assert(count >= 0);
+        BlockObstaclePtrs<N> retv;
+        Pointi<N> temp_pt;
+        for(int i=0; i<count; i++) {
+            for(int d=0; d<N; d++) {
+                temp_pt[d] = min_pt[d] + rand()%(max_pt[d] - min_pt[d]);
+            }
+            retv.push_back(std::make_shared<BlockObstacle<N> >(temp_pt));
+        }
+        return retv;
+    }
 
     // a DynamicObstacles contain some random circle obstacles and block obstacles
     template<Dimension N>
@@ -128,6 +183,10 @@ namespace freeNav::JOB {
         ObstaclePtrs<N> obstacles_;
 
     };
+
+
+
+
 
 }
 

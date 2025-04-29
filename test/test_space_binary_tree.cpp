@@ -22,6 +22,7 @@
 
 #include "../algorithm/space_binary_tree/space_binary_tree.h"
 #include "../freeNav-base/dependencies/3d_textmap/voxel_loader.h"
+#include "dependencies.h"
 
 using namespace freeNav::JOB;
 using namespace freeNav;
@@ -164,7 +165,7 @@ TEST(SpaceBinaryTree2D, test) {
 
         if(draw_free_leaf) {
             //canvas.draw_DistMap(block_detect.dimension_info_, block_detect.dist_map_);
-            int total_count = getTotalIndexOfSpace<2>(dimension);
+            //int total_count = getTotalIndexOfSpace<2>(dimension);
             for(int i=0; i<block_ptrs.size(); i++) {
                 const auto& block_ptr = block_ptrs[i];
                 const Pointi<2> pt1 = block_ptr->min_, pt2 = block_ptr->max_;
@@ -261,61 +262,7 @@ void LineOfSightTest(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<N>& isoc_
         assert(isoc_temp(pt) == sbt.isOccupied(pt));
     }
 
-    double sum_1 = 0, sum_2 = 0;
-    int success_count = 0;
-    for(int i=0; i<1e6; i++) {
-        // random pick two passable point
-        Id id1 = 0, id2 = 0;
-        Pointi<N> pt1, pt2;
-        int count = 1000;
-        while(count >= 0) {
-            id1 = rand() % total_index;
-            pt1 = IdToPointi<N>(id1, temp_dim);
-            if (!isoc_temp(pt1)) {
-                break;
-            } else {
-                count --;
-            }
-        }
-        if (isoc_temp(pt1)) {
-            continue;
-        }
-        count = 1000;
-        while(count >= 0) {
-            id2 = rand() % total_index;
-            pt2 = IdToPointi<N>(id2, temp_dim);
-            if (!isoc_temp(pt2)) {
-                break;
-            } else {
-                count --;
-            }
-        }
-        if (isoc_temp(pt2)) {
-            continue;
-        }
-        //std::cout << "do LOS between " << pt1 << ", " << pt2 <<  std::endl;
-        gettimeofday(&tv_pre, &tz);
-        bool isoc1 = LineCrossObstacle<N>(pt1, pt2, isoc_temp, neighbor);
-        gettimeofday(&tv_after, &tz);
-        double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-        sum_1 = sum_1 + time_cost1;
-        Pointis<N> visited_pt;
-        int count_of_block;
-        gettimeofday(&tv_pre, &tz);
-        bool isoc2 = sbt.lineCrossObstacle(pt1, pt2, visited_pt, count_of_block);
-        gettimeofday(&tv_after, &tz);
-        double time_cost2 = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-        sum_2 = sum_2 + time_cost2;
-        success_count ++;
-        if(isoc1 != isoc2) {
-            std::cout << i << " th test failed, pt1/pt2 = " << pt1 << " / " << pt2 << std::endl;
-            // assert classic LOS check and SBT's LOS check have the same result
-            assert(isoc1 == isoc2);
-        }
-    }
-
-    std::cout << success_count <<  " LOS test, mean raw LOS time cost = " << sum_1/(double)success_count
-              << ", mean SBT LOS time cost = " << sum_2/(double)success_count << std::endl;
+    LOSCompare<N>(temp_dim, isoc_temp, sbt);
 
 }
 

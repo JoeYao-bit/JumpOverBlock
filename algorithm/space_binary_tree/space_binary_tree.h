@@ -94,23 +94,27 @@ namespace freeNav::JOB {
             // initialize of space
             Id total_index = getTotalIndexOfSpace<N>(dim_);
             block_ptr_map_.resize(total_index, nullptr);
-//            initialized_ = true;
+            initialized_ = true;
+            root_->occ_ = false;
             for(Id id=0; id<total_index; id++) {
                 Pointi<N> pt = IdToPointi<N>(id, dim_);
-                if(!isoc_(pt)) {
-                    setOccupiedState(pt, false);
+//                if(!isoc_(pt)) {
+//                    setOccupiedState(pt, false);
+//                }
+                if(isoc_(pt)) {
+                    setOccupiedState(pt, true);
                 }
             }
             // initialize of block_ptr_map_, need test
-            std::vector<TreeNodePtr<N> > free_leaf_nodes = getAllPassableLeafNodes();
-            for(const auto& leaf_node : free_leaf_nodes) {
-                if(leaf_node->depth_ >= max_depth_ - min_block_depth_width_) { continue; } // limit minimum size of blocks
-                BlockPtr<N> block_ptr = std::make_shared<Block<N> >();
-                block_ptr->min_ = leaf_node->base_pt_;
-                Pointi<N> offset; offset.setAll(pow_2_[max_depth_-leaf_node->depth_]-1);
-                block_ptr->max_ = leaf_node->base_pt_ + offset;
-                setBlockPtrForNode(leaf_node, block_ptr);
-            }
+//            std::vector<TreeNodePtr<N> > free_leaf_nodes = getAllPassableLeafNodes();
+//            for(const auto& leaf_node : free_leaf_nodes) {
+//                if(leaf_node->depth_ >= max_depth_ - min_block_depth_width_) { continue; } // limit minimum size of blocks
+//                BlockPtr<N> block_ptr = std::make_shared<Block<N> >();
+//                block_ptr->min_ = leaf_node->base_pt_;
+//                Pointi<N> offset; offset.setAll(pow_2_[max_depth_-leaf_node->depth_]-1);
+//                block_ptr->max_ = leaf_node->base_pt_ + offset;
+//                setBlockPtrForNode(leaf_node, block_ptr);
+//            }
             initialized_ = true;
         }
 
@@ -163,6 +167,8 @@ namespace freeNav::JOB {
                             buffer->children_[i]->base_pt_ = buffer->base_pt_ + flag_pts_[i].multi(zoom_ratio);
                             buffer->children_[i]->occ_ = !is_occupied;
                             buffer->children_[i]->mixed_state_ = false;
+                            // TODO: set block ptr when is_occupied = true
+                            // as when is_occupied = true, no block ptr will be set in recurAndUpdate
                         }
                         size_t index = getIndex(pt, dp);
                         buffer = buffer->children_[index];
@@ -179,12 +185,12 @@ namespace freeNav::JOB {
             //printTree();
             // if a node's all children node is passable, set all it's children node to nullptr
             TreeNodePtr<N> parent = buffer->parent_;
-            recurAndUpdate(parent, is_occupied);
+            recurAndUpdate(parent);
         }
 
         // set mixed_state to false and all children to nullptr if all child are occupied or unpassable
         // and update block_ptr_map_
-        void recurAndUpdate(TreeNodePtr<N> parent, bool updated_state) {
+        void recurAndUpdate(TreeNodePtr<N> parent) {
             //std::cout << "recurAndUpdate" << std::endl;
             assert(parent->depth_ == max_depth_ - 1);
             // remove child node if all child are passable
@@ -208,14 +214,16 @@ namespace freeNav::JOB {
                     for(int i=0; i<pow_2_[N]; i++) {
                         parent->children_[i] = nullptr;
                     }
-                    if(updated_state == false && initialized_) {
+                    if(initialized_) {
                         // if set to passable, check whether create big block
                         // limit minimum size of blocks
-                        if(parent->depth_ < max_depth_ - min_block_depth_width_) {
+                        std::cout << "create block, parent->occ_ = " << parent->occ_ << std::endl;
+                        if(!parent->occ_ && (parent->depth_ < max_depth_ - min_block_depth_width_)) {
                             BlockPtr<N> block_ptr = std::make_shared<Block<N> >();
                             block_ptr->min_ = parent->base_pt_;
                             Pointi<N> offset; offset.setAll(pow_2_[max_depth_-parent->depth_]-1);
                             block_ptr->max_ = parent->base_pt_ + offset;
+                            std::cout << "create block min/max " << block_ptr->min_ << ", " << block_ptr->max_ << std::endl;
                             setBlockPtrForNode(parent, block_ptr);
                         }
                     }
@@ -362,7 +370,7 @@ namespace freeNav::JOB {
         }
 
         TreeNodePtrs<N> getAllPassableLeafNodes() const {
-            std::cout << "-- " << __FUNCTION__ << std::endl;
+            //std::cout << "-- " << __FUNCTION__ << std::endl;
             TreeNodePtrs<N> nodes = { root_ }, next_nodes, retv;
             int dp = 0;
             while (!nodes.empty()) {
