@@ -12,8 +12,15 @@ namespace freeNav::JOB {
 
     template<Dimension N>
     void SpaceBinaryTreeVarify(DimensionLength* temp_dim,
-                    const IS_OCCUPIED_FUNC<N>& isoc_temp,
-                    const SpaceBinaryTree<N>& sbt) {
+                               const IS_OCCUPIED_FUNC<N>& isoc_temp,
+                               const SpaceBinaryTree<N>& sbt) {
+
+        struct timezone tz;
+        struct timeval tv_pre;
+        struct timeval tv_after;
+        gettimeofday(&tv_pre, &tz);
+
+        std::cout << "start SpaceBinaryTree varify thread " << std::endl;
 
         Id total_index = getTotalIndexOfSpace<N>(temp_dim);
         // debug: check whether SBT have the same state as map
@@ -25,7 +32,35 @@ namespace freeNav::JOB {
                 assert(isoc_temp(pt) == false);
             }
         }
+        // debug: check whether every block cover all node in its range
+        std::vector<bool> checked(total_index, false);
+        for(Id id=0; id<total_index; id++) {
+            if (checked[id]) { continue; }
+            // assert every block is not out of map
+            if (sbt.block_ptr_map_[id] == nullptr) { continue; }
+            auto node = sbt.block_ptr_map_[id];
 
+            Pointi<N> offset = node->max_ - node->min_;
+
+            DimensionLength local_dim[N];
+            for (int d = 0; d < N; d++) { local_dim[d] = offset[d] + 1; }
+            Id local_total_index = getTotalIndexOfSpace<N>(local_dim), global_id;
+            Pointi<N> local_pt, global_pt;
+            for(Id id=0; id<local_total_index; id++) {
+                local_pt = IdToPointi<N>(id, local_dim);
+                global_pt = node->min_ + local_pt;
+                // no grid in block is out of map
+                assert(!isOutOfBoundary(global_pt, temp_dim));
+                global_id = PointiToId<N>(global_pt, temp_dim);
+                // all node in the block have the same block
+                assert(sbt.block_ptr_map_[global_id] == node);
+                assert(checked[global_id] == false);
+            }
+        }
+        gettimeofday(&tv_after, &tz);
+        double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+
+        std::cout << "finish SpaceBinaryTree varify in " << time_cost << " ms" << std::endl;
     }
 
     // times_of_test do how many times of LOS compare
@@ -93,8 +128,29 @@ namespace freeNav::JOB {
             double time_cost2 = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
             sum_2 = sum_2 + time_cost2;
             success_count ++;
-            if(isoc1 != isoc2) {
+            if(isoc1 != isoc2)
+            {
+                Pointis<2> pts_raw;
+
+                std::cout << "Raw LOS visited_pt = ";
+                Line<N> line(pt1, pt2);
+                int check_step = line.step;
+                Pointi<N> pt;
+                for(int i=1; i<check_step; i++) {
+                    pt = line.GetPoint(i);
+                    std::cout << pt << "(" << isoc_temp(pt) << ")" << std::endl;
+                }
+                std::cout << std::endl;
+
                 std::cout << i << " th test failed, pt1/pt2 = " << pt1 << " / " << pt2 << std::endl;
+                std::cout << "raw LOS = " << isoc1 << ", SBT LOS = " << isoc2 << std::endl;
+
+                std::cout << "SBT visited_pt = ";
+
+                for(const auto& vpt : visited_pt) {
+                    std::cout << vpt << "(" << isoc_temp(vpt) << "), ";
+                }
+                std::cout << std::endl;
                 // assert classic LOS check and SBT's LOS check have the same result
                 assert(isoc1 == isoc2);
             }

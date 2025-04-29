@@ -8,6 +8,7 @@
 #include "../freeNav-base/visualization/canvas/canvas.h"
 #include "dependencies.h"
 
+#include <thread>
 
 // dynamic map
 // time cost of update dynamic map
@@ -16,33 +17,38 @@
 using namespace freeNav::JOB;
 using namespace freeNav;
 
+template<Dimension N>
+void varify_thread(DimensionLength* temp_dim,
+                   const IS_OCCUPIED_FUNC<N>& isoc_temp,
+                   const SpaceBinaryTree<N>& sbt) {
+//    SpaceBinaryTreeVarify(temp_dim, isoc_temp, sbt);
 
+    LOSCompare<N>(temp_dim, isoc_temp, sbt);
+
+}
 
 TEST(dynamic_obstacles_2D, test) {
-    DimensionLength dim[2];
+    DimensionLength* dim = new DimensionLength[2];
 
-    dim[0] = 130, dim[1] = 110;
+    dim[0] = 10, dim[1] = 10;
 
     auto is_occupied = [&](const Pointi<2> & pt) -> bool {
-        if(pt[0] >= dim[0] || pt[0] < 0) {
-            return true;
-        }
-        if(pt[1] >= dim[1] || pt[1] < 0) {
+        if(isOutOfBoundary<2>(pt, dim)) {
             return true;
         }
         return false;
     };
 
     ObstaclePtrs<2> obs = {
-            std::make_shared<CircleObstacle<2> >(30),
-            std::make_shared<BlockObstacle<2> >(Pointi<2>{30, 20}),
+            std::make_shared<CircleObstacle<2> >(4),
+            std::make_shared<BlockObstacle<2> >(Pointi<2>{3, 5}),
             };
 
     CircleObstaclePtrs<2> co = generateRandomCircleObstacles<2>(5, 2, 5);
-    obs.insert(obs.end(), co.begin(), co.end());
+    //obs.insert(obs.end(), co.begin(), co.end());
 
     BlockObstaclePtrs<2> bo = generateRandomBlockObstacles<2>(5, Pointi<2>{2, 2}, Pointi<2>{5, 5});
-    obs.insert(obs.end(), co.begin(), co.end());
+    //obs.insert(obs.end(), co.begin(), co.end());
 
     DynamicObstacles<2> dynamic_obstacles(dim, obs);
 
@@ -56,7 +62,8 @@ TEST(dynamic_obstacles_2D, test) {
     bool draw_pre_occupy = false,
          draw_current_occupy = true,
          draw_free_leaf = false,
-         draw_block = true;
+         draw_block = true,
+         triger_varify = false;
 
     while(1) {
         canvas.resetCanvas();
@@ -100,6 +107,28 @@ TEST(dynamic_obstacles_2D, test) {
                 //break;
             }
         }
+        if(triger_varify) {
+            triger_varify = false;
+            Id total_index = getTotalIndexOfSpace<2>(dim);
+            std::cout << "total_index = " << total_index << std::endl;
+            std::vector<bool> temp_map(total_index, false);
+            std::cout << "temp_map.size() = " << temp_map.size() << std::endl;
+            Pointis<2> occ_pts = dynamic_obstacles.getCurrentOccupationPoints();
+            for(const auto& occ_pt : occ_pts) {
+                temp_map[PointiToId(occ_pt, dim)] = true;
+            }
+            auto is_occupied_temp = [=](const Pointi<2> & pt) -> bool {
+                if(isOutOfBoundary<2>(pt, dim)) {
+                    return true;
+                }
+                Id temp_id = PointiToId(pt, dim);
+                //std::cout << "temp_map.size() = " << temp_map.size() << ", temp_id = " << temp_id << std::endl;
+                return temp_map[temp_id];
+            };
+
+            std::thread t(varify_thread<2>, dim, is_occupied_temp, sbt); // start varify thread
+            t.detach();
+        }
         char key = canvas.show(30);
         switch (key) {
             case 'p':
@@ -123,15 +152,22 @@ TEST(dynamic_obstacles_2D, test) {
             case 'b':
                 draw_block = !draw_block;
                 break;
+            case 'v':
+                triger_varify = true;
+                break;
             default:
                 break;
         }
     }
-
+    delete dim;
 }
+
+// statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
 TEST(massiveSBTLOSCompareTest, test) {
 
-    massiveSBTLOSCompareTest<2>(10, 100, {200,300,400}, {10,20,40});
+    //massiveSBTLOSCompareTest<2>(10, 100, {200,300,400}, {10,20,40});
+
+    massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
 
 }
