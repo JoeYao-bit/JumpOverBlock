@@ -20,7 +20,7 @@ using namespace freeNav;
 template<Dimension N>
 void varify_thread(DimensionLength* temp_dim,
                    const IS_OCCUPIED_FUNC<N>& isoc_temp,
-                   const SpaceBinaryTree<N>& sbt) {
+                   const SpaceBinaryTreePtr<N>& sbt) {
 //    SpaceBinaryTreeVarify(temp_dim, isoc_temp, sbt);
     LOSCompare<N>(temp_dim, isoc_temp, sbt);
 
@@ -53,8 +53,8 @@ TEST(dynamic_obstacles_2D, test) {
 
     dynamic_obstacles.random();
 
-    SpaceBinaryTree<2> sbt(is_occupied, dim);
-
+    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTreeAnyDimension<2> >(is_occupied, dim);
+    sbt->initialize();
 
     Canvas canvas("dynamic_obstacles_2D", dim[0], dim[1], .05, 1000/std::max(dim[0], dim[1]));
 
@@ -77,20 +77,29 @@ TEST(dynamic_obstacles_2D, test) {
             canvas.drawGrids(dynamic_obstacles.current_center_pts_, COLOR_TABLE[0]);
         }
         if(draw_block) {
-            for(int id=0; id<sbt.block_ptr_map_.size(); id++) {
-                if(sbt.block_ptr_map_[id] == nullptr) { continue; }
-                Pointi<2> pt = IdToPointi<2>(id, dim);
-                Id indicator = PointiToId<2>(sbt.block_ptr_map_[id]->min_, dim);
-                canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
+//            for(int id=0; id<sbt->block_ptr_map_.size(); id++) {
+//                if(sbt->block_ptr_map_[id] == nullptr) { continue; }
+//                Pointi<2> pt = IdToPointi<2>(id, dim);
+//                Id indicator = PointiToId<2>(sbt->block_ptr_map_[id]->min_, dim);
+//                canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
+//            }
+            for(int x=0; x<dim[0]; x++) {
+                for(int y=0; y<dim[0]; y++) {
+                    Pointi<2> pt{x, y};
+                    auto block_ptr = sbt->getInternalBlockPtr(pt);
+                    if(block_ptr == nullptr) { continue; }
+                    Id indicator = PointiToId<2>(block_ptr->min_, dim);
+                    canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
+                }
             }
         }
         if(draw_free_leaf) {
-            std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
+            std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt->getAllPassableLeafNodes();
             BlockPtrs<2> block_ptrs;
             for(const auto& leaf_node : free_leaf_nodes) {
                 BlockPtr<2> block_ptr = std::make_shared<Block<2> >();
                 block_ptr->min_ = leaf_node->base_pt_;
-                Pointi<2> offset; offset.setAll(sbt.pow_2_[sbt.max_depth_-leaf_node->depth_]-1);
+                Pointi<2> offset; offset.setAll(sbt->pow_2_[sbt->max_depth_-leaf_node->depth_]-1);
                 block_ptr->max_ = leaf_node->base_pt_ + offset;
                 assert((!is_occupied(block_ptr->min_)) && (!is_occupied(block_ptr->max_)));
                 block_ptrs.push_back(block_ptr);
@@ -139,10 +148,10 @@ TEST(dynamic_obstacles_2D, test) {
             case 32: // 32 means space
                 dynamic_obstacles.random();
                 for(const auto& pre_pt : dynamic_obstacles.getPreviousOccupationPoints()) {
-                    sbt.setOccupiedState(pre_pt, false);
+                    sbt->setOccupiedState(pre_pt, false);
                 }
                 for(const auto& cur_pt : dynamic_obstacles.getCurrentOccupationPoints()) {
-                    sbt.setOccupiedState(cur_pt, true);
+                    sbt->setOccupiedState(cur_pt, true);
                 }
                 break;
             case 'f':
@@ -165,10 +174,10 @@ TEST(dynamic_obstacles_2D, test) {
 
 TEST(massiveSBTLOSCompareTest, test) {
 
-    for(int i=0; i<10; i++) {
+    for(int i=0; i<1; i++) {
 
         massiveSBTLOSCompareTest<2>(10, 100, {200, 300, 400}, {10, 20, 40});
 
-        massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
+        //massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
     }
 }

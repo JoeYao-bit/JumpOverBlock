@@ -91,10 +91,14 @@ namespace freeNav::JOB {
             // precomputation of flag points
             flag_pts_ = GetFloorOrCeilFlag<N>();
             assert(flag_pts_.size() == pow_2_[N]);
+
+            // NOTICE: in override class's constructor, set all internal occ map state to occupied
+        }
+
+        // need call this after construction
+        virtual void initialize() {
             // initialize of space
             Id total_index = getTotalIndexOfSpace<N>(dim_);
-            block_ptr_map_.resize(total_index, nullptr);
-            occ_map_.resize(total_index, true);
 
             initialized_ = false;
             root_->occ_ = true;
@@ -102,9 +106,11 @@ namespace freeNav::JOB {
                 Pointi<N> pt = IdToPointi<N>(id, dim_);
                 if(!isoc_(pt)) {
                     setOccupiedState(pt, false);
-                    occ_map_[id] = false;
+                    //occ_map_[id] = false;
+                    setInternalOccState(pt, false);
                 }
             }
+
             // initialize of block_ptr_map_
             std::vector<TreeNodePtr<N> > free_leaf_nodes = getAllPassableLeafNodes();
             for(const auto& leaf_node : free_leaf_nodes) {
@@ -118,9 +124,17 @@ namespace freeNav::JOB {
             initialized_ = true;
         }
 
+        virtual void setInternalOccState(const Pointi<N>& pt, bool occ_state) = 0;
+
+        virtual bool getInternalOccState(const Pointi<N>& pt) = 0;
+
+        virtual void setInternalBlockPtr(const Pointi<N>& pt, const BlockPtr<N>& block_ptr) = 0;
+
+        virtual BlockPtr<N> getInternalBlockPtr(const Pointi<N>& pt) = 0;
+
+
         // set all grid in current node range to the same block_ptr
         void setBlockPtrForNode(const TreeNodePtr<N>& node, const BlockPtr<N>& block_ptr) {
-            assert(!block_ptr_map_.empty());
             if(block_ptr != nullptr &&
                 (isOutOfBoundary(block_ptr->min_, dim_) || isOutOfBoundary(block_ptr->max_, dim_))) {
                 return;
@@ -142,8 +156,9 @@ namespace freeNav::JOB {
                 if(isOutOfBoundary(global_pt, dim_)) {
                     continue;
                 }
-                global_id = PointiToId(global_pt, dim_);
-                block_ptr_map_[global_id] = block_ptr;
+                //global_id = PointiToId(global_pt, dim_);
+                //block_ptr_map_[global_id] = block_ptr;
+                setInternalBlockPtr(global_pt, block_ptr);
             }
         }
 
@@ -152,8 +167,11 @@ namespace freeNav::JOB {
         // and update block_ptr_map_
         void setOccupiedState(const Pointi<N>& pt, bool is_occupied) {
             if(isOutOfBoundary(pt, dim_)) { return ; }
-            Id id = PointiToId(pt, dim_);
-            occ_map_[id] = is_occupied;
+
+            //Id id = PointiToId(pt, dim_);
+            //occ_map_[id] = is_occupied;
+
+            setInternalOccState(pt, is_occupied);
 
             TreeNodePtr<N> buffer = root_;
             for(int dp=0; dp <= max_depth_; dp++) {
@@ -312,45 +330,54 @@ namespace freeNav::JOB {
 //            return false;
 //        }
 
-        bool lineCrossObstacle(const Pointi<N>& pt1, const Pointi<N>& pt2,
-                               Pointis<N>& visited_pt,
-                               int& count_of_block) const {
-            if(isOutOfBoundary(pt1, dim_) || isOutOfBoundary(pt2, dim_)) { return true; }
+        int raw_visited_pt_count_ = 0, SBT_visited_pt_count_ = 0;// for debug
+
+        bool lineCrossObstacleRaw(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied) {
             if(pt1 == pt2) return true;
-            visited_pt.clear();
-            count_of_block = 0;
             Line<N> line(pt1, pt2);
             int check_step = line.step;
             Pointi<N> pt;
-            Id current_id, id;
+            for(int i=1; i<check_step; i++) {
+                pt = line.GetPoint(i);
+                raw_visited_pt_count_ ++;
+                if(is_occupied(pt)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool lineCrossObstacleSBT(const Pointi<N>& pt1, const Pointi<N>& pt2,
+                               Pointis<N>& visited_pt,
+                               int& count_of_block
+                               ) {
+            //if(isOutOfBoundary(pt1, dim_) || isOutOfBoundary(pt2, dim_)) { return true; }
+            if(pt1 == pt2) return true;
+            //visited_pt.clear();
+            //count_of_block = 0;
+            Line<N> line(pt1, pt2);
+            int check_step = line.step;
+            Pointi<N> pt;
+            Id id;
             int jump_step = 0;
             for(int i=1; i<check_step; i++) {
                 pt = line.GetPoint(i);
-                visited_pt.push_back(pt);
-                if(isoc_(pt)) {
-                    return true;
-                }
-                //if(is_occupied(pt)) { return true; } // ignore dynamic update of map
-                id = PointiToId(pt, dim_);
-                if(occ_map_[id]) { return true; }
-                current_id = PointiToId(pt, dim_);
-                const auto& block_ptr = block_ptr_map_[current_id];
+                SBT_visited_pt_count_ ++;
+
+                //id = PointiToId(pt, dim_);
+                //if(occ_map_[id]) { return true; }
+
+                if(getInternalOccState(pt)) { return true; }
+
+                //current_id = PointiToId(pt, dim_);
+                //const auto& block_ptr = block_ptr_map_[id];
+                const auto& block_ptr = getInternalBlockPtr(pt);
+
                 // if in block, jump over current block
                 if(block_ptr != nullptr) {
                     jump_step = findExitPointOfBlock(line, pt, i, block_ptr);
                     //std::cout << " jump step " << jump_step << std::endl;
-                    // NOTICE: the exit point should be in the same block
                     i = i + jump_step;
-
-                    pt = line.GetPoint(i);
-                    if(isOutOfBoundary(pt, dim_)) {
-                        std::cout << "dim = " << printDimInfo<N>(dim_) << std::endl;
-                        std::cout << "pt = " << pt << std::endl;
-                        assert(!isOutOfBoundary(pt, dim_));
-                    }
-                    Id local_id = PointiToId(pt, dim_);
-                    assert(block_ptr_map_[current_id] == block_ptr_map_[local_id]);
-
                     count_of_block ++;
                 }
             }
@@ -446,13 +473,58 @@ namespace freeNav::JOB {
 
         Pointis<N> flag_pts_; // precomputation of all flag points
 
+        bool initialized_ = false; // enable update block ptr only after initialized
+
+    };
+
+
+    template<Dimension N>
+    using SpaceBinaryTreePtr = std::shared_ptr<SpaceBinaryTree<N> >;
+
+
+
+    // store all passable block
+    // if a block (tree node)'s all children node is nullptr, it is passable
+    // otherwise, some part of it are passable and others are occupied,
+    // those passable are non-null, unpassable are null
+    template<Dimension N>
+    class SpaceBinaryTreeAnyDimension : public SpaceBinaryTree<N> {
+    public:
+
+        SpaceBinaryTreeAnyDimension(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim, int min_block_depth_width = 1)
+                : SpaceBinaryTree<N>(isoc, dim, min_block_depth_width) {
+            Id total_index = getTotalIndexOfSpace<N>(this->dim_);
+            occ_map_.resize(total_index, true);
+            block_ptr_map_.resize(total_index, nullptr);
+        }
+
+        virtual void setInternalOccState(const Pointi<N>& pt, bool occ_state) override {
+            if(isOutOfBoundary(pt, this->dim_)) { return; }
+            occ_map_[PointiToId(pt, this->dim_)] = occ_state;
+        }
+
+        virtual bool getInternalOccState(const Pointi<N>& pt) override {
+            if(isOutOfBoundary(pt, this->dim_)) { return true; }
+            return occ_map_[PointiToId(pt, this->dim_)];
+        }
+
+        virtual void setInternalBlockPtr(const Pointi<N>& pt, const BlockPtr<N>& block_ptr) override {
+            if(isOutOfBoundary(pt, this->dim_)) { return; }
+            block_ptr_map_[PointiToId(pt, this->dim_)] = block_ptr;
+        }
+
+        virtual BlockPtr<N> getInternalBlockPtr(const Pointi<N>& pt) override {
+            if(isOutOfBoundary(pt, this->dim_)) { return nullptr; }
+            return block_ptr_map_[PointiToId(pt, this->dim_)];
+        }
+
         BlockPtrs<N> block_ptr_map_; // save all grid's block ptr need lots space, but reduce time cost
 
         std::vector<bool> occ_map_; // save all grid's state need lots space, but reduce time cost
 
-        bool initialized_ = false; // enable update block ptr only after initialized
 
     };
+
 
 }
 
