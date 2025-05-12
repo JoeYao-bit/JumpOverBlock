@@ -64,8 +64,8 @@ namespace freeNav::JOB {
     class SpaceBinaryTree {
     public:
 
-        SpaceBinaryTree(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim)
-        : isoc_(isoc), dim_(dim) {
+        SpaceBinaryTree(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim, int min_block_depth_width = 1)
+        : isoc_(isoc), dim_(dim), min_block_depth_width_(min_block_depth_width) {
             // initialize
             root_ = std::make_shared<TreeNode<N> >();
             root_->base_pt_ = Pointi<N>();
@@ -339,7 +339,18 @@ namespace freeNav::JOB {
                 if(block_ptr != nullptr) {
                     jump_step = findExitPointOfBlock(line, pt, i, block_ptr);
                     //std::cout << " jump step " << jump_step << std::endl;
+                    // NOTICE: the exit point should be in the same block
                     i = i + jump_step;
+
+                    pt = line.GetPoint(i);
+                    if(isOutOfBoundary(pt, dim_)) {
+                        std::cout << "dim = " << printDimInfo<N>(dim_) << std::endl;
+                        std::cout << "pt = " << pt << std::endl;
+                        assert(!isOutOfBoundary(pt, dim_));
+                    }
+                    Id local_id = PointiToId(pt, dim_);
+                    assert(block_ptr_map_[current_id] == block_ptr_map_[local_id]);
+
                     count_of_block ++;
                 }
             }

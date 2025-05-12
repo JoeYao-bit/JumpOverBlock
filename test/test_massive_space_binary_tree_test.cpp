@@ -22,7 +22,6 @@ void varify_thread(DimensionLength* temp_dim,
                    const IS_OCCUPIED_FUNC<N>& isoc_temp,
                    const SpaceBinaryTree<N>& sbt) {
 //    SpaceBinaryTreeVarify(temp_dim, isoc_temp, sbt);
-
     LOSCompare<N>(temp_dim, isoc_temp, sbt);
 
 }
@@ -30,7 +29,7 @@ void varify_thread(DimensionLength* temp_dim,
 TEST(dynamic_obstacles_2D, test) {
     DimensionLength* dim = new DimensionLength[2];
 
-    dim[0] = 10, dim[1] = 10;
+    dim[0] = 200, dim[1] = 200;
 
     auto is_occupied = [&](const Pointi<2> & pt) -> bool {
         if(isOutOfBoundary<2>(pt, dim)) {
@@ -45,14 +44,14 @@ TEST(dynamic_obstacles_2D, test) {
             };
 
     CircleObstaclePtrs<2> co = generateRandomCircleObstacles<2>(5, 2, 5);
-    //obs.insert(obs.end(), co.begin(), co.end());
+    obs.insert(obs.end(), co.begin(), co.end());
 
     BlockObstaclePtrs<2> bo = generateRandomBlockObstacles<2>(5, Pointi<2>{2, 2}, Pointi<2>{5, 5});
-    //obs.insert(obs.end(), co.begin(), co.end());
+    obs.insert(obs.end(), co.begin(), co.end());
 
     DynamicObstacles<2> dynamic_obstacles(dim, obs);
 
-    //dynamic_obstacles.random();
+    dynamic_obstacles.random();
 
     SpaceBinaryTree<2> sbt(is_occupied, dim);
 
@@ -166,8 +165,10 @@ TEST(dynamic_obstacles_2D, test) {
 
 TEST(massiveSBTLOSCompareTest, test) {
 
-    //massiveSBTLOSCompareTest<2>(10, 100, {200,300,400}, {10,20,40});
+    for(int i=0; i<10; i++) {
 
-    massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
+        massiveSBTLOSCompareTest<2>(10, 100, {200, 300, 400}, {10, 20, 40});
 
+        massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
+    }
 }

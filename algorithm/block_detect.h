@@ -63,9 +63,16 @@ namespace freeNav::JOB {
         DimensionLength dimen_[N]; // not original data, update with max_ and min_
 
         std::vector<bool> is_expandable_ = std::vector<bool>(2*N, true);
+
+        friend std::ostream& operator<<(std::ostream& os, const Block<N>& block);
+
     };
 
-
+    template<Dimension N>
+    std::ostream& operator<<(std::ostream& os, const Block<N>& block) {
+        os << "Block: " << block.min_ << ", " << block.max_;
+        return os;
+    }
 
     template <Dimension N>
     class BlockDetectorInterface {

@@ -49,7 +49,7 @@ namespace freeNav::JOB {
             //std::cout << " reach end of line" << std::endl;
             return line.step - index - 1;
         }
-        return (line.step*minimum_step_to_exit).floor();
+        return std::max((line.step*minimum_step_to_exit - 1).floor(), 0);
     }
 
     template <Dimension N>

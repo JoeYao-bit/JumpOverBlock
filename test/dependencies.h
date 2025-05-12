@@ -67,6 +67,130 @@ namespace freeNav::JOB {
     // each compare use how many times of sample to find a point
     template<Dimension N>
     void LOSCompare(DimensionLength* temp_dim,
+                    const SpaceBinaryTree<N>& sbt,
+                    const DynamicObstacles<N>& dynamic_obstacles,
+                    std::vector<std::string>& output_strings,
+                    int times_of_test = 1e6,
+                    int max_sample_times = 1e3) {
+
+        SpaceBinaryTreeVarify<N>(temp_dim, dynamic_obstacles.isoc_, sbt);
+
+        struct timezone tz;
+        struct timeval tv_pre;
+        struct timeval tv_after;
+
+        Pointis<N-1> neighbor = GetNeightborOffsetGrids<N-1>();
+
+        Id total_index = getTotalIndexOfSpace<N>(temp_dim);
+
+        double sum_1 = 0, sum_2 = 0;
+        int success_count = 0;
+        for(int i=0; i<times_of_test; i++) {
+            // random pick two passable point
+            Id id1 = 0, id2 = 0;
+            Pointi<N> pt1, pt2;
+            int count = max_sample_times;
+            while(count >= 0) {
+                id1 = rand() % total_index;
+                pt1 = IdToPointi<N>(id1, temp_dim);
+                if (!dynamic_obstacles.isoc_(pt1)) {
+                    break;
+                } else {
+                    count --;
+                }
+            }
+            if (dynamic_obstacles.isoc_(pt1)) {
+                continue;
+            }
+            count = max_sample_times;
+            while(count >= 0) {
+                id2 = rand() % total_index;
+                pt2 = IdToPointi<N>(id2, temp_dim);
+                if (!dynamic_obstacles.isoc_(pt2)) {
+                    break;
+                } else {
+                    count --;
+                }
+            }
+            if (dynamic_obstacles.isoc_(pt2)) {
+                continue;
+            }
+            //std::cout << "do LOS between " << pt1 << ", " << pt2 <<  std::endl;
+            gettimeofday(&tv_pre, &tz);
+            bool isoc1 = LineCrossObstacle<N>(pt1, pt2, dynamic_obstacles.isoc_, neighbor);
+            gettimeofday(&tv_after, &tz);
+            double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
+            sum_1 = sum_1 + time_cost1;
+            Pointis<N> visited_pt;
+            int count_of_block;
+            gettimeofday(&tv_pre, &tz);
+            bool isoc2 = sbt.lineCrossObstacle(pt1, pt2, visited_pt, count_of_block);
+            gettimeofday(&tv_after, &tz);
+            double time_cost2 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
+            sum_2 = sum_2 + time_cost2;
+            success_count ++;
+            if(isoc1 != isoc2)
+            {
+                Pointis<2> pts_raw;
+
+                std::cout << "Raw LOS visited_pt = ";
+                Line<N> line(pt1, pt2);
+                int check_step = line.step;
+                Pointi<N> pt, occ_pt;
+                for(int i=1; i<check_step; i++) {
+                    pt = line.GetPoint(i);
+                    std::cout << pt << "(" << dynamic_obstacles.isoc_(pt) << ")， ";
+                    if(dynamic_obstacles.isoc_(pt)) {
+                        occ_pt = pt;
+                        break;
+                    }
+                }
+                std::cout << std::endl;
+
+                std::cout << i << " th test failed, pt1/pt2 = " << pt1 << " / " << pt2 << std::endl;
+                std::cout << "raw LOS = " << isoc1 << ", SBT LOS = " << isoc2 << std::endl;
+
+                std::cout << "SBT visited_pt = ";
+
+                for(const auto& vpt : visited_pt) {
+                    std::cout << vpt << "(" << dynamic_obstacles.isoc_(vpt) << "), ";
+                }
+                std::cout << std::endl;
+
+                Id occ_id = PointiToId(occ_pt, temp_dim);
+                std::cout << "occ_pt in block = " << sbt.block_ptr_map_[occ_id] << std::endl;
+
+                std::cout << "dim info " << printDimInfo<N>(temp_dim) << std::endl;
+                std::cout << "dynamic obstacles = " << dynamic_obstacles << std::endl;
+                // assert classic LOS check and SBT's LOS check have the same result
+                assert(isoc1 == isoc2);
+            }
+
+
+
+            std::stringstream ss;
+            ss << dynamic_obstacles.occ_pt_count_ << " "
+               << getTotalIndexOfSpace<N>(temp_dim) << " "
+               << time_cost1 << " "
+               << time_cost2;
+            output_strings.push_back(ss.str());
+
+        }
+
+        Id space_size = getTotalIndexOfSpace<N>(temp_dim);
+        std::cout << "dim info " << printDimInfo<N>(temp_dim) << std::endl;
+        std::cout << "dynamic obstacles " << dynamic_obstacles << std::endl;
+        std::cout << "obstacleDensity " << (float)dynamic_obstacles.occ_pt_count_ / space_size << std::endl;
+        std::cout << success_count <<  " LOS test, mean raw / SBT LOS time cost (us) = " << sum_1/(double)success_count
+                  << " / " << sum_2/(double)success_count << std::endl;
+
+    }
+
+
+    // times_of_test do how many times of LOS compare
+    // each compare use how many times of sample to find a point
+    template<Dimension N>
+    void LOSCompare(DimensionLength* temp_dim,
                     const IS_OCCUPIED_FUNC<N>& isoc_temp,
                     const SpaceBinaryTree<N>& sbt,
                     int times_of_test = 1e6,
@@ -118,14 +242,14 @@ namespace freeNav::JOB {
             gettimeofday(&tv_pre, &tz);
             bool isoc1 = LineCrossObstacle<N>(pt1, pt2, isoc_temp, neighbor);
             gettimeofday(&tv_after, &tz);
-            double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+            double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
             sum_1 = sum_1 + time_cost1;
             Pointis<N> visited_pt;
             int count_of_block;
             gettimeofday(&tv_pre, &tz);
             bool isoc2 = sbt.lineCrossObstacle(pt1, pt2, visited_pt, count_of_block);
             gettimeofday(&tv_after, &tz);
-            double time_cost2 = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+            double time_cost2 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
             sum_2 = sum_2 + time_cost2;
             success_count ++;
             if(isoc1 != isoc2)
@@ -138,7 +262,7 @@ namespace freeNav::JOB {
                 Pointi<N> pt;
                 for(int i=1; i<check_step; i++) {
                     pt = line.GetPoint(i);
-                    std::cout << pt << "(" << isoc_temp(pt) << ")" << std::endl;
+                    std::cout << pt << "(" << isoc_temp(pt) << ")， ";
                 }
                 std::cout << std::endl;
 
@@ -156,9 +280,31 @@ namespace freeNav::JOB {
             }
         }
 
-        std::cout << success_count <<  " LOS test, mean raw LOS time cost = " << sum_1/(double)success_count
-                  << ", mean SBT LOS time cost = " << sum_2/(double)success_count << std::endl;
 
+
+        std::cout << success_count <<  " LOS test, mean raw / SBT LOS time cost (us) = " << sum_1/(double)success_count
+                  << " / " << sum_2/(double)success_count << std::endl;
+
+    }
+
+    template<Dimension N>
+    ObstaclePtrs<N> generateRandomObstacles(const int& number_of_obstacle,
+                                 int min_radius = 5,
+                                 int max_radius = 10,
+                                 int min_block_width = 10,
+                                 int max_block_width = 20) {
+        ObstaclePtrs<N> obs;
+
+        CircleObstaclePtrs<N> co = generateRandomCircleObstacles<N>(number_of_obstacle/2, min_radius, max_radius);
+        obs.insert(obs.end(), co.begin(), co.end());
+
+        Pointi<N> min_pt, max_pt;
+        min_pt.setAll(min_block_width);
+        max_pt.setAll(max_block_width);
+        BlockObstaclePtrs<N> bo = generateRandomBlockObstacles<N>(number_of_obstacle/2, min_pt, max_pt);
+        obs.insert(obs.end(), co.begin(), co.end());
+
+        return obs;
     }
 
     // half obstacle is circle and another half is block obstacle
@@ -175,16 +321,8 @@ namespace freeNav::JOB {
 
         for(const auto& width : width_of_space) {
             for(const auto& count : number_of_obstacles) {
-                ObstaclePtrs<N> obs;
 
-                CircleObstaclePtrs<N> co = generateRandomCircleObstacles<N>(count/2, min_radius, max_radius);
-                obs.insert(obs.end(), co.begin(), co.end());
-
-                Pointi<N> min_pt, max_pt;
-                min_pt.setAll(min_block_width);
-                max_pt.setAll(max_block_width);
-                BlockObstaclePtrs<N> bo = generateRandomBlockObstacles<N>(count/2, min_pt, max_pt);
-                obs.insert(obs.end(), co.begin(), co.end());
+                ObstaclePtrs<N> obs = generateRandomObstacles<N>(count, min_radius, max_radius, min_block_width, max_block_width);
 
 
                 DimensionLength dim[N];
@@ -202,30 +340,30 @@ namespace freeNav::JOB {
                 DynamicObstacles<N> dynamic_obstacles(dim, obs);
 
                 Id total_index = getTotalIndexOfSpace<N>(dim);
-                std::vector<bool> temp_map(total_index, false);
                 std::cout << N << " dimension space, width = " << width << ", number of obstacles = " << count << std::endl;
 
                 for(int i=0; i<random_times; i++) {
 
                     dynamic_obstacles.random();
+                    struct timezone tz;
+                    struct timeval tv_pre;
+                    struct timeval tv_after;
+
+                    gettimeofday(&tv_pre, &tz);
 
                     for(const auto& pre_pt : dynamic_obstacles.getPreviousOccupationPoints()) {
                         sbt.setOccupiedState(pre_pt, false);
-                        temp_map[PointiToId(pre_pt, dim)] = false;
                     }
                     for(const auto& cur_pt : dynamic_obstacles.getCurrentOccupationPoints()) {
                         sbt.setOccupiedState(cur_pt, true);
-                        temp_map[PointiToId(cur_pt, dim)] = true;
                     }
-                    // construct local update isoc
-                    auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {
-                        if(isOutOfBoundary(pt, dim)) {
-                            return true;
-                        }
-                        return temp_map[PointiToId(pt, dim)];
-                    };
+                    gettimeofday(&tv_after, &tz);
+                    double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
 
-                    LOSCompare<N>(dim, is_occupied_temp, sbt);
+                    std::cout << "dynamicUpdateTimeCost " << time_cost1 << " us" << std::endl;
+
+                    std::vector<std::string> ss;
+                    LOSCompare<N>(dim, sbt, dynamic_obstacles, ss);
 
                 }
 

@@ -195,7 +195,7 @@ TEST(BlockDetector, BlockDetectorFull) {
     std::cout << "-- block detect end in " << build_cost << "ms" << std::endl;
 
     auto callback = [](int event, int x, int y, int flags, void *) {
-        if(event == CV_EVENT_LBUTTONDOWN) {
+        if(event == cv::EVENT_LBUTTONDOWN) {
             if(set_pt1) {
                 pt1[0] = x;
                 pt1[1] = y;
@@ -417,7 +417,7 @@ TEST(DistanceMapUpdate, test) {
     std::cout << "-- block detect end in " << build_cost << "ms" << std::endl;
 
     auto callback = [](int event, int x, int y, int flags, void *) {
-        if(event == CV_EVENT_LBUTTONDOWN) {
+        if(event == cv::EVENT_LBUTTONDOWN) {
             if(set_pt1) {
                 pt1[0] = x;
                 pt1[1] = y;
