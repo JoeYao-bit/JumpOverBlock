@@ -47,7 +47,8 @@ TEST(getIndex, test) {
         return false;
     };
 
-    SpaceBinaryTree<2> sbt(is_occupied, dim);
+    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dim);
+    sbt.initialize();
     sbt.printTree();
 
     Id total_index = getTotalIndexOfSpace<2>(dim);
@@ -75,8 +76,8 @@ TEST(setOccupiedState, test) {
         return false;
     };
 
-    SpaceBinaryTree<2> sbt(is_occupied, dim);
-
+    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dim);
+    sbt.initialize();
     sbt.printTree();
 
 
@@ -124,8 +125,8 @@ TEST(SpaceBinaryTree2D, test) {
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTree<2> sbt(is_occupied, dimension);
-
+    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dimension);
+    sbt.initialize();
     gettimeofday(&tv_after, &tz);
 
     double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
@@ -219,7 +220,8 @@ TEST(SpaceBinaryTree3D, test) {
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTree<3> sbt(is_occupied, dimension);
+    SpaceBinaryTreeAnyDimension<3> sbt(is_occupied, dimension);
+    sbt.initialize();
 
     gettimeofday(&tv_after, &tz);
 
@@ -246,12 +248,14 @@ void LineOfSightTest(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<N>& isoc_
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTree<N> sbt(isoc_temp, temp_dim);
+    SpaceBinaryTreePtr<N> sbt = std::make_shared<SpaceBinaryTreeAnyDimension<N> >(isoc_temp, temp_dim, 3);
+    sbt->initialize();
 
     gettimeofday(&tv_after, &tz);
 
     double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-    std::cout << "SpaceBinaryTree" << N << "D take " << time_cost << " ms to initialize" << std::endl;
+    std::cout << "SpaceBinaryTree" << N << "D, min_block_depth = " << sbt->min_block_depth_width_
+              << " take " << time_cost << " ms to initialize" << std::endl;
 
     Id total_index = getTotalIndexOfSpace<N>(temp_dim);
     Pointis<N-1> neighbor = GetNeightborOffsetGrids<N-1>();
@@ -259,11 +263,12 @@ void LineOfSightTest(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<N>& isoc_
 
     for(Id id=0; id<total_index; id++) {
         Pointi<N> pt = IdToPointi<N>(id, temp_dim);
-        assert(isoc_temp(pt) == sbt.isOccupied(pt));
+        assert(isoc_temp(pt) == sbt->isOccupied(pt));
     }
 
     LOSCompare<N>(temp_dim, isoc_temp, sbt);
 
+    std::cout << "raw / SBT visited pt = " << sbt->raw_visited_pt_count_ << " / " << sbt->SBT_visited_pt_count_ << std::endl;
 }
 
 // MapTestConfig_Shanghai_0_512

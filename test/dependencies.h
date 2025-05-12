@@ -13,7 +13,7 @@ namespace freeNav::JOB {
     template<Dimension N>
     void SpaceBinaryTreeVarify(DimensionLength* temp_dim,
                                const IS_OCCUPIED_FUNC<N>& isoc_temp,
-                               const SpaceBinaryTree<N>& sbt) {
+                               const SpaceBinaryTreePtr<N>& sbt) {
 
         struct timezone tz;
         struct timeval tv_pre;
@@ -27,8 +27,8 @@ namespace freeNav::JOB {
         //        and each block is passable
         for(Id id=0; id<total_index; id++) {
             Pointi<N> pt = IdToPointi<N>(id, temp_dim);
-            assert(isoc_temp(pt) == sbt.isOccupied(pt));
-            if(sbt.block_ptr_map_[id] != nullptr) {
+            assert(isoc_temp(pt) == sbt->isOccupied(pt));
+            if(sbt->getInternalBlockPtr(pt) != nullptr) {
                 assert(isoc_temp(pt) == false);
             }
         }
@@ -37,8 +37,9 @@ namespace freeNav::JOB {
         for(Id id=0; id<total_index; id++) {
             if (checked[id]) { continue; }
             // assert every block is not out of map
-            if (sbt.block_ptr_map_[id] == nullptr) { continue; }
-            auto node = sbt.block_ptr_map_[id];
+            Pointi<N> pt = IdToPointi<N>(id, temp_dim);
+            if (sbt->getInternalBlockPtr(pt) == nullptr) { continue; }
+            auto node = sbt->getInternalBlockPtr(pt);
 
             Pointi<N> offset = node->max_ - node->min_;
 
@@ -53,7 +54,7 @@ namespace freeNav::JOB {
                 assert(!isOutOfBoundary(global_pt, temp_dim));
                 global_id = PointiToId<N>(global_pt, temp_dim);
                 // all node in the block have the same block
-                assert(sbt.block_ptr_map_[global_id] == node);
+                assert(sbt->getInternalBlockPtr(global_pt) == node);
                 assert(checked[global_id] == false);
             }
         }
@@ -67,7 +68,7 @@ namespace freeNav::JOB {
     // each compare use how many times of sample to find a point
     template<Dimension N>
     void LOSCompare(DimensionLength* temp_dim,
-                    const SpaceBinaryTree<N>& sbt,
+                    const SpaceBinaryTreePtr<N>& sbt,
                     const DynamicObstacles<N>& dynamic_obstacles,
                     std::vector<std::string>& output_strings,
                     int times_of_test = 1e6,
@@ -115,20 +116,30 @@ namespace freeNav::JOB {
             if (dynamic_obstacles.isoc_(pt2)) {
                 continue;
             }
+
+            sbt->raw_visited_pt_count_ = 0, sbt->SBT_visited_pt_count_ = 0;
+
             //std::cout << "do LOS between " << pt1 << ", " << pt2 <<  std::endl;
             gettimeofday(&tv_pre, &tz);
-            bool isoc1 = LineCrossObstacle<N>(pt1, pt2, dynamic_obstacles.isoc_, neighbor);
+            bool isoc1 = sbt->lineCrossObstacleRaw(pt1, pt2, dynamic_obstacles.isoc_);
+
             gettimeofday(&tv_after, &tz);
             double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
             sum_1 = sum_1 + time_cost1;
             Pointis<N> visited_pt;
             int count_of_block;
             gettimeofday(&tv_pre, &tz);
-            bool isoc2 = sbt.lineCrossObstacle(pt1, pt2, visited_pt, count_of_block);
+            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, visited_pt, count_of_block);
+            //bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, dynamic_obstacles.isoc_);
+
             gettimeofday(&tv_after, &tz);
             double time_cost2 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
             sum_2 = sum_2 + time_cost2;
             success_count ++;
+
+            //std::cout << "raw / SBT visited pt = " << sbt->raw_visited_pt_count_ << " / " << sbt->SBT_visited_pt_count_ << std::endl;
+
+
             if(isoc1 != isoc2)
             {
                 Pointis<2> pts_raw;
@@ -158,7 +169,7 @@ namespace freeNav::JOB {
                 std::cout << std::endl;
 
                 Id occ_id = PointiToId(occ_pt, temp_dim);
-                std::cout << "occ_pt in block = " << sbt.block_ptr_map_[occ_id] << std::endl;
+                std::cout << "occ_pt in block = " << sbt->getInternalBlockPtr(occ_pt) << std::endl;
 
                 std::cout << "dim info " << printDimInfo<N>(temp_dim) << std::endl;
                 std::cout << "dynamic obstacles = " << dynamic_obstacles << std::endl;
@@ -176,7 +187,7 @@ namespace freeNav::JOB {
             output_strings.push_back(ss.str());
 
         }
-
+        std::cout << "haha" << std::endl;
         Id space_size = getTotalIndexOfSpace<N>(temp_dim);
         std::cout << "dim info " << printDimInfo<N>(temp_dim) << std::endl;
         std::cout << "dynamic obstacles " << dynamic_obstacles << std::endl;
@@ -192,7 +203,7 @@ namespace freeNav::JOB {
     template<Dimension N>
     void LOSCompare(DimensionLength* temp_dim,
                     const IS_OCCUPIED_FUNC<N>& isoc_temp,
-                    const SpaceBinaryTree<N>& sbt,
+                    const SpaceBinaryTreePtr<N>& sbt,
                     int times_of_test = 1e6,
                     int max_sample_times = 1e3) {
 
@@ -239,19 +250,25 @@ namespace freeNav::JOB {
                 continue;
             }
             //std::cout << "do LOS between " << pt1 << ", " << pt2 <<  std::endl;
+            //sbt->raw_visited_pt_count_ = 0, sbt->SBT_visited_pt_count_ = 0;
+
             gettimeofday(&tv_pre, &tz);
-            bool isoc1 = LineCrossObstacle<N>(pt1, pt2, isoc_temp, neighbor);
+            bool isoc1 = sbt->lineCrossObstacleRaw(pt1, pt2, isoc_temp);
             gettimeofday(&tv_after, &tz);
             double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
             sum_1 = sum_1 + time_cost1;
             Pointis<N> visited_pt;
             int count_of_block;
             gettimeofday(&tv_pre, &tz);
-            bool isoc2 = sbt.lineCrossObstacle(pt1, pt2, visited_pt, count_of_block);
+            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, visited_pt, count_of_block);
             gettimeofday(&tv_after, &tz);
             double time_cost2 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
             sum_2 = sum_2 + time_cost2;
             success_count ++;
+
+            //std::cout << "raw / SBT visited pt = " << sbt->raw_visited_pt_count_ << " / " << sbt->SBT_visited_pt_count_ << std::endl;
+
+
             if(isoc1 != isoc2)
             {
                 Pointis<2> pts_raw;
@@ -281,6 +298,7 @@ namespace freeNav::JOB {
         }
 
 
+        std::cout << "flag" << std::endl;
 
         std::cout << success_count <<  " LOS test, mean raw / SBT LOS time cost (us) = " << sum_1/(double)success_count
                   << " / " << sum_2/(double)success_count << std::endl;
@@ -322,7 +340,18 @@ namespace freeNav::JOB {
         for(const auto& width : width_of_space) {
             for(const auto& count : number_of_obstacles) {
 
-                ObstaclePtrs<N> obs = generateRandomObstacles<N>(count, min_radius, max_radius, min_block_width, max_block_width);
+                // debug: do not use external config of obstacles
+                int local_min_radius = width/20,
+                    local_max_radius = width/10,
+                    local_min_block_width = width/10,
+                    local_max_block_width = width/5;
+
+                ObstaclePtrs<N> obs = generateRandomObstacles<N>(count,
+                                                                 local_min_radius,
+                                                                 local_max_radius,
+                                                                 local_min_block_width,
+                                                                 local_max_block_width);
+
 
 
                 DimensionLength dim[N];
@@ -335,8 +364,8 @@ namespace freeNav::JOB {
                     }
                     return false;
                 };
-                SpaceBinaryTree<N> sbt(is_occupied, dim);
-
+                SpaceBinaryTreePtr<N> sbt = std::make_shared<SpaceBinaryTreeAnyDimension<N> >(is_occupied, dim);
+                sbt->initialize();
                 DynamicObstacles<N> dynamic_obstacles(dim, obs);
 
                 Id total_index = getTotalIndexOfSpace<N>(dim);
@@ -352,10 +381,10 @@ namespace freeNav::JOB {
                     gettimeofday(&tv_pre, &tz);
 
                     for(const auto& pre_pt : dynamic_obstacles.getPreviousOccupationPoints()) {
-                        sbt.setOccupiedState(pre_pt, false);
+                        sbt->setOccupiedState(pre_pt, false);
                     }
                     for(const auto& cur_pt : dynamic_obstacles.getCurrentOccupationPoints()) {
-                        sbt.setOccupiedState(cur_pt, true);
+                        sbt->setOccupiedState(cur_pt, true);
                     }
                     gettimeofday(&tv_after, &tz);
                     double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
