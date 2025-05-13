@@ -347,7 +347,7 @@ namespace freeNav::JOB {
             return false;
         }
 
-        bool lineCrossObstacleSBT(const Pointi<N>& pt1, const Pointi<N>& pt2,
+        bool lineCrossObstacleSBT(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied,
                                Pointis<N>& visited_pt,
                                int& count_of_block
                                ) {
@@ -364,22 +364,17 @@ namespace freeNav::JOB {
                 pt = line.GetPoint(i);
                 SBT_visited_pt_count_ ++;
 
-                //id = PointiToId(pt, dim_);
-                //if(occ_map_[id]) { return true; }
-
-                if(getInternalOccState(pt)) { return true; }
-
-                //current_id = PointiToId(pt, dim_);
-                //const auto& block_ptr = block_ptr_map_[id];
+                if(is_occupied(pt)) { return true; }
+//
                 const auto& block_ptr = getInternalBlockPtr(pt);
-
-                // if in block, jump over current block
-                if(block_ptr != nullptr) {
-                    jump_step = findExitPointOfBlock(line, pt, i, block_ptr);
-                    //std::cout << " jump step " << jump_step << std::endl;
-                    i = i + jump_step;
-                    count_of_block ++;
-                }
+//
+//                // if in block, jump over current block
+//                if(block_ptr != nullptr) {
+//                    jump_step = findExitPointOfBlock(line, pt, i, block_ptr);
+//                    //std::cout << " jump step " << jump_step << std::endl;
+//                    i = i + jump_step;
+//                    count_of_block ++;
+//                }
             }
             return false;
         }
@@ -525,6 +520,44 @@ namespace freeNav::JOB {
 
     };
 
+    class SpaceBinaryTree2D : public SpaceBinaryTree<2> {
+    public:
+
+        SpaceBinaryTree2D(const IS_OCCUPIED_FUNC<2>& isoc, DimensionLength* dim, int min_block_depth_width = 1)
+                : SpaceBinaryTree<2>(isoc, dim, min_block_depth_width) {
+            std::vector<bool> base_occ_map(dim[1], true);
+            occ_map_.resize(dim[0], base_occ_map);
+            std::vector<BlockPtr<2> > base_block_map(dim[1], nullptr);
+            block_ptr_map_.resize(dim[0], base_block_map);
+            std::cout << "start initialize of SBT2D" << std::endl;
+        }
+
+        virtual void setInternalOccState(const Pointi<2>& pt, bool occ_state) override {
+            if(isOutOfBoundary(pt, this->dim_)) { return; }
+            occ_map_[pt[0]][pt[1]] = occ_state;
+        }
+
+        virtual bool getInternalOccState(const Pointi<2>& pt) override {
+            if(isOutOfBoundary(pt, this->dim_)) { return true; }
+            return occ_map_[pt[0]][pt[1]];
+        }
+
+        virtual void setInternalBlockPtr(const Pointi<2>& pt, const BlockPtr<2>& block_ptr) override {
+            //if(isOutOfBoundary(pt, this->dim_)) { return; }
+            block_ptr_map_[pt[0]][pt[1]] = block_ptr;
+        }
+
+        virtual BlockPtr<2> getInternalBlockPtr(const Pointi<2>& pt) override {
+            //if(isOutOfBoundary(pt, this->dim_)) { return nullptr; }
+            return block_ptr_map_[pt[0]][pt[1]];
+        }
+
+        std::vector<BlockPtrs<2> > block_ptr_map_; // save all grid's block ptr need lots space, but reduce time cost
+
+        std::vector<std::vector<bool> > occ_map_; // save all grid's state need lots space, but reduce time cost
+
+
+    };
 
 }
 
