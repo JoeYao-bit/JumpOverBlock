@@ -129,7 +129,7 @@ namespace freeNav::JOB {
             Pointis<N> visited_pt;
             int count_of_block;
             gettimeofday(&tv_pre, &tz);
-            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, visited_pt, count_of_block);
+            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, dynamic_obstacles.isoc_, visited_pt, count_of_block);
             //bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, dynamic_obstacles.isoc_);
 
             gettimeofday(&tv_after, &tz);
@@ -260,7 +260,7 @@ namespace freeNav::JOB {
             Pointis<N> visited_pt;
             int count_of_block;
             gettimeofday(&tv_pre, &tz);
-            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, visited_pt, count_of_block);
+            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, isoc_temp, visited_pt, count_of_block);
             gettimeofday(&tv_after, &tz);
             double time_cost2 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
             sum_2 = sum_2 + time_cost2;
@@ -296,9 +296,6 @@ namespace freeNav::JOB {
                 assert(isoc1 == isoc2);
             }
         }
-
-
-        std::cout << "flag" << std::endl;
 
         std::cout << success_count <<  " LOS test, mean raw / SBT LOS time cost (us) = " << sum_1/(double)success_count
                   << " / " << sum_2/(double)success_count << std::endl;

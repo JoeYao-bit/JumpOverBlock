@@ -47,7 +47,7 @@ TEST(getIndex, test) {
         return false;
     };
 
-    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dim);
+    SpaceBinaryTree2D sbt(is_occupied, dim);
     sbt.initialize();
     sbt.printTree();
 
@@ -243,6 +243,36 @@ TEST(GetFloorOrCeilFlag, test) {
     }
 }
 
+//         sbt = std::make_shared<SpaceBinaryTree2D>(isoc_temp, temp_dim, 3);
+
+
+void LineOfSightTest2D(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<2>& isoc_temp) {
+
+    gettimeofday(&tv_pre, &tz);
+
+    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTree2D>(isoc_temp, temp_dim);//, 3);
+
+    sbt->initialize();
+
+    gettimeofday(&tv_after, &tz);
+
+    double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+    std::cout << "SpaceBinaryTree" << 2 << "D, min_block_depth = " << sbt->min_block_depth_width_
+              << " take " << time_cost << " ms to initialize" << std::endl;
+
+    Id total_index = getTotalIndexOfSpace<2>(temp_dim);
+    srand(time(0));
+
+    for(Id id=0; id<total_index; id++) {
+        Pointi<2> pt = IdToPointi<2>(id, temp_dim);
+        assert(isoc_temp(pt) == sbt->isOccupied(pt));
+    }
+
+    LOSCompare<2>(temp_dim, isoc_temp, sbt);
+
+    std::cout << "raw / SBT visited pt = " << sbt->raw_visited_pt_count_ << " / " << sbt->SBT_visited_pt_count_ << std::endl;
+}
+
 template<Dimension N>
 void LineOfSightTest(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<N>& isoc_temp) {
 
@@ -279,7 +309,8 @@ TEST(LineOfSightCheck2D, test) {
 
     auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
 
-    LineOfSightTest<2>(dimension, is_occupied);
+    //LineOfSightTest<2>(dimension, is_occupied);
+    LineOfSightTest2D(dimension, is_occupied);
 }
 
 

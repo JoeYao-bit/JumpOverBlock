@@ -34,7 +34,7 @@ namespace freeNav::JOB {
     struct Block;
 
     template <Dimension N>
-    using BlockPtr = std::shared_ptr<Block<N> >;
+    using BlockPtr = std::shared_ptr<Block<N> >; // shared_ptr is very time consuming, compare to raw pointer
 
     template <Dimension N>
     using BlockPtrs = std::vector<BlockPtr<N> >;
