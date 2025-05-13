@@ -176,6 +176,7 @@ TEST(massiveSBTLOSCompareTest, test) {
 
     for(int i=0; i<1; i++) {
 
+//        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
         massiveSBTLOSCompareTest<2>(10, 100, {200, 300, 400}, {10, 20, 40});
 
         //massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});

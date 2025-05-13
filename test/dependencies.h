@@ -54,6 +54,10 @@ namespace freeNav::JOB {
                 assert(!isOutOfBoundary(global_pt, temp_dim));
                 global_id = PointiToId<N>(global_pt, temp_dim);
                 // all node in the block have the same block
+                if(sbt->getInternalBlockPtr(global_pt) != node) {
+                    std::cout << "sbt->getInternalBlockPtr(global_pt) = " << sbt->getInternalBlockPtr(global_pt) << std::endl;
+                    std::cout << "node = " << node << std::endl;
+                }
                 assert(sbt->getInternalBlockPtr(global_pt) == node);
                 assert(checked[global_id] == false);
             }
@@ -397,6 +401,80 @@ namespace freeNav::JOB {
         }
     }
 
+
+    // half obstacle is circle and another half is block obstacle
+    void massiveSBTLOSCompareTest2D(int random_times, // how many times of randomize for a map
+                                    int repeat_times, // how many times of LOS for a randomize
+                                    const std::vector<int>& width_of_space,
+                                    const std::vector<int>& number_of_obstacles,
+                                    int min_radius = 5,
+                                    int max_radius = 10,
+                                    int min_block_width = 10,
+                                    int max_block_width = 20) {
+
+
+        for(const auto& width : width_of_space) {
+            for(const auto& count : number_of_obstacles) {
+
+                // debug: do not use external config of obstacles
+                int local_min_radius = width/20,
+                        local_max_radius = width/10,
+                        local_min_block_width = width/10,
+                        local_max_block_width = width/5;
+
+                ObstaclePtrs<2> obs = generateRandomObstacles<2>(count,
+                                                                 local_min_radius,
+                                                                 local_max_radius,
+                                                                 local_min_block_width,
+                                                                 local_max_block_width);
+
+
+
+                DimensionLength dim[2];
+                for(int d=0; d<2; d++) {
+                    dim[d] = width;
+                }
+                auto is_occupied = [&](const Pointi<2> & pt) -> bool {
+                    if(isOutOfBoundary(pt, dim)) {
+                        return true;
+                    }
+                    return false;
+                };
+                SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTree2D>(is_occupied, dim);
+                sbt->initialize();
+                DynamicObstacles<2> dynamic_obstacles(dim, obs);
+
+                Id total_index = getTotalIndexOfSpace<2>(dim);
+                std::cout << 2 << " dimension space, width = " << width << ", number of obstacles = " << count << std::endl;
+
+                for(int i=0; i<random_times; i++) {
+
+                    dynamic_obstacles.random();
+                    struct timezone tz;
+                    struct timeval tv_pre;
+                    struct timeval tv_after;
+
+                    gettimeofday(&tv_pre, &tz);
+
+                    for(const auto& pre_pt : dynamic_obstacles.getPreviousOccupationPoints()) {
+                        sbt->setOccupiedState(pre_pt, false);
+                    }
+                    for(const auto& cur_pt : dynamic_obstacles.getCurrentOccupationPoints()) {
+                        sbt->setOccupiedState(cur_pt, true);
+                    }
+                    gettimeofday(&tv_after, &tz);
+                    double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
+
+                    std::cout << "dynamicUpdateTimeCost " << time_cost1 << " us" << std::endl;
+
+                    std::vector<std::string> ss;
+                    LOSCompare<2>(dim, sbt, dynamic_obstacles, ss);
+
+                }
+
+            }
+        }
+    }
 
 }
 
