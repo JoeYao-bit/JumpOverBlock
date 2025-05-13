@@ -250,7 +250,7 @@ void LineOfSightTest2D(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<2>& iso
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTree2D>(isoc_temp, temp_dim);//, 3);
+    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTree2D>(isoc_temp, temp_dim, 4);
 
     sbt->initialize();
 
@@ -268,7 +268,7 @@ void LineOfSightTest2D(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<2>& iso
         assert(isoc_temp(pt) == sbt->isOccupied(pt));
     }
 
-    LOSCompare<2>(temp_dim, isoc_temp, sbt);
+    LOSCompare<2>(temp_dim, isoc_temp, sbt, 10, 1e2);
 
     std::cout << "raw / SBT visited pt = " << sbt->raw_visited_pt_count_ << " / " << sbt->SBT_visited_pt_count_ << std::endl;
 }
