@@ -172,13 +172,18 @@ TEST(dynamic_obstacles_2D, test) {
 
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
-TEST(massiveSBTLOSCompareTest, test) {
-
+//TEST(massiveSBTLOSCompareTest, test) {
+int main() {
     for(int i=0; i<1; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
-        massiveSBTLOSCompareTest<2>(10, 100, {200, 300, 400}, {10, 20, 40});
+//        massiveSBTLOSCompareTest2D(1, 100, {700, 800, 1000}, {40, 60});
+
+//        massiveSBTLOSCompareTest2D(1, 1, {600}, {40});
 
         //massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
+
+        massiveSBTLOSCompareTest3D(10, 10, {400, 500, 600}, {10, 20, 40, 80}, 4);
+
     }
 }
