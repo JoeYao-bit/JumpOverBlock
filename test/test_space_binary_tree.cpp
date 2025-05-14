@@ -205,7 +205,8 @@ TEST(SpaceBinaryTree2D, test) {
 //MapTestConfig_A1 109404 ms
 // A1 10000 LOS test, mean raw LOS time cost = 0.0077252, mean SBT LOS time cost = 0.0059969
 // Complex 1000000 LOS test, mean raw LOS time cost = 0.00199108, mean SBT LOS time cost = 0.00311197
-auto map_test_config_3D = MapTestConfig_Complex;
+// MapTestConfig_Complex
+auto map_test_config_3D = MapTestConfig_A1;
 
 TextMapLoader_3D loader3D(map_test_config_3D.at("map_path"));
 
@@ -246,11 +247,11 @@ TEST(GetFloorOrCeilFlag, test) {
 //         sbt = std::make_shared<SpaceBinaryTree2D>(isoc_temp, temp_dim, 3);
 
 
-void LineOfSightTest2D(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<2>& isoc_temp) {
+void LineOfSightTest2D(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<2>& isoc_temp, int min_block_depth_width = 4) {
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTree2D>(isoc_temp, temp_dim, 4);
+    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTree2D>(isoc_temp, temp_dim, min_block_depth_width);
 
     sbt->initialize();
 
@@ -268,7 +269,34 @@ void LineOfSightTest2D(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<2>& iso
         assert(isoc_temp(pt) == sbt->isOccupied(pt));
     }
 
-    LOSCompare<2>(temp_dim, isoc_temp, sbt, 10, 1e2);
+    LOSCompare<2>(temp_dim, isoc_temp, sbt, 1e6, 1e3);
+
+    std::cout << "raw / SBT visited pt = " << sbt->raw_visited_pt_count_ << " / " << sbt->SBT_visited_pt_count_ << std::endl;
+}
+
+void LineOfSightTest3D(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<3>& isoc_temp, int min_block_depth_width = 4) {
+
+    gettimeofday(&tv_pre, &tz);
+
+    SpaceBinaryTreePtr<3> sbt = std::make_shared<SpaceBinaryTree3D>(isoc_temp, temp_dim, min_block_depth_width);
+
+    sbt->initialize();
+
+    gettimeofday(&tv_after, &tz);
+
+    double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+    std::cout << "SpaceBinaryTree" << 3 << "D, min_block_depth = " << sbt->min_block_depth_width_
+              << " take " << time_cost << " ms to initialize" << std::endl;
+
+    Id total_index = getTotalIndexOfSpace<3>(temp_dim);
+    srand(time(0));
+
+    for(Id id=0; id<total_index; id++) {
+        Pointi<3> pt = IdToPointi<3>(id, temp_dim);
+        assert(isoc_temp(pt) == sbt->isOccupied(pt));
+    }
+
+    LOSCompare<3>(temp_dim, isoc_temp, sbt, 1e6, 1e3);
 
     std::cout << "raw / SBT visited pt = " << sbt->raw_visited_pt_count_ << " / " << sbt->SBT_visited_pt_count_ << std::endl;
 }
@@ -305,20 +333,25 @@ void LineOfSightTest(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<N>& isoc_
 // 1000000 LOS test, mean raw LOS time cost = 0.00166777, mean SBT LOS time cost = 0.00124032
 
 TEST(LineOfSightCheck2D, test) {
+//int main() {
     auto dimension = loader.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
 
     //LineOfSightTest<2>(dimension, is_occupied);
-    LineOfSightTest2D(dimension, is_occupied);
+    for(int i=2; i<=6; i++) {
+        LineOfSightTest2D(dimension, is_occupied, i);
+    }
 }
 
 
-TEST(LineOfSightCheck3D, test) {
+//TEST(LineOfSightCheck3D, test) {
+int main() {
     auto dimension = loader3D.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<3> & pt) -> bool { return loader3D.isOccupied(pt); };
 
-    LineOfSightTest<3>(dimension, is_occupied);
-
+    for(int i=2; i<=6; i++) {
+        LineOfSightTest3D(dimension, is_occupied, i);
+    }
 }
