@@ -7,8 +7,22 @@
 
 #include "../algorithm/space_binary_tree/space_binary_tree.h"
 #include "dynamic_obstacles.h"
+#include <fstream>
 
 namespace freeNav::JOB {
+
+    template<Dimension N>
+    void writeToFile(const std::vector<std::string>& strs, const std::string& file_path) {
+        std::ofstream os(file_path, std::ios::app);
+        if(!os.is_open()) {
+            std::cout << "file_path " << file_path << " open failed" << std::endl;
+            return;
+        }
+        for(const auto& str : strs) {
+            os << str << std::endl;
+        }
+        os.close();
+    }
 
     template<Dimension N>
     void SpaceBinaryTreeVarify(DimensionLength* temp_dim,
@@ -90,7 +104,7 @@ namespace freeNav::JOB {
 
         double sum_1 = 0, sum_2 = 0;
         int success_count = 0, occ_count = 0;
-        std::cout << "haha times_of_test  = " << times_of_test << std::endl;
+        std::cout << "times_of_LOS_compare_test  = " << times_of_test << std::endl;
         for(int i=0; i<times_of_test; i++) {
             // random pick two passable point
             Id id1 = 0, id2 = 0;
@@ -184,22 +198,27 @@ namespace freeNav::JOB {
 
             if(isoc1 == true) { occ_count ++; }
 
-            std::stringstream ss;
-            ss << dynamic_obstacles.occ_pt_count_ << " "
-               << getTotalIndexOfSpace<N>(temp_dim) << " "
-               << time_cost1 << " "
-               << time_cost2;
-            output_strings.push_back(ss.str());
-
         }
-        std::cout << "haha" << std::endl;
         Id space_size = getTotalIndexOfSpace<N>(temp_dim);
         std::cout << "dim info " << printDimInfo<N>(temp_dim) << std::endl;
         std::cout << "dynamic obstacles " << dynamic_obstacles << std::endl;
         std::cout << "obstacleDensity " << (float)dynamic_obstacles.occ_pt_count_ / space_size << std::endl;
         std::cout << success_count <<  " LOS test, mean raw / SBT LOS time cost (us) = " << sum_1/(double)success_count
                   << " / " << sum_2/(double)success_count << std::endl;
-        std::cout << "occ ratio = " << (float)occ_count / success_count << std::endl;
+        std::cout << "occ_ratio(LOS_pass/LOS_total) = " << (float)occ_count / success_count << std::endl;
+
+
+        std::stringstream ss;
+        ss << N << " "  // Dimension
+           << (float)occ_count / success_count << " " // occ ratio
+           << sum_1/(double)success_count << " " // mean raw time cost
+           << sum_2/(double)success_count << " " // mean SBT time cost
+           << getTotalIndexOfSpace<N>(temp_dim) << " " // total index of space
+           << (float)dynamic_obstacles.occ_pt_count_ / space_size << " " // ratio of occ grid
+           << printDimInfo<N>(temp_dim) << " " // dimension length
+           ;
+        output_strings.push_back(ss.str());
+
     }
 
 
@@ -322,7 +341,7 @@ namespace freeNav::JOB {
         min_pt.setAll(min_block_width);
         max_pt.setAll(max_block_width);
         BlockObstaclePtrs<N> bo = generateRandomBlockObstacles<N>(number_of_obstacle/2, min_pt, max_pt);
-        obs.insert(obs.end(), co.begin(), co.end());
+        obs.insert(obs.end(), bo.begin(), bo.end());
 
         return obs;
     }
@@ -333,8 +352,12 @@ namespace freeNav::JOB {
                                   int repeat_times, // how many times of LOS for a randomize
                                   const std::vector<int>& width_of_space,
                                   const std::vector<int>& number_of_obstacles,
+                                  const std::string& file_path,
                                   int time_of_test = 1e6,
-                                  int max_sample_times = 1e3) {
+                                  int max_sample_times = 1e3,
+                                  int max_obs_move_distance = 10,
+                                  bool update_block_ptr_realtime = false,
+                                  int  min_block_depth_width = 4) {
 
         struct timezone tz;
         struct timeval tv_pre;
@@ -347,8 +370,8 @@ namespace freeNav::JOB {
                 // debug: do not use external config of obstacles
                 int local_min_radius = width/20,
                     local_max_radius = width/10,
-                    local_min_block_width = width/10,
-                    local_max_block_width = width/5;
+                    local_min_block_width = width/20,
+                    local_max_block_width = width/10;
 
                 ObstaclePtrs<N> obs = generateRandomObstacles<N>(count,
                                                                  local_min_radius,
@@ -358,7 +381,7 @@ namespace freeNav::JOB {
 
                 DimensionLength dim[N];
                 for(int d=0; d<N; d++) {
-                    dim[d] = width;
+                   dim[d] = width;
                 }
                 auto is_occupied = [&](const Pointi<N> & pt) -> bool {
                     if(isOutOfBoundary(pt, dim)) {
@@ -369,7 +392,7 @@ namespace freeNav::JOB {
 
                 gettimeofday(&tv_pre, &tz);
 
-                SpaceBinaryTreePtr<N> sbt = std::make_shared<SBTtype>(is_occupied, dim);
+                SpaceBinaryTreePtr<N> sbt = std::make_shared<SBTtype>(is_occupied, dim, min_block_depth_width);
                 sbt->initialize();
 
                 gettimeofday(&tv_after, &tz);
@@ -380,32 +403,42 @@ namespace freeNav::JOB {
 
                 Id total_index = getTotalIndexOfSpace<N>(dim);
                 std::cout << N << " dimension space, width = " << width << ", number of obstacles = " << count << std::endl;
-
+                std::cout << "max_obs_move_distance = " << max_obs_move_distance << std::endl;
                 for(int i=0; i<random_times; i++) {
 
-                    dynamic_obstacles.random();
+                    dynamic_obstacles.random(max_obs_move_distance);
 
                     gettimeofday(&tv_pre, &tz);
 
                     for(const auto& pre_pt : dynamic_obstacles.getPreviousOccupationPoints()) {
-                        sbt->setOccupiedState(pre_pt, false);
+                        sbt->setOccupiedState(pre_pt, false, update_block_ptr_realtime);
                     }
                     for(const auto& cur_pt : dynamic_obstacles.getCurrentOccupationPoints()) {
-                        sbt->setOccupiedState(cur_pt, true);
+                        sbt->setOccupiedState(cur_pt, true, update_block_ptr_realtime);
                     }
-                    gettimeofday(&tv_after, &tz);
-                    double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
 
-                    std::cout << "dynamicUpdateTimeCost " << time_cost1 << " us" << std::endl;
+                    if(!update_block_ptr_realtime) {
+                        sbt->initBlockPtrMap();
+                    }
+
+                    gettimeofday(&tv_after, &tz);
+                    double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e3+ (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+
+                    std::cout << "dynamicUpdateTimeCost " << time_cost1 << " ms" << std::endl;
 
                     std::vector<std::string> ss;
                     LOSCompare<N>(dim, sbt, dynamic_obstacles, ss, time_of_test, max_sample_times);
-
+                    if(!file_path.empty()) {
+                        writeToFile<N>(ss, file_path);
+                        std::cout << "write test data to " << file_path << std::endl;
+                    }
                 }
 
             }
         }
     }
+
+
 
 }
 

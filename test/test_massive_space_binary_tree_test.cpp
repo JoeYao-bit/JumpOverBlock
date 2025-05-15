@@ -173,17 +173,31 @@ TEST(dynamic_obstacles_2D, test) {
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
 //TEST(massiveSBTLOSCompareTest, test) {
+
+std::string file_path = "../test/SBT_LOS.txt";
+
 int main() {
     for(int i=0; i<1; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
-        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(1, 100, {700, 800, 1000}, {40, 60});
+//        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(10, 100,
+//                                                       {700, 800, 1000},
+//                                                       {40, 60}, 1e4, 1e3, 10);
 
 //        massiveSBTLOSCompareTest2D(1, 1, {600}, {40});
 
         //massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
 
-//        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(10, 10, {400, 500, 600}, {10, 20, 40, 80}, 4);
+        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
+                                                       1,
+                                                       {200, 300, 400, 500, 600, 700, 800},
+                                                       {10, 20, 40, 60, 80},
+                                                       file_path,
+                                                       1e5,
+                                                       1e3,
+                                                       1,
+                                                       true,
+                                                       4);
 
     }
 }

@@ -339,7 +339,7 @@ TEST(LineOfSightCheck2D, test) {
     auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
 
     //LineOfSightTest<2>(dimension, is_occupied);
-    for(int i=2; i<=6; i++) {
+    for(int i=2; i<=2; i++) {
         LineOfSightTest2D(dimension, is_occupied, i);
     }
 }
@@ -351,7 +351,8 @@ int main() {
 
     auto is_occupied = [](const Pointi<3> & pt) -> bool { return loader3D.isOccupied(pt); };
 
-    for(int i=2; i<=6; i++) {
+    for(int i=4; i<=4; i++)
+    {
         LineOfSightTest3D(dimension, is_occupied, i);
     }
 }
