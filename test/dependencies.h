@@ -209,7 +209,7 @@ namespace freeNav::JOB {
 
 
         std::stringstream ss;
-        ss << N << " "  // Dimension
+        ss << "COMPARE " << N << " "  // Dimension
            << (float)occ_count / success_count << " " // occ ratio
            << sum_1/(double)success_count << " " // mean raw time cost
            << sum_2/(double)success_count << " " // mean SBT time cost
@@ -363,6 +363,8 @@ namespace freeNav::JOB {
         struct timeval tv_pre;
         struct timeval tv_after;
 
+        std::vector<std::string> strs;
+
 
         for(const auto& width : width_of_space) {
             for(const auto& count : number_of_obstacles) {
@@ -399,6 +401,8 @@ namespace freeNav::JOB {
                 double time_cost_init = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
                 std::cout << "SBT init time cost " << time_cost_init << " ms" << std::endl;
 
+
+
                 DynamicObstacles<N> dynamic_obstacles(dim, obs);
 
                 Id total_index = getTotalIndexOfSpace<N>(dim);
@@ -426,10 +430,26 @@ namespace freeNav::JOB {
 
                     std::cout << "dynamicUpdateTimeCost " << time_cost1 << " ms" << std::endl;
 
-                    std::vector<std::string> ss;
-                    LOSCompare<N>(dim, sbt, dynamic_obstacles, ss, time_of_test, max_sample_times);
+                    gettimeofday(&tv_pre, &tz);
+                    SpaceBinaryTreePtr<N> sbt_tree = std::make_shared<SBTtype>(dynamic_obstacles.isoc_, dim, min_block_depth_width);
+                    gettimeofday(&tv_after, &tz);
+
+                    time_cost_init = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+
+
+                    std::stringstream ss1;
+                    ss1 << "SBT " << N << " "  // Dimension
+                       << time_cost_init << " " // init time cost
+                       << time_cost1 << " " // update time cost
+                       << total_index << " " // total index of space
+                       << (float)dynamic_obstacles.occ_pt_count_ / total_index << " " // ratio of occ grid
+                       << printDimInfo<N>(dim) << " " // dimension length
+                       ;
+
+                    strs.push_back(ss1.str());
+                    LOSCompare<N>(dim, sbt, dynamic_obstacles, strs, time_of_test, max_sample_times);
                     if(!file_path.empty()) {
-                        writeToFile<N>(ss, file_path);
+                        writeToFile<N>(strs, file_path);
                         std::cout << "write test data to " << file_path << std::endl;
                     }
                 }

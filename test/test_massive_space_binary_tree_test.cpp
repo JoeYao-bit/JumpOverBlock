@@ -177,7 +177,7 @@ TEST(dynamic_obstacles_2D, test) {
 std::string file_path = "../test/SBT_LOS.txt";
 
 int main() {
-    for(int i=0; i<1; i++) {
+    for(int i=0; i<100; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
 //        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(10, 100,
@@ -190,7 +190,7 @@ int main() {
 
         massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(5,
                                                        1,
-                                                       {600, 700, 800, 900, 1000},
+                                                       {200,300,400,500,700,800,900, 1000},
                                                        {10, 20, 40, 60, 80, 160},
                                                        file_path,
                                                        1e5,
@@ -199,16 +199,16 @@ int main() {
                                                        true,
                                                        4);
 
-//        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
-//                                                       1,
-//                                                       {200, 300, 400, 500, 600, 700, 800},
-//                                                       {10, 20, 40, 60, 80},
-//                                                       file_path,
-//                                                       1e5,
-//                                                       1e3,
-//                                                       1,
-//                                                       true,
-//                                                       4);
+        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
+                                                       1,
+                                                       {200, 300, 400, 500, 600, 700, 800},
+                                                       {10, 20, 40, 60, 80},
+                                                       file_path,
+                                                       1e5,
+                                                       1e3,
+                                                       1,
+                                                       true,
+                                                       4);
 
     }
 }
