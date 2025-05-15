@@ -21,59 +21,59 @@ namespace freeNav::JOB {
     template<Dimension N>
     using TreeNodePtrs = std::vector<TreeNodePtr<N> >;
 
-    template<Dimension N>
-    using BlockPtrRaw = Block<N>*;
-
 //    template<Dimension N>
-//    using BlockPtrRaw = std::shared_ptr<Block<N> >;
+//    using BlockPtrRaw = Block<N>*;
+
+    template<Dimension N>
+    using BlockPtrRaw = std::shared_ptr<Block<N> >;
 
     template<Dimension N>
     using BlockPtrsRaw = std::vector<BlockPtrRaw<N> >;
 
 
-    // return: current in the block or not
-    // for a line that cross a block, find the point on it and leave obstacle
-    // update inner index of line
-    template<Dimension N>
-    int findExitPointOfBlock(Line<N>& line, const Pointi<N>& current_pt, const int& index, const BlockPtrRaw<N>& block_ptr) {
-        // check whether the line reach end of line
-        if(index >= line.step - 1) {return 0; }
-        //Pointi<N> current_pt = line.GetPoint(index);
-        // check whether current line's last traveled point in the block
-        //if(!block_ptr->PointiInBlock(current_pt)) {
-        //std::cout << " not in block" << std::endl;
-        //    return 0;
-        //}
-        //bool line_increase = (line.step_length > 0);
-        //Dimension minimum_step_exit_dim = 0;
-        Fraction minimum_step_to_exit = Fraction(line.step), future_step;
-        // determine the fast dim to leave current block
-        for(Dimension dim=0; dim<N; dim++) {
-            if(line.parameter[dim].second == 0) {
-                continue;
-            } else {
-                if(line.parameter[dim].second > 0) {
-                    future_step = (Fraction(block_ptr->max_[dim] - current_pt[dim]) /
-                                   line.parameter[dim].second).toAbs();
-                } else {
-                    future_step = (Fraction(block_ptr->min_[dim] - current_pt[dim]) /
-                                   line.parameter[dim].second).toAbs();
-                }
-                //std::cout << " dim " << dim << " / future_step " << future_step.toFloat() << std::endl;
-                if (future_step < minimum_step_to_exit) {
-                    //minimum_step_exit_dim = dim;
-                    minimum_step_to_exit = future_step;
-                }
-            }
-        }
-        //std::cout << " line.step " << line.step << " - index " << index << std::endl;
-        //std::cout << " minimum_step_to_exit " << minimum_step_to_exit << std::endl;
-        if(minimum_step_to_exit > line.step - index) {
-            //std::cout << " reach end of line" << std::endl;
-            return line.step - index - 1;
-        }
-        return std::max((line.step*minimum_step_to_exit - 1).floor(), 0);
-    }
+//    // return: current in the block or not
+//    // for a line that cross a block, find the point on it and leave obstacle
+//    // update inner index of line
+//    template<Dimension N>
+//    int findExitPointOfBlock(Line<N>& line, const Pointi<N>& current_pt, const int& index, const BlockPtrRaw<N>& block_ptr) {
+//        // check whether the line reach end of line
+//        if(index >= line.step - 1) {return 0; }
+//        //Pointi<N> current_pt = line.GetPoint(index);
+//        // check whether current line's last traveled point in the block
+//        //if(!block_ptr->PointiInBlock(current_pt)) {
+//        //std::cout << " not in block" << std::endl;
+//        //    return 0;
+//        //}
+//        //bool line_increase = (line.step_length > 0);
+//        //Dimension minimum_step_exit_dim = 0;
+//        Fraction minimum_step_to_exit = Fraction(line.step), future_step;
+//        // determine the fast dim to leave current block
+//        for(Dimension dim=0; dim<N; dim++) {
+//            if(line.parameter[dim].second == 0) {
+//                continue;
+//            } else {
+//                if(line.parameter[dim].second > 0) {
+//                    future_step = (Fraction(block_ptr->max_[dim] - current_pt[dim]) /
+//                                   line.parameter[dim].second).toAbs();
+//                } else {
+//                    future_step = (Fraction(block_ptr->min_[dim] - current_pt[dim]) /
+//                                   line.parameter[dim].second).toAbs();
+//                }
+//                //std::cout << " dim " << dim << " / future_step " << future_step.toFloat() << std::endl;
+//                if (future_step < minimum_step_to_exit) {
+//                    //minimum_step_exit_dim = dim;
+//                    minimum_step_to_exit = future_step;
+//                }
+//            }
+//        }
+//        //std::cout << " line.step " << line.step << " - index " << index << std::endl;
+//        //std::cout << " minimum_step_to_exit " << minimum_step_to_exit << std::endl;
+//        if(minimum_step_to_exit > line.step - index) {
+//            //std::cout << " reach end of line" << std::endl;
+//            return line.step - index - 1;
+//        }
+//        return std::max((line.step*minimum_step_to_exit - 1).floor(), 0);
+//    }
 
     // all leaf node's children is all nullptr
     // if a node have non-nullptr children, it has a mixed state, part of it is passable and other part is unpassable
@@ -108,7 +108,7 @@ namespace freeNav::JOB {
 
         Pointi<N> base_pt_; // the minimum point of the cube of current node
 
-        BlockPtrRaw<N> block_ptr_ = nullptr;
+//        BlockPtrRaw<N> block_ptr_ = nullptr;
 
     };
 
@@ -187,6 +187,22 @@ namespace freeNav::JOB {
             releaseLeafNodes();
         }
 
+        void initBlockPtrMap() {
+            clearInternalBlockPtr();
+
+            std::vector<TreeNodePtr<N> > free_leaf_nodes = getAllPassableLeafNodes();
+            for(const auto& leaf_node : free_leaf_nodes) {
+                if(leaf_node->depth_ >= max_depth_ - min_block_depth_width_) { continue; } // limit minimum size of blocks
+//                BlockPtrRaw<N> block_ptr = new Block<N>();
+                BlockPtrRaw<N> block_ptr = std::make_shared<Block<N> >();
+                block_ptr->min_ = leaf_node->base_pt_;
+                Pointi<N> offset; offset.setAll(pow_2_[max_depth_-leaf_node->depth_]-1);
+                block_ptr->max_ = leaf_node->base_pt_ + offset;
+                //leaf_node->block_ptr_ = block_ptr;
+                setBlockPtrForNode(leaf_node, block_ptr);
+            }
+        }
+
         // need call this after construction
         virtual void initialize() {
             // initialize of space
@@ -197,24 +213,14 @@ namespace freeNav::JOB {
             for(Id id=0; id<total_index; id++) {
                 Pointi<N> pt = IdToPointi<N>(id, dim_);
                 if(!isoc_(pt)) {
-                    setOccupiedState(pt, false);
+                    setOccupiedState(pt, false, false);
                     //occ_map_[id] = false;
                     setInternalOccState(pt, false);
                 }
             }
 
             // initialize of block_ptr_map_
-            std::vector<TreeNodePtr<N> > free_leaf_nodes = getAllPassableLeafNodes();
-            for(const auto& leaf_node : free_leaf_nodes) {
-                if(leaf_node->depth_ >= max_depth_ - min_block_depth_width_) { continue; } // limit minimum size of blocks
-                BlockPtrRaw<N> block_ptr = new Block<N>();
-//                BlockPtrRaw<N> block_ptr = std::make_shared<Block<N> >();
-                block_ptr->min_ = leaf_node->base_pt_;
-                Pointi<N> offset; offset.setAll(pow_2_[max_depth_-leaf_node->depth_]-1);
-                block_ptr->max_ = leaf_node->base_pt_ + offset;
-                leaf_node->block_ptr_ = block_ptr;
-                setBlockPtrForNode(leaf_node, block_ptr);
-            }
+            initBlockPtrMap();
             initialized_ = true;
         }
 
@@ -226,6 +232,7 @@ namespace freeNav::JOB {
 
         virtual const BlockPtrRaw<N>& getInternalBlockPtr(const Pointi<N>& pt) const = 0;
 
+        virtual void clearInternalBlockPtr() = 0;
 
         // set all grid in current node range to the same block_ptr
         void setBlockPtrForNode(const TreeNodePtr<N>& node, const BlockPtrRaw<N>& block_ptr) {
@@ -259,7 +266,7 @@ namespace freeNav::JOB {
         // update state of node, do not update isoc
         // set passable to unpassable may result new tree node and erase existing node
         // and update block_ptr_map_
-        void setOccupiedState(const Pointi<N>& pt, bool is_occupied) {
+        void setOccupiedState(const Pointi<N>& pt, bool is_occupied, bool update_block = true) {
             if(isOutOfBoundary(pt, dim_)) { return ; }
 
             //Id id = PointiToId(pt, dim_);
@@ -285,7 +292,7 @@ namespace freeNav::JOB {
                     //std::cout << "reach a leaf node, and its not the same state" << std::endl;
                     buffer->mixed_state_ = true;
                     // update block_ptr_map_
-                    if(is_occupied && initialized_) {
+                    if(is_occupied && initialized_ && update_block) {
                         // set all block ptr in current leaf node as nullptr
                         setBlockPtrForNode(buffer, nullptr);
                     }
@@ -300,15 +307,15 @@ namespace freeNav::JOB {
                             // set block ptr when is_occupied = true, as this action may create multiple small blocks
                             // as when is_occupied = true, no block ptr will be set in recurAndUpdate
                             if(is_occupied && i != index &&
-                                    (buffer->children_[i]->depth_ < max_depth_ - min_block_depth_width_)) {
-                                BlockPtrRaw<N> block_ptr = new Block<N>();
-//                                BlockPtrRaw<N> block_ptr = std::make_shared<Block<N> >();
+                                    (buffer->children_[i]->depth_ < max_depth_ - min_block_depth_width_) && update_block) {
+//                                BlockPtrRaw<N> block_ptr = new Block<N>();
+                                BlockPtrRaw<N> block_ptr = std::make_shared<Block<N> >();
                                 block_ptr->min_ = buffer->children_[i]->base_pt_;
                                 Pointi<N> offset; offset.setAll(pow_2_[max_depth_-buffer->children_[i]->depth_]-1);
                                 block_ptr->max_ = buffer->children_[i]->base_pt_ + offset;
                                 //std::cout << "create block min/max " << block_ptr->min_ << ", " << block_ptr->max_ << std::endl;
                                 setBlockPtrForNode(buffer->children_[i], block_ptr);
-                                buffer->children_[i]->block_ptr_ = block_ptr;
+                                //buffer->children_[i]->block_ptr_ = block_ptr;
                             }
                         }
                         buffer = buffer->children_[index];
@@ -329,12 +336,12 @@ namespace freeNav::JOB {
             //printTree();
             // if a node's all children node is passable, set all it's children node to nullptr
             TreeNodePtr<N> parent = buffer->parent_;
-            recurAndUpdate(parent);
+            recurAndUpdate(parent, update_block);
         }
 
         // set mixed_state to false and all children to nullptr if all child are occupied or unpassable
         // and update block_ptr_map_
-        void recurAndUpdate(TreeNodePtr<N> parent) {
+        void recurAndUpdate(TreeNodePtr<N> parent, bool update_block = true) {
             //std::cout << "recurAndUpdate" << std::endl;
             assert(parent->depth_ == max_depth_ - 1);
             // remove child node if all child are passable
@@ -366,15 +373,15 @@ namespace freeNav::JOB {
                         // if set to passable, check whether create big block
                         // limit minimum size of blocks
                         //std::cout << "create block, parent->occ_ = " << parent->occ_ << std::endl;
-                        if(!parent->occ_ && (parent->depth_ < max_depth_ - min_block_depth_width_)) {
-                            BlockPtrRaw<N> block_ptr = new Block<N>();
-//                            BlockPtrRaw<N> block_ptr = std::make_shared<Block<N> >();
+                        if(!parent->occ_ && (parent->depth_ < max_depth_ - min_block_depth_width_) && update_block) {
+//                            BlockPtrRaw<N> block_ptr = new Block<N>();
+                            BlockPtrRaw<N> block_ptr = std::make_shared<Block<N> >();
                             block_ptr->min_ = parent->base_pt_;
                             Pointi<N> offset; offset.setAll(pow_2_[max_depth_-parent->depth_]-1);
                             block_ptr->max_ = parent->base_pt_ + offset;
                             //std::cout << "create block min/max " << block_ptr->min_ << ", " << block_ptr->max_ << std::endl;
                             setBlockPtrForNode(parent, block_ptr);
-                            parent->block_ptr_ = block_ptr;
+                            //parent->block_ptr_ = block_ptr;
                         }
                     }
                 } else {
@@ -625,6 +632,10 @@ namespace freeNav::JOB {
             return block_ptr_map_[PointiToId(pt, this->dim_)];
         }
 
+        virtual void clearInternalBlockPtr() {
+            block_ptr_map_ = BlockPtrsRaw<N>(getTotalIndexOfSpace<N>(this->dim_), nullptr);
+        }
+
         BlockPtrsRaw<N> block_ptr_map_; // save all grid's block ptr need lots space, but reduce time cost
 
         std::vector<bool> occ_map_; // save all grid's state need lots space, but reduce time cost
@@ -664,6 +675,10 @@ namespace freeNav::JOB {
         virtual const BlockPtrRaw<2>& getInternalBlockPtr(const Pointi<2>& pt) const override {
             if(pt[0] < 0 || pt[0] >= dim_[0] || pt[1] < 0 || pt[1] >= dim_[1]) { return nullptr; }
             return block_ptr_map_[pt[0] + pt[1]*dim_[0]];
+        }
+
+        virtual void clearInternalBlockPtr() {
+            block_ptr_map_ = BlockPtrsRaw<2>(getTotalIndexOfSpace<2>(dim_), nullptr);
         }
 
         BlockPtrsRaw<2> block_ptr_map_; // save all grid's block ptr need lots space, but reduce time cost
@@ -712,6 +727,10 @@ namespace freeNav::JOB {
             return block_ptr_map_[pt[0] + pt[1]*dim_[0] + pt[2]*dim_[0]*dim_[1]];
 //            if(isOutOfBoundary(pt, this->dim_)) { return nullptr; }
 //            return block_ptr_map_[PointiToId(pt, dim_)];
+        }
+
+        virtual void clearInternalBlockPtr() {
+            block_ptr_map_ = BlockPtrsRaw<3>(getTotalIndexOfSpace<3>(dim_), nullptr);
         }
 
         BlockPtrsRaw<3> block_ptr_map_; // save all grid's block ptr need lots space, but reduce time cost

@@ -162,10 +162,13 @@ namespace freeNav::JOB {
         : dim_(dim), obstacles_(obstacles) {
             // init obstacle's position
             map_ = std::vector<bool>(getTotalIndexOfSpace<N>(dim), false);
+            previous_center_pts_.resize(obstacles.size(), Pointi<N>());
+            current_center_pts_.resize(obstacles.size(), Pointi<N>());
+            random();
         }
 
         // update each obstacle's center to random point in the space
-        void random() {
+        void random(int max_random_move_distance = 0) {
             previous_center_pts_ = current_center_pts_;
             previous_occupied_pts_ = current_occupied_pts_;
 
@@ -176,9 +179,19 @@ namespace freeNav::JOB {
             current_center_pts_.clear();
             srand(time(0)); // use time as seed of generate random number
             for(int i=0; i<obstacles_.size(); i++) {
-                Pointi<N> center_pt;
+                Pointi<N> center_pt = previous_center_pts_[i];
                 for(int d=0; d<N; d++) {
-                    center_pt[d] = rand() % dim_[d];
+                    if(max_random_move_distance == 0) {
+                        center_pt[d] = rand() % dim_[d];
+                    } else {
+                        center_pt[d] = center_pt[d] + max_random_move_distance - rand() % (2*max_random_move_distance);
+                        // avoid negative number
+                        while(center_pt[d] < 0) {
+                            center_pt[d] = center_pt[d] + dim_[d];
+                        }
+                        // avoid out of range
+                        center_pt[d] = center_pt[d] % dim_[d];
+                    }
                 }
                 current_center_pts_.push_back(center_pt);
             }
