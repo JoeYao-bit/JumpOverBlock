@@ -168,3 +168,5 @@ file_path = "../test/SBT_LOS.txt"
 all_data = loadDataFromfile(file_path)
 
 drawData(all_data, 3)
+
+drawData(all_data, 2)
