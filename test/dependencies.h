@@ -399,11 +399,22 @@ namespace freeNav::JOB {
 
                 gettimeofday(&tv_after, &tz);
                 double time_cost_init = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-                std::cout << "SBT init time cost " << time_cost_init << " ms" << std::endl;
+//                std::cout << "SBT init time cost " << time_cost_init << " ms" << std::endl;
 
 
 
                 DynamicObstacles<N> dynamic_obstacles(dim, obs);
+
+                // synchronize with dynamicObstacles
+                for(int id=0; id<dynamic_obstacles.current_map_.size(); id++) {
+                    if(dynamic_obstacles.current_map_[id]) {
+                        Pointi<N> pt = IdToPointi<N>(id, dim);
+                        sbt->setOccupiedState(pt, true, update_block_ptr_realtime);
+                    }
+                }
+                if(!update_block_ptr_realtime) {
+                    sbt->initBlockPtrMap();
+                }
 
                 Id total_index = getTotalIndexOfSpace<N>(dim);
                 std::cout << N << " dimension space, width = " << width << ", number of obstacles = " << count << std::endl;
@@ -413,12 +424,13 @@ namespace freeNav::JOB {
                     dynamic_obstacles.random(max_obs_move_distance);
 
                     gettimeofday(&tv_pre, &tz);
+                    // only update changed node
 
-                    for(const auto& pre_pt : dynamic_obstacles.getPreviousOccupationPoints()) {
-                        sbt->setOccupiedState(pre_pt, false, update_block_ptr_realtime);
+                    for(const auto& new_free : dynamic_obstacles.getNewPassablePoints()) {
+                        sbt->setOccupiedState(new_free, false, update_block_ptr_realtime);
                     }
-                    for(const auto& cur_pt : dynamic_obstacles.getCurrentOccupationPoints()) {
-                        sbt->setOccupiedState(cur_pt, true, update_block_ptr_realtime);
+                    for(const auto& new_occ : dynamic_obstacles.getNewOccupiedPoints()) {
+                        sbt->setOccupiedState(new_occ, true, update_block_ptr_realtime);
                     }
 
                     if(!update_block_ptr_realtime) {
@@ -429,12 +441,14 @@ namespace freeNav::JOB {
                     double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e3+ (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
 
                     std::cout << "dynamicUpdateTimeCost " << time_cost1 << " ms" << std::endl;
-
+//                    SpaceBinaryTreeVarify(dim, dynamic_obstacles.isoc_, sbt);
                     gettimeofday(&tv_pre, &tz);
-                    SpaceBinaryTreePtr<N> sbt_tree = std::make_shared<SBTtype>(dynamic_obstacles.isoc_, dim, min_block_depth_width);
+                    SpaceBinaryTreePtr<N> temp_sbt = std::make_shared<SBTtype>(dynamic_obstacles.isoc_, dim, min_block_depth_width);
+                    temp_sbt->initialize();
                     gettimeofday(&tv_after, &tz);
 
                     time_cost_init = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+                    std::cout << "SBT_init_time_cost " << time_cost_init << " ms" << std::endl;
 
 
                     std::stringstream ss1;

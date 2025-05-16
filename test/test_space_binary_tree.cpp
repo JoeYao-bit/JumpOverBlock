@@ -332,8 +332,8 @@ void LineOfSightTest(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<N>& isoc_
 // MapTestConfig_Shanghai_0_512
 // 1000000 LOS test, mean raw LOS time cost = 0.00166777, mean SBT LOS time cost = 0.00124032
 
-TEST(LineOfSightCheck2D, test) {
-//int main() {
+//TEST(LineOfSightCheck2D, test) {
+int main() {
     auto dimension = loader.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
@@ -345,8 +345,8 @@ TEST(LineOfSightCheck2D, test) {
 }
 
 
-//TEST(LineOfSightCheck3D, test) {
-int main() {
+TEST(LineOfSightCheck3D, test) {
+//int main() {
     auto dimension = loader3D.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<3> & pt) -> bool { return loader3D.isOccupied(pt); };

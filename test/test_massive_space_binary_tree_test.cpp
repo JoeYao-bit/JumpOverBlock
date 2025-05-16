@@ -27,6 +27,7 @@ void varify_thread(DimensionLength* temp_dim,
 }
 
 TEST(dynamic_obstacles_2D, test) {
+//int main() {
     DimensionLength* dim = new DimensionLength[2];
 
     dim[0] = 200, dim[1] = 200;
@@ -69,11 +70,25 @@ TEST(dynamic_obstacles_2D, test) {
         canvas.drawEmptyGrid();
         canvas.drawGridMap(dim, is_occupied);
         if(draw_pre_occupy) {
-            canvas.drawGrids(dynamic_obstacles.getPreviousOccupationPoints());
+            //canvas.drawGrids(dynamic_obstacles.getPreviousOccupationPoints());
+            Id total_index = getTotalIndexOfSpace<2>(dim);
+            for(int id=0; id<total_index; id++) {
+                if(dynamic_obstacles.pre_map_[id] == false) { continue; }
+                Pointi<2> pt = IdToPointi<2>(id, dim);
+                int x = pt[0], y = pt[1];
+                canvas.drawGrid(x, y, cv::Vec3b::all(0));
+            }
             canvas.drawGrids(dynamic_obstacles.previous_center_pts_, COLOR_TABLE[1]);
         }
         if(draw_current_occupy) {
-            canvas.drawGrids(dynamic_obstacles.getCurrentOccupationPoints());
+//            canvas.drawGrids(dynamic_obstacles.getCurrentOccupationPoints());
+            Id total_index = getTotalIndexOfSpace<2>(dim);
+            for(int id=0; id<total_index; id++) {
+                if(dynamic_obstacles.current_map_[id] == false) { continue; }
+                Pointi<2> pt = IdToPointi<2>(id, dim);
+                int x = pt[0], y = pt[1];
+                canvas.drawGrid(x, y, cv::Vec3b::all(0));
+            }
             canvas.drawGrids(dynamic_obstacles.current_center_pts_, COLOR_TABLE[0]);
         }
         if(draw_block) {
@@ -117,24 +132,24 @@ TEST(dynamic_obstacles_2D, test) {
         }
         if(triger_varify) {
             triger_varify = false;
-            Id total_index = getTotalIndexOfSpace<2>(dim);
-            std::cout << "total_index = " << total_index << std::endl;
-            std::vector<bool> temp_map(total_index, false);
-            std::cout << "temp_map.size() = " << temp_map.size() << std::endl;
-            Pointis<2> occ_pts = dynamic_obstacles.getCurrentOccupationPoints();
-            for(const auto& occ_pt : occ_pts) {
-                temp_map[PointiToId(occ_pt, dim)] = true;
-            }
-            auto is_occupied_temp = [=](const Pointi<2> & pt) -> bool {
-                if(isOutOfBoundary<2>(pt, dim)) {
-                    return true;
-                }
-                Id temp_id = PointiToId(pt, dim);
-                //std::cout << "temp_map.size() = " << temp_map.size() << ", temp_id = " << temp_id << std::endl;
-                return temp_map[temp_id];
-            };
+//            Id total_index = getTotalIndexOfSpace<2>(dim);
+//            std::cout << "total_index = " << total_index << std::endl;
+//            std::vector<bool> temp_map(total_index, false);
+//            std::cout << "temp_map.size() = " << temp_map.size() << std::endl;
+//            Pointis<2> occ_pts = dynamic_obstacles.getCurrentOccupationPoints();
+//            for(const auto& occ_pt : occ_pts) {
+//                temp_map[PointiToId(occ_pt, dim)] = true;
+//            }
+//            auto is_occupied_temp = [=](const Pointi<2> & pt) -> bool {
+//                if(isOutOfBoundary<2>(pt, dim)) {
+//                    return true;
+//                }
+//                Id temp_id = PointiToId(pt, dim);
+//                //std::cout << "temp_map.size() = " << temp_map.size() << ", temp_id = " << temp_id << std::endl;
+//                return temp_map[temp_id];
+//            };
 
-            std::thread t(varify_thread<2>, dim, is_occupied_temp, sbt); // start varify thread
+            std::thread t(varify_thread<2>, dim, dynamic_obstacles.isoc_, sbt); // start varify thread
             t.detach();
         }
         char key = canvas.show(30);
@@ -147,10 +162,10 @@ TEST(dynamic_obstacles_2D, test) {
                 break;
             case 32: // 32 means space
                 dynamic_obstacles.random();
-                for(const auto& pre_pt : dynamic_obstacles.getPreviousOccupationPoints()) {
+                for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
                     sbt->setOccupiedState(pre_pt, false);
                 }
-                for(const auto& cur_pt : dynamic_obstacles.getCurrentOccupationPoints()) {
+                for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
                     sbt->setOccupiedState(cur_pt, true);
                 }
                 break;
@@ -172,12 +187,12 @@ TEST(dynamic_obstacles_2D, test) {
 
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
-//TEST(massiveSBTLOSCompareTest, test) {
 
 std::string file_path = "../test/SBT_LOS.txt";
 
 int main() {
-    for(int i=0; i<100; i++) {
+//TEST(massiveSBTLOSCompareTest, test) {
+    for(int i=0; i<1; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
 //        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(10, 100,
@@ -188,6 +203,17 @@ int main() {
 
         //massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
 
+//        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(10,
+//                                                       1,
+//                                                       {200, 300, 400, 500, 700, 800, 900, 1000},
+//                                                       {10,20,30,40,50,60,70,80},
+//                                                       file_path,
+//                                                       1e5,
+//                                                       1e3,
+//                                                       1,
+//                                                       true,
+//                                                       4);
+
         massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(5,
                                                        1,
                                                        {200,300,400,500,700,800,900, 1000},
@@ -196,7 +222,7 @@ int main() {
                                                        1e5,
                                                        1e3,
                                                        1,
-                                                       true,
+                                                       false,
                                                        4);
 
         massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,

@@ -150,7 +150,7 @@ def drawSBTInitData(all_data, dim):
 
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
-    plt.ylabel("Init Time Cost", fontsize = 13)
+    plt.ylabel("Init Time Cost (ms)", fontsize = 13)
     plt.xlabel("Occ Ratio", fontsize = 13)    
     for map_key, map_value in map_data.items():
         x = map_value["occ_ratio"]
@@ -189,7 +189,7 @@ def drawSBTUpdateData(all_data, dim):
 
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
-    plt.ylabel("Update Time Cost", fontsize = 13)
+    plt.ylabel("Update Time Cost(ms)", fontsize = 13)
     plt.xlabel("Occ Ratio", fontsize = 13)    
     for map_key, map_value in map_data.items():
         x = map_value["occ_ratio"]
