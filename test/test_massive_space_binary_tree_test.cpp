@@ -192,7 +192,7 @@ std::string file_path = "../test/SBT_LOS.txt";
 
 int main() {
 //TEST(massiveSBTLOSCompareTest, test) {
-    for(int i=0; i<1; i++) {
+    for(int i=0; i<100; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
 //        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(10, 100,
@@ -221,8 +221,8 @@ int main() {
                                                        file_path,
                                                        1e5,
                                                        1e3,
-                                                       1,
-                                                       false,
+                                                       {1,2,4,6,8,10,20,40},
+                                                       true,
                                                        4);
 
         massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
@@ -232,7 +232,7 @@ int main() {
                                                        file_path,
                                                        1e5,
                                                        1e3,
-                                                       1,
+                                                       {1,2,4,6,8,10,20,40},
                                                        true,
                                                        4);
 

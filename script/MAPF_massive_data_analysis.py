@@ -32,13 +32,13 @@ def loadDataFromfile(file_path):
                 elif splited_line[0] == "SBT":
                     new_data = SBTData()
                     
-                    new_data.dim                  = int(splited_line  [1])
-                    new_data.init_time_cost       = float(splited_line[2])
-                    new_data.update_time_cost     = float(splited_line[3])
-                    new_data.total_index_of_space = int(splited_line  [4])
-                    new_data.occ_ratio            = float(splited_line[5])
-                    new_data.dimension_length     = int(splited_line  [6])
-
+                    new_data.dim                   = int(splited_line  [1])
+                    new_data.init_time_cost        = float(splited_line[2])
+                    new_data.update_time_cost      = float(splited_line[3])
+                    new_data.total_index_of_space  = int(splited_line  [4])
+                    new_data.occ_ratio             = float(splited_line[5])
+                    new_data.max_obs_move_distance = int(splited_line  [6])
+                    new_data.dimension_length      = int(splited_line  [7])
                     data_list.append(new_data)
 
     except Exception as e:            
@@ -72,6 +72,7 @@ class SBTData:
     total_index_of_space = 0
     occ_ratio = 0.
     dimension_length = 0 
+    max_obs_move_distance = 0
 
 # def drawData3D(all_data, dim):
 #     x1 = []
