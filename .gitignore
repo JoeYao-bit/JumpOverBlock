@@ -15,4 +15,8 @@ ENLSVG-Pathfinding/
 CMakeFiles/
 build/
 venv/
+<<<<<<< HEAD
 pic/
+=======
+pic/
+>>>>>>> 3df2446aa3784381372c99e0f79e55b1676037e8
