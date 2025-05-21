@@ -85,7 +85,7 @@ namespace freeNav::JOB {
     // times_of_test do how many times of LOS compare
     // each compare use how many times of sample to find a point
     template<Dimension N>
-    void LOSCompare(DimensionLength* temp_dim,
+    float LOSCompare(DimensionLength* temp_dim,
                     const SpaceBinaryTreePtr<N>& sbt,
                     const DynamicObstacles<N>& dynamic_obstacles,
                     std::vector<std::string>& output_strings,
@@ -104,6 +104,7 @@ namespace freeNav::JOB {
 
         double sum_1 = 0, sum_2 = 0;
         int success_count = 0, occ_count = 0;
+        double collision_count = 0;
         std::cout << "times_of_LOS_compare_test  = " << times_of_test << std::endl;
         for(int i=0; i<times_of_test; i++) {
             // random pick two passable point
@@ -218,6 +219,8 @@ namespace freeNav::JOB {
            << printDimInfo<N>(temp_dim) << " " // dimension length
            ;
         output_strings.push_back(ss.str());
+
+       return (float)occ_count / success_count;
 
     }
 
@@ -456,6 +459,9 @@ namespace freeNav::JOB {
                         std::cout << "SBT_init_time_cost " << time_cost_init << " ms" << std::endl;
 
 
+
+                        std::vector<std::string> strs;
+                        float occ_ratio = LOSCompare<N>(dim, sbt, dynamic_obstacles, strs, time_of_test, max_sample_times);
                         std::stringstream ss1;
                         ss1 << "SBT " << N << " "  // Dimension
                             << time_cost_init << " " // init time cost
@@ -463,11 +469,10 @@ namespace freeNav::JOB {
                             << total_index << " " // total index of space
                             << (float) dynamic_obstacles.occ_pt_count_ / total_index << " " // ratio of occ grid
                             << max_obs_move_distance << " "
+                            << occ_ratio << " "
                             << printDimInfo<N>(dim) << " " // dimension length
-                                ;
-                        std::vector<std::string> strs;
+                                    ;
                         strs.push_back(ss1.str());
-                        LOSCompare<N>(dim, sbt, dynamic_obstacles, strs, time_of_test, max_sample_times);
                         if (!file_path.empty()) {
                             writeToFile<N>(strs, file_path);
                             std::cout << "write test data to " << file_path << std::endl;
