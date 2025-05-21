@@ -27,6 +27,9 @@ def loadDataFromfile(file_path):
                     new_data.occ_ratio            = float(splited_line[6])
                     new_data.dimension_length     = int(splited_line  [7])
 
+                    # if new_data.dimension_length % 200 != 0:
+                    #     continue
+
                     data_list.append(new_data)
 
                 elif splited_line[0] == "SBT":
@@ -38,7 +41,13 @@ def loadDataFromfile(file_path):
                     new_data.total_index_of_space  = int(splited_line  [4])
                     new_data.occ_ratio             = float(splited_line[5])
                     new_data.max_obs_move_distance = int(splited_line  [6])
-                    new_data.dimension_length      = int(splited_line  [7])
+                    new_data.colli_ratio           = float(splited_line[7])
+                    new_data.dimension_length      = int(splited_line  [8])
+
+
+                    # if new_data.dimension_length % 200 != 0:
+                    #     continue
+                
                     data_list.append(new_data)
 
     except Exception as e:            
@@ -102,6 +111,7 @@ def drawCompareData(all_data, dim):
             continue
         if a_data.dim != dim:
             continue
+
         if a_data.dimension_length not in map_data:
             map_data[a_data.dimension_length] = dict()
             map_data[a_data.dimension_length]["colli_ratio"] = list()
@@ -142,27 +152,37 @@ def drawSBTInitData(all_data, dim):
             continue
         if a_data.dim != dim:
             continue
+
         if a_data.dimension_length not in map_data:
             map_data[a_data.dimension_length] = dict()
-            map_data[a_data.dimension_length]["occ_ratio"] = list()
+            map_data[a_data.dimension_length]["colli_ratio"] = list()
             map_data[a_data.dimension_length]["init_time_cost"] = list()
-        map_data[a_data.dimension_length]["occ_ratio"].append(a_data.occ_ratio)
+        map_data[a_data.dimension_length]["colli_ratio"].append(a_data.colli_ratio)
         map_data[a_data.dimension_length]["init_time_cost"].append(a_data.init_time_cost)
 
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
+
     plt.ylabel("Init Time Cost (ms)", fontsize = 13)
-    plt.xlabel("Occ Ratio", fontsize = 13)    
+    plt.xlabel("Colli Ratio", fontsize = 13)    
     for map_key, map_value in map_data.items():
-        x = map_value["occ_ratio"]
+        x = map_value["colli_ratio"]
         y = map_value["init_time_cost"]
         scatter = ax.scatter(x, y, marker='.')
         
         coefficients = np.polyfit(x, y, deg=1)
         trend_line = np.poly1d(coefficients)
         plt.plot(x, trend_line(x), label='width='+str(map_key))
-        
-    plt.legend(ncol=2)    
+
+    plt.tick_params(axis='both', labelsize=16) # work
+    formater = ticker.ScalarFormatter(useMathText=True) 
+    formater.set_scientific(True)
+    formater.set_powerlimits((0,0))
+    ax = plt.gca()
+    ax.yaxis.offsetText.set_fontsize(18)
+    ax.yaxis.set_major_formatter(formater) 
+    
+    plt.legend(ncol=2, fontsize=12)    
     # plt.show()     
     save_path = "../test/pic/"
     if not os.path.exists(save_path):
@@ -181,21 +201,22 @@ def drawSBTUpdateData(all_data, dim, max_obs_move_dist):
             continue
         if a_data.dim != dim:
             continue
+
         if a_data.max_obs_move_distance != max_obs_move_dist:
             continue        
         if a_data.dimension_length not in map_data:
             map_data[a_data.dimension_length] = dict()
-            map_data[a_data.dimension_length]["occ_ratio"] = list()
+            map_data[a_data.dimension_length]["colli_ratio"] = list()
             map_data[a_data.dimension_length]["update_time_cost"] = list()
-        map_data[a_data.dimension_length]["occ_ratio"].append(a_data.occ_ratio)
+        map_data[a_data.dimension_length]["colli_ratio"].append(a_data.colli_ratio)
         map_data[a_data.dimension_length]["update_time_cost"].append(a_data.update_time_cost)
 
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
     plt.ylabel("Update Time Cost(ms)", fontsize = 13)
-    plt.xlabel("Occ Ratio", fontsize = 13)    
+    plt.xlabel("Colli Ratio", fontsize = 13)    
     for map_key, map_value in map_data.items():
-        x = map_value["occ_ratio"]
+        x = map_value["colli_ratio"]
         y = map_value["update_time_cost"]
         scatter = ax.scatter(x, y, marker='.')
         
