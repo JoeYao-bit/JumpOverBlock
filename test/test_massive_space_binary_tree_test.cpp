@@ -72,9 +72,8 @@ TEST(dynamic_obstacles_2D, test) {
         if(draw_pre_occupy) {
             //canvas.drawGrids(dynamic_obstacles.getPreviousOccupationPoints());
             Id total_index = getTotalIndexOfSpace<2>(dim);
-            for(int id=0; id<total_index; id++) {
-                if(dynamic_obstacles.pre_map_[id] == false) { continue; }
-                Pointi<2> pt = IdToPointi<2>(id, dim);
+            for(const auto& pre_id : dynamic_obstacles.pre_occ_ids_) {
+                Pointi<2> pt = IdToPointi<2>(pre_id, dim);
                 int x = pt[0], y = pt[1];
                 canvas.drawGrid(x, y, cv::Vec3b::all(0));
             }
@@ -192,7 +191,7 @@ std::string file_path = "../test/SBT_LOS.txt";
 
 int main() {
 //TEST(massiveSBTLOSCompareTest, test) {
-    for(int i=0; i<100; i++) {
+    for(int i=0; i<1; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
 //        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(10, 100,
@@ -221,20 +220,20 @@ int main() {
                                                        file_path,
                                                        1e5,
                                                        1e3,
-                                                       {1,2,4,6,8,10,20,40},
+                                                       {1,4,8,16,32,0},
                                                        true,
                                                        4);
 
-        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
-                                                       1,
-                                                       {200, 300, 400, 500, 600, 700, 800},
-                                                       {10, 20, 40, 60, 80},
-                                                       file_path,
-                                                       1e5,
-                                                       1e3,
-                                                       {1,2,4,6,8,10,20,40},
-                                                       true,
-                                                       4);
+//        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
+//                                                       1,
+//                                                       {200, 300, 400, 500, 600, 700, 800},
+//                                                       {10, 20, 40, 60, 80},
+//                                                       file_path,
+//                                                       1e5,
+//                                                       1e3,
+//                                                       {1,2,4,6,8,10,20,40},
+//                                                       true,
+//                                                       4);
 
     }
 }

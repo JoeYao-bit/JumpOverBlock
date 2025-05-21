@@ -363,7 +363,6 @@ namespace freeNav::JOB {
         struct timeval tv_pre;
         struct timeval tv_after;
 
-        std::vector<std::string> strs;
 
 
         for(const auto& width : width_of_space) {
@@ -466,7 +465,7 @@ namespace freeNav::JOB {
                             << max_obs_move_distance << " "
                             << printDimInfo<N>(dim) << " " // dimension length
                                 ;
-
+                        std::vector<std::string> strs;
                         strs.push_back(ss1.str());
                         LOSCompare<N>(dim, sbt, dynamic_obstacles, strs, time_of_test, max_sample_times);
                         if (!file_path.empty()) {

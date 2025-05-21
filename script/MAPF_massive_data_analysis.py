@@ -174,13 +174,15 @@ def drawSBTInitData(all_data, dim):
     print("save picture to "+save_path)        
 
 
-def drawSBTUpdateData(all_data, dim):
+def drawSBTUpdateData(all_data, dim, max_obs_move_dist):
     map_data = {} # dimelength and data occ ratio, dimension_length
     for a_data in all_data:
         if type(a_data).__name__ != "SBTData":
             continue
         if a_data.dim != dim:
             continue
+        if a_data.max_obs_move_distance != max_obs_move_dist:
+            continue        
         if a_data.dimension_length not in map_data:
             map_data[a_data.dimension_length] = dict()
             map_data[a_data.dimension_length]["occ_ratio"] = list()
@@ -207,7 +209,7 @@ def drawSBTUpdateData(all_data, dim):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
         print("Folder: " + save_path + " created")
-    save_path = save_path + "dim_"+str(dim)+"_update_summary"    
+    save_path = save_path + "dim_"+str(dim)+"_dist_"+ str(max_obs_move_dist) +"_update_summary"    
     plt.savefig(save_path, dpi = 200, bbox_inches='tight')   
     plt.close()
     print("save picture to "+save_path)        
@@ -226,8 +228,9 @@ all_compare_data = loadDataFromfile(file_path)
 drawSBTInitData(all_compare_data, 3)
 drawSBTInitData(all_compare_data, 2)
 
-drawSBTUpdateData(all_compare_data, 3)
-drawSBTUpdateData(all_compare_data, 2)
+for max_dist in [1, 4, 16, 0]:
+    drawSBTUpdateData(all_compare_data, 3, max_dist)
+    drawSBTUpdateData(all_compare_data, 2, max_dist)
 
 drawCompareData(all_compare_data, 3)
 drawCompareData(all_compare_data, 2)

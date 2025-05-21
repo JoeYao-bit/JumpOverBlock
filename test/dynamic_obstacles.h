@@ -161,7 +161,7 @@ namespace freeNav::JOB {
         DynamicObstacles(DimensionLength* dim, const ObstaclePtrs<N>& obstacles)
         : dim_(dim), obstacles_(obstacles) {
             // init obstacle's position
-            pre_map_     = std::vector<bool>(getTotalIndexOfSpace<N>(dim), false);
+            //pre_map_     = std::vector<bool>(getTotalIndexOfSpace<N>(dim), false);
             current_map_ = std::vector<bool>(getTotalIndexOfSpace<N>(dim), false);
 
             previous_center_pts_.resize(obstacles.size(), Pointi<N>());
@@ -172,9 +172,13 @@ namespace freeNav::JOB {
         // update each obstacle's center to random point in the space
         void random(int max_random_move_distance = 0) {
             previous_center_pts_ = current_center_pts_;
-            pre_map_ = current_map_;
+            //pre_map_ = current_map_;
 
-            current_map_ = std::vector<bool>(pre_map_.size(), false);
+            pre_occ_ids_ = cur_occ_ids_;
+
+            Id total_index = getTotalIndexOfSpace<N>(dim_);
+
+            current_map_ = std::vector<bool>(total_index, false);
 
             current_center_pts_.clear();
             srand(time(0)); // use time as seed of generate random number
@@ -197,11 +201,13 @@ namespace freeNav::JOB {
             }
 
             occ_pt_count_ = 0;
+            cur_occ_ids_.clear();
             for(int i=0; i<obstacles_.size(); i++) {
                 Pointis<N> occupation = obstacles_[i]->getOccupiedGrid(current_center_pts_[i]);
                 for(const auto& occupy_pt : occupation) {
                     if(!isOutOfBoundary(occupy_pt, dim_)) {
                         Id id = PointiToId(occupy_pt, dim_);
+                        cur_occ_ids_.insert(id);
                         if(current_map_[id] == false) {
                             occ_pt_count_ ++;
                         }
@@ -210,17 +216,15 @@ namespace freeNav::JOB {
                 }
             }
 
-            new_free_pts_.clear();
-            new_occ_pts_.clear();
-            Id total_index = getTotalIndexOfSpace<N>(dim_);
-            for(int id=0; id<total_index; id++) {
-                if(current_map_[id] != pre_map_[id]) {
-                    Pointi<N> pt = IdToPointi<N>(id, dim_);
-                    if(pre_map_[id] == true) {
-                        new_free_pts_.push_back(pt);
-                    } else {
-                        new_occ_pts_.push_back(pt);
-                    }
+            for(const auto& cur_id : cur_occ_ids_) {
+                if(pre_occ_ids_.find(cur_id) == pre_occ_ids_.end()) {
+                    new_occ_pts_.push_back(IdToPointi<N>(cur_id, dim_));
+                }
+            }
+
+            for(const auto& pre_id : pre_occ_ids_) {
+                if(cur_occ_ids_.find(pre_id) == cur_occ_ids_.end()) {
+                    new_free_pts_.push_back(IdToPointi<N>(pre_id, dim_));
                 }
             }
 
@@ -233,20 +237,21 @@ namespace freeNav::JOB {
             };
             isoc_ = is_occupied_temp;
 
+
             //debug
-            std::vector<bool> copy_pre_map = pre_map_;
-            for(const auto& new_occ : new_occ_pts_) {
-                Id id = PointiToId(new_occ, dim_);
-                copy_pre_map[id] = true;
-            }
-            for(const auto& new_free : new_free_pts_) {
-                Id id = PointiToId(new_free, dim_);
-                copy_pre_map[id] = false;
-            }
-            for(Id id=0; id<total_index; id++) {
-                assert(copy_pre_map[id] == current_map_[id]);
-            }
-            std::cout << "Dynamic random pass debug" << std::endl;
+//            std::vector<bool> copy_pre_map = pre_map_;
+//            for(const auto& new_occ : new_occ_pts_) {
+//                Id id = PointiToId(new_occ, dim_);
+//                copy_pre_map[id] = true;
+//            }
+//            for(const auto& new_free : new_free_pts_) {
+//                Id id = PointiToId(new_free, dim_);
+//                copy_pre_map[id] = false;
+//            }
+//            for(Id id=0; id<total_index; id++) {
+//                assert(copy_pre_map[id] == current_map_[id]);
+//            }
+//            std::cout << "Dynamic random pass debug" << std::endl;
         }
 
 //        Pointis<N> getPreviousOccupationPoints() const {
@@ -271,11 +276,13 @@ namespace freeNav::JOB {
 
         IS_OCCUPIED_FUNC<N> isoc_;
 
-        std::vector<bool> pre_map_;
+//        std::vector<bool> pre_map_;
         std::vector<bool> current_map_;
 
         Pointis<N> previous_center_pts_;
         Pointis<N> current_center_pts_;
+
+        std::set<Id> pre_occ_ids_, cur_occ_ids_;
 
         Pointis<N> new_occ_pts_;
         Pointis<N> new_free_pts_;
