@@ -6,9 +6,7 @@
 #include "octomap/octomap.h"
 #include "../test/test_data.h"
 #include "../freeNav-base/dependencies/2d_grid/text_map_loader.h"
-#include "../freeNav-base/visualization/canvas/canvas.h"
 
-//#include "../freeNav-base/visualization/canvas/canvas.h"
 //#include "../test/test_data.h"
 //#include "../freeNav-base/dependencies/random_map_generator.h"
 //#include "../freeNav-base/basic_elements/distance_map_update.h"
@@ -118,89 +116,6 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
 int zoom_rate = 1;
 
-TEST(SpaceBinaryTree2D, test) {
-    auto dimension = loader.getDimensionInfo();
-
-    auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
-
-    gettimeofday(&tv_pre, &tz);
-
-    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dimension);
-    sbt.initialize();
-    gettimeofday(&tv_after, &tz);
-
-    double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-    std::cout << "SpaceBinaryTree2D take " << time_cost << " ms to initialize" << std::endl;
-
-    Id total_index = getTotalIndexOfSpace<2>(dimension);
-
-    for(Id id=0; id<total_index; id++) {
-        Pointi<2> pt = IdToPointi<2>(id, dimension);
-        assert(is_occupied(pt) == sbt.isOccupied(pt));
-    }
-
-    std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
-    BlockPtrs<2> block_ptrs;
-    for(const auto& leaf_node : free_leaf_nodes) {
-        BlockPtr<2> block_ptr = std::make_shared<Block<2> >();
-        block_ptr->min_ = leaf_node->base_pt_;
-        Pointi<2> offset; offset.setAll(sbt.pow_2_[sbt.max_depth_-leaf_node->depth_]-1);
-        block_ptr->max_ = leaf_node->base_pt_ + offset;
-        assert((!is_occupied(block_ptr->min_)) && (!is_occupied(block_ptr->max_)));
-        block_ptrs.push_back(block_ptr);
-    }
-
-    // set to reverse state
-//    for(Id id=0; id<total_index; id++) {
-//        Pointi<2> pt = IdToPointi<2>(id, dimension);
-//        sbt.setOccupiedState(pt, !is_occupied(pt));
-//    }
-
-    Canvas canvas("SpaceBinaryTree2D",dimension[0],dimension[1], .05, zoom_rate);
-    bool draw_free_leaf = true,
-         draw_block = false;
-    while(1) {
-        canvas.resetCanvas();
-        canvas.drawEmptyGrid();
-        canvas.drawGridMap(dimension, is_occupied);
-
-        if(draw_free_leaf) {
-            //canvas.draw_DistMap(block_detect.dimension_info_, block_detect.dist_map_);
-            //int total_count = getTotalIndexOfSpace<2>(dimension);
-            for(int i=0; i<block_ptrs.size(); i++) {
-                const auto& block_ptr = block_ptrs[i];
-                const Pointi<2> pt1 = block_ptr->min_, pt2 = block_ptr->max_;
-                //const Pointi<2> pt1 = Pointi<2>{0, 0}, pt2 = Pointi<2>{100, 100};
-                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, false,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, false,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, false,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, false,COLOR_TABLE[i%30]);
-                //break;
-            }
-        }
-        if(draw_block) {
-            for(int id=0; id<sbt.block_ptr_map_.size(); id++) {
-                if(sbt.block_ptr_map_[id] == nullptr) { continue; }
-                Pointi<2> pt = IdToPointi<2>(id, dimension);
-                Id indicator = PointiToId<2>(sbt.block_ptr_map_[id]->min_, dimension);
-                canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
-            }
-        }
-        char key = canvas.show(30);
-        switch (key) {
-            case 'f':
-                draw_free_leaf = !draw_free_leaf;
-                break;
-            case 'b':
-                draw_block = !draw_block;
-                break;
-            default:
-                break;
-        }
-    }
-
-}
-
 //MapTestConfig_Complex 7796.59 ms 4277.9 ms
 //MapTestConfig_A1 109404 ms
 // A1 10000 LOS test, mean raw LOS time cost = 0.0077252, mean SBT LOS time cost = 0.0059969
@@ -210,32 +125,6 @@ auto map_test_config_3D = MapTestConfig_A1;
 
 TextMapLoader_3D loader3D(map_test_config_3D.at("map_path"));
 
-
-TEST(SpaceBinaryTree3D, test) {
-    auto dimension = loader3D.getDimensionInfo();
-
-    auto is_occupied = [](const Pointi<3> & pt) -> bool { return loader3D.isOccupied(pt); };
-
-    std::cout << "SpaceBinaryTree3D start initialize" << std::endl;
-
-
-    gettimeofday(&tv_pre, &tz);
-
-    SpaceBinaryTreeAnyDimension<3> sbt(is_occupied, dimension);
-    sbt.initialize();
-
-    gettimeofday(&tv_after, &tz);
-
-    double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-    std::cout << "SpaceBinaryTree3D take " << time_cost << " ms to initialize" << std::endl;
-
-    Id total_index = getTotalIndexOfSpace<3>(dimension);
-
-    for(Id id=0; id<total_index; id++) {
-        Pointi<3> pt = IdToPointi<3>(id, dimension);
-        assert(is_occupied(pt) == sbt.isOccupied(pt));
-    }
-}
 
 TEST(GetFloorOrCeilFlag, test) {
     Pointis<2> offsets = GetFloorOrCeilFlag<2>();

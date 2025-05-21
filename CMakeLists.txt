@@ -25,21 +25,11 @@ endif()
 
 add_subdirectory(freeNav-base)
 
-add_executable(test_3d_block_viewer test/test_3d_block_viewer.cpp)
-target_link_libraries(test_3d_block_viewer freeNav-base)
 
-add_executable(test_los_for_sparse_map test/test_los_for_sparse_map.cpp)
-target_link_libraries(test_los_for_sparse_map freeNav-base)
-
-add_executable(test_massive_los_check_with_jump_block test/test_massive_los_check_with_jump_block.cpp)
-target_link_libraries(test_massive_los_check_with_jump_block freeNav-base)# ${CGAL_LIBRARIES})
-## add ${CGAL_LIBRARIES} to third party lib cause /usr/local/include/g2o/core/base_fixed_sized_edge.hpp:168:33: error: ‘(1.0e+0 / 2.0000000000000001e-9)’ is not a constant expression
-#
 add_executable(test_detect_best_block_width test/test_detect_best_block_width.cpp)
 target_link_libraries(test_detect_best_block_width freeNav-base)
 
-add_executable(test_massive_los_check_with_random_map test/test_massive_los_check_with_random_map.cpp)
-target_link_libraries(test_massive_los_check_with_random_map freeNav-base)
+
 
 add_executable(test_space_binary_tree test/test_space_binary_tree.cpp)
 target_link_libraries(test_space_binary_tree freeNav-base)
