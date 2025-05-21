@@ -122,7 +122,7 @@ def drawCompareData(all_data, dim):
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
     plt.ylabel("Acc Ratio", fontsize = 13)
-    plt.xlabel("Collision Ratio", fontsize = 13)    
+    plt.xlabel("Obstacle Density", fontsize = 13)    
     for map_key, map_value in map_data.items():
         x = map_value["colli_ratio"]
         y = map_value["acc_ratio"]
@@ -132,7 +132,7 @@ def drawCompareData(all_data, dim):
         trend_line = np.poly1d(coefficients)
         plt.plot(x, trend_line(x), label='width='+str(map_key))
         
-    plt.legend(ncol=2)    
+    plt.legend(ncol=2, fontsize=12)    
     # plt.show()     
     save_path = "../test/pic/"
     if not os.path.exists(save_path):
@@ -163,8 +163,8 @@ def drawSBTInitData(all_data, dim):
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
 
-    plt.ylabel("Init Time Cost (ms)", fontsize = 13)
-    plt.xlabel("Colli Ratio", fontsize = 13)    
+    plt.ylabel("Time Cost (ms)", fontsize = 16)
+    plt.xlabel("Obstacle Density", fontsize = 16)    
     for map_key, map_value in map_data.items():
         x = map_value["colli_ratio"]
         y = map_value["init_time_cost"]
@@ -174,12 +174,12 @@ def drawSBTInitData(all_data, dim):
         trend_line = np.poly1d(coefficients)
         plt.plot(x, trend_line(x), label='width='+str(map_key))
 
-    plt.tick_params(axis='both', labelsize=16) # work
+    plt.tick_params(axis='both', labelsize=18) # work
     formater = ticker.ScalarFormatter(useMathText=True) 
     formater.set_scientific(True)
     formater.set_powerlimits((0,0))
     ax = plt.gca()
-    ax.yaxis.offsetText.set_fontsize(18)
+    ax.yaxis.offsetText.set_fontsize(16)
     ax.yaxis.set_major_formatter(formater) 
     
     plt.legend(ncol=2, fontsize=12)    
@@ -213,8 +213,8 @@ def drawSBTUpdateData(all_data, dim, max_obs_move_dist):
 
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
-    plt.ylabel("Update Time Cost(ms)", fontsize = 13)
-    plt.xlabel("Colli Ratio", fontsize = 13)    
+    plt.ylabel("Time Cost(ms)", fontsize = 16)
+    plt.xlabel("Obstacle Density", fontsize = 16)    
     for map_key, map_value in map_data.items():
         x = map_value["colli_ratio"]
         y = map_value["update_time_cost"]
@@ -223,8 +223,17 @@ def drawSBTUpdateData(all_data, dim, max_obs_move_dist):
         coefficients = np.polyfit(x, y, deg=1)
         trend_line = np.poly1d(coefficients)
         plt.plot(x, trend_line(x), label='width='+str(map_key))
+
+
+    plt.tick_params(axis='both', labelsize=18) # work
+    formater = ticker.ScalarFormatter(useMathText=True) 
+    formater.set_scientific(True)
+    formater.set_powerlimits((0,0))
+    ax = plt.gca()
+    ax.yaxis.offsetText.set_fontsize(16)
+    ax.yaxis.set_major_formatter(formater)     
         
-    plt.legend(ncol=2)    
+    plt.legend(ncol=2, fontsize=12)    
     # plt.show()     
     save_path = "../test/pic/"
     if not os.path.exists(save_path):
