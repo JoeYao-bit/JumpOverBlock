@@ -3,7 +3,7 @@
 //
 
 #include "gtest/gtest.h"
-#include "octomap/octomap.h"
+//#include "octomap/octomap.h"
 #include "../test/test_data.h"
 #include "../freeNav-base/dependencies/2d_grid/text_map_loader.h"
 

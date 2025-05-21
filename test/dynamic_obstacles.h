@@ -6,7 +6,7 @@
 #define JUMPOVERBLOCK_DYNAMIC_OBSTACLES_H
 
 #include <random>
-#include "freeNav-base/basic_elements/point.h"
+#include "../freeNav-base/basic_elements/point.h"
 
 namespace freeNav::JOB {
 

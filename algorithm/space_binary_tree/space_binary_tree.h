@@ -7,7 +7,7 @@
 
 #include <auto_ptr.h>
 #include <vector>
-#include "freeNav-base/basic_elements/point.h"
+#include "../../freeNav-base/basic_elements/point.h"
 #include "../line_of_sight_jump_between_block.h"
 
 namespace freeNav::JOB {
