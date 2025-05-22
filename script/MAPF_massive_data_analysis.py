@@ -122,7 +122,7 @@ def drawCompareData(all_data, dim):
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
     plt.ylabel("Acc Ratio", fontsize = 13)
-    plt.xlabel("Obstacle Density", fontsize = 13)    
+    plt.xlabel("Obstacle Density ($\Phi$)", fontsize = 16)    
     for map_key, map_value in map_data.items():
         x = map_value["colli_ratio"]
         y = map_value["acc_ratio"]
@@ -164,7 +164,7 @@ def drawSBTInitData(all_data, dim):
     ax = plt.axes()
 
     plt.ylabel("Time Cost (ms)", fontsize = 16)
-    plt.xlabel("Obstacle Density", fontsize = 16)    
+    plt.xlabel("Obstacle Density ($\Phi$)", fontsize = 16)    
     for map_key, map_value in map_data.items():
         x = map_value["colli_ratio"]
         y = map_value["init_time_cost"]
@@ -214,7 +214,7 @@ def drawSBTUpdateData(all_data, dim, max_obs_move_dist):
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
     plt.ylabel("Time Cost(ms)", fontsize = 16)
-    plt.xlabel("Obstacle Density", fontsize = 16)    
+    plt.xlabel("Obstacle Density ($\Phi$)", fontsize = 16)    
     for map_key, map_value in map_data.items():
         x = map_value["colli_ratio"]
         y = map_value["update_time_cost"]
