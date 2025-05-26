@@ -200,7 +200,9 @@ namespace freeNav::JOB {
 
                 int d = rand() % N;
                 if(max_random_move_distance == 0) {
-                    center_pt[d] = rand() % dim_[d];
+                    for(int d=0; d<N; d++) {
+                        center_pt[d] = rand() % dim_[d];
+                    }
                 } else {
                     center_pt[d] = center_pt[d] + max_random_move_distance - rand() % (2 * max_random_move_distance);
                 }
