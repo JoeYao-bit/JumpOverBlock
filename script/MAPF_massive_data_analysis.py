@@ -258,7 +258,7 @@ all_compare_data = loadDataFromfile(file_path)
 drawSBTInitData(all_compare_data, 3)
 drawSBTInitData(all_compare_data, 2)
 
-for max_dist in [1, 4, 16, 0]:
+for max_dist in [1, 2, 3, 4]:
     drawSBTUpdateData(all_compare_data, 3, max_dist)
     drawSBTUpdateData(all_compare_data, 2, max_dist)
 

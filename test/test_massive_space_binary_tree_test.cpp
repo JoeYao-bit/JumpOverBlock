@@ -61,33 +61,36 @@ int main() {
 //                                                        file_path,
 //                                                        1e5,
 //                                                        1e3,
-//                                                        {1,4,8,16,32,0},
+//                                                        {1,2,3,4},
 //                                                        true,
 //                                                        4);
 //
-//        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
-//                                                      1,
-//                                                      {200, 300, 400, 500, 600},
-//                                                      //{600, 700, 800},
-//                                                      {10, 20, 40, 60, 80, 160},
-//                                                      file_path,
-//                                                      1e5,
-//                                                      1e3,
-//                                                      {1,4,16,32,0},
-//                                                      true,
-//                                                      4);
 
-        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(1,
-                                                       1,
-                                                       {300},
-                //{600, 700, 800},
-                                                       {10, 20, 40, 60, 80, 160},
-                                                       file_path,
-                                                       1e3,
-                                                       1e3,
-                                                       {1},
-                                                       true,
-                                                       4);
+        for(int k=0; k<5; k++) {
+
+            massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
+                                                           1,
+                                                           {200, 400, 600, 800},
+                    //{600, 700, 800},
+                                                           {10, 20, 40, 60, 80, 160},
+                                                           file_path,
+                                                           1e5,
+                                                           1e3,
+                                                           {1, 2, 3, 4},
+                                                           true,
+                                                           4);
+        }
+//        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(1,
+//                                                       1,
+//                                                       {300},
+//                //{600, 700, 800},
+//                                                       {10},
+//                                                       file_path,
+//                                                       1e5,
+//                                                       1e3,
+//                                                       {1},
+//                                                       true,
+//                                                       4);
 
     }
 }
