@@ -184,19 +184,33 @@ namespace freeNav::JOB {
             srand(time(0)); // use time as seed of generate random number
             for(int i=0; i<obstacles_.size(); i++) {
                 Pointi<N> center_pt = previous_center_pts_[i];
-                for(int d=0; d<N; d++) {
-                    if(max_random_move_distance == 0) {
-                        center_pt[d] = rand() % dim_[d];
-                    } else {
-                        center_pt[d] = center_pt[d] + max_random_move_distance - rand() % (2*max_random_move_distance);
-                        // avoid negative number
-                        while(center_pt[d] < 0) {
-                            center_pt[d] = center_pt[d] + dim_[d];
-                        }
-                        // avoid out of range
-                        center_pt[d] = center_pt[d] % dim_[d];
-                    }
+//                for(int d=0; d<N; d++) {
+//                    if(max_random_move_distance == 0) {
+//                        center_pt[d] = rand() % dim_[d];
+//                    } else {
+//                        center_pt[d] = center_pt[d] + max_random_move_distance - rand() % (2*max_random_move_distance);
+//                        // avoid negative number
+//                        while(center_pt[d] < 0) {
+//                            center_pt[d] = center_pt[d] + dim_[d];
+//                        }
+//                        // avoid out of range
+//                        center_pt[d] = center_pt[d] % dim_[d];
+//                    }
+//                }
+
+                int d = rand() % N;
+                if(max_random_move_distance == 0) {
+                    center_pt[d] = rand() % dim_[d];
+                } else {
+                    center_pt[d] = center_pt[d] + max_random_move_distance - rand() % (2 * max_random_move_distance);
                 }
+                // avoid negative number
+                while(center_pt[d] < 0) {
+                    center_pt[d] = center_pt[d] + dim_[d];
+                }
+                // avoid out of range
+                center_pt[d] = center_pt[d] % dim_[d];
+
                 current_center_pts_.push_back(center_pt);
             }
 

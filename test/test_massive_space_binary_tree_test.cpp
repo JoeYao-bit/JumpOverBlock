@@ -64,7 +64,7 @@ int main() {
 //                                                        {1,2,3,4},
 //                                                        true,
 //                                                        4);
-//
+
 
         for(int k=0; k<5; k++) {
 
@@ -80,6 +80,7 @@ int main() {
                                                            true,
                                                            4);
         }
+
 //        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(1,
 //                                                       1,
 //                                                       {300},
