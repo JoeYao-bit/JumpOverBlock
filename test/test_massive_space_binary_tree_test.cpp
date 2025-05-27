@@ -28,7 +28,7 @@ void varify_thread(DimensionLength* temp_dim,
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
 
-std::string file_path = "../test/SBT_LOS.txt";
+std::string file_path = "../test/SBT_LOS_second.txt";
 
 int main() {
 //TEST(massiveSBTLOSCompareTest, test) {
@@ -50,9 +50,9 @@ int main() {
 
            massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(1,
                                                           1,
-                                                          {200, 400, 600, 800, 1000},
+                                                          {600, 800},
                    //{600, 700, 800},
-                                                          {10, 20, 40, 60, 80, 160, 320},
+                                                          {20, 40, 80, 160, 320, 480},
                                                           file_path,
                                                           1e5,
                                                           1e3,
