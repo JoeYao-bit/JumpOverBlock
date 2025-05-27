@@ -34,32 +34,32 @@ int main() {
 //TEST(massiveSBTLOSCompareTest, test) {
     for(int i=0; i<1; i++) {
 
-         massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(5,
-                                                        1,
-                                                        {200, 400, 600, 800, 1000},
-                                                        {10, 20, 40, 60, 80, 160},
-                                                        file_path,
-                                                        1e5,
-                                                        1e3,
-                                                        {1,2,3,4},
-                                                        true,
-                                                        4);
+        //  massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(5,
+        //                                                 1,
+        //                                                 {200, 400, 600, 800, 1000},
+        //                                                 {10, 20, 40, 60, 80, 160},
+        //                                                 file_path,
+        //                                                 1e5,
+        //                                                 1e3,
+        //                                                 {1,2,3,4},
+        //                                                 true,
+        //                                                 4);
 
 
-//        for(int k=0; k<5; k++) {
-//
-//            massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(1,
-//                                                           1,
-//                                                           {200, 400, 600, 800},
-//                    //{600, 700, 800},
-//                                                           {10, 20, 40, 60, 80, 160},
-//                                                           file_path,
-//                                                           1e5,
-//                                                           1e3,
-//                                                           {1, 2, 3, 4},
-//                                                           true,
-//                                                           4);
-//        }
+       for(int k=0; k<5; k++) {
+
+           massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(1,
+                                                          1,
+                                                          {200, 400, 600, 800, 1000},
+                   //{600, 700, 800},
+                                                          {10, 20, 40, 60, 80, 160, 320},
+                                                          file_path,
+                                                          1e5,
+                                                          1e3,
+                                                          {1, 2, 3, 4},
+                                                          true,
+                                                          4);
+       }
 
 
     }

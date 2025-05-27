@@ -377,19 +377,19 @@ namespace freeNav::JOB {
                             local_min_block_width = width / 20,
                             local_max_block_width = width / 10;
 
-                    ObstaclePtrs<N> obs = generateRandomObstacles<N>(count,
-                                                                     local_min_radius,
-                                                                     local_max_radius,
-                                                                     local_min_block_width,
-                                                                     local_max_block_width);
+                    // ObstaclePtrs<N> obs = generateRandomObstacles<N>(count,
+                    //                                                  local_min_radius,
+                    //                                                  local_max_radius,
+                    //                                                  local_min_block_width,
+                    //                                                  local_max_block_width);
 
 //
-//                    Pointi<N> min_pt, max_pt;
-//                    min_pt.setAll(local_min_block_width);
-//                    max_pt.setAll(local_max_block_width);
-//                    BlockObstaclePtrs<N> bo = generateRandomBlockObstacles<N>(count, min_pt, max_pt);
-//                    ObstaclePtrs<N> obs;
-//                    obs.insert(obs.end(), bo.begin(), bo.end());
+                   Pointi<N> min_pt, max_pt;
+                   min_pt.setAll(local_min_block_width);
+                   max_pt.setAll(local_max_block_width);
+                   BlockObstaclePtrs<N> bo = generateRandomBlockObstacles<N>(count, min_pt, max_pt);
+                   ObstaclePtrs<N> obs;
+                   obs.insert(obs.end(), bo.begin(), bo.end());
 
 
                     DimensionLength dim[N];
