@@ -188,6 +188,7 @@ namespace freeNav::JOB {
         }
 
         void initBlockPtrMap() {
+            std::cout << "start " << __FUNCTION__ << std::endl;
             clearInternalBlockPtr();
 
             std::vector<TreeNodePtr<N> > free_leaf_nodes = getAllPassableLeafNodes();
@@ -201,10 +202,12 @@ namespace freeNav::JOB {
                 //leaf_node->block_ptr_ = block_ptr;
                 setBlockPtrForNode(leaf_node, block_ptr);
             }
+            std::cout << "finish " << __FUNCTION__ << std::endl;
         }
 
         // need call this after construction
         virtual void initialize() {
+            std::cout << "start " << __FUNCTION__ << std::endl;
             // initialize of space
             Id total_index = getTotalIndexOfSpace<N>(dim_);
 
@@ -222,6 +225,7 @@ namespace freeNav::JOB {
             // initialize of block_ptr_map_
             initBlockPtrMap();
             initialized_ = true;
+            std::cout << "finish " << __FUNCTION__ << std::endl;
         }
 
         virtual void setInternalOccState(const Pointi<N>& pt, bool occ_state) = 0;
