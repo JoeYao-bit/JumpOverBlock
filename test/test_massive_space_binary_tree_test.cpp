@@ -50,9 +50,9 @@ int main() {
 
            massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(1,
                                                           1,
-                                                          {600, 800},
+                                                          {800},
                    //{600, 700, 800},
-                                                          {320, 480, 640, 960},
+                                                          {20, 40, 80, 160},
                                                           file_path,
                                                           1e5,
                                                           1e3,

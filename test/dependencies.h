@@ -372,9 +372,9 @@ namespace freeNav::JOB {
             for(const auto& count : number_of_obstacles) {
                 for(const auto& max_obs_move_distance : max_obs_move_distances) {
                     // debug: do not use external config of obstacles
-                    int local_min_radius = width / 20,
-                            local_max_radius = width / 10,
-                            local_min_block_width = width / 20,
+                    int local_min_radius = width / 16,
+                            local_max_radius = width / 12,
+                            local_min_block_width = width / 12,
                             local_max_block_width = width / 10;
 
                     // ObstaclePtrs<N> obs = generateRandomObstacles<N>(count,
