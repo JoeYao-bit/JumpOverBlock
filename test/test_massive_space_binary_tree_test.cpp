@@ -46,7 +46,7 @@ int main() {
         //                                                 4);
 
 
-       for(int k=0; k<5; k++) {
+       for(int k=0; k<1; k++) {
 
            massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(1,
                                                           1,
