@@ -454,35 +454,32 @@ namespace freeNav::JOB {
 
                     std::cout << "dynamicUpdateTimeCost " << time_cost1 << " ms" << std::endl;
 
+                    //    SpaceBinaryTreeVarify(dim, dynamic_obstacles.isoc_, sbt);
+                    gettimeofday(&tv_pre, &tz);
+                    SpaceBinaryTreePtr<N> temp_sbt = std::make_shared<SBTtype>(dynamic_obstacles.isoc_, dim,
+                                                                                   min_block_depth_width);
+                    temp_sbt->initialize();
+                    gettimeofday(&tv_after, &tz);
+
+                    time_cost_init =
+                                (tv_after.tv_sec - tv_pre.tv_sec) * 1e3 + (tv_after.tv_usec - tv_pre.tv_usec) / 1e3;
+                    std::cout << "SBT_init_time_cost " << time_cost_init << " ms" << std::endl;
+
                     for (int i = 0; i < random_times; i++) {
-
-
-//                    SpaceBinaryTreeVarify(dim, dynamic_obstacles.isoc_, sbt);
-                        // gettimeofday(&tv_pre, &tz);
-                        // SpaceBinaryTreePtr<N> temp_sbt = std::make_shared<SBTtype>(dynamic_obstacles.isoc_, dim,
-                        //                                                            min_block_depth_width);
-                        // temp_sbt->initialize();
-                        // gettimeofday(&tv_after, &tz);
-
-                        // time_cost_init =
-                        //         (tv_after.tv_sec - tv_pre.tv_sec) * 1e3 + (tv_after.tv_usec - tv_pre.tv_usec) / 1e3;
-                        // std::cout << "SBT_init_time_cost " << time_cost_init << " ms" << std::endl;
-
-
 
                         std::vector<std::string> strs;
                         float occ_ratio = LOSCompare<N>(dim, sbt, dynamic_obstacles, strs, time_of_test, max_sample_times);
-                        // std::stringstream ss1;
-                        // ss1 << "SBT " << N << " "  // Dimension
-                        //     << time_cost_init << " " // init time cost
-                        //     << time_cost1 << " " // update time cost
-                        //     << total_index << " " // total index of space
-                        //     << (float) dynamic_obstacles.occ_pt_count_ / total_index << " " // ratio of occ grid
-                        //     << max_obs_move_distance << " "
-                        //     << occ_ratio << " "
-                        //     << printDimInfo<N>(dim) << " " // dimension length
-                        //             ;
-                        // strs.push_back(ss1.str());
+                        std::stringstream ss1;
+                        ss1 << "SBT " << N << " "  // Dimension
+                            << time_cost_init << " " // init time cost
+                            << time_cost1 << " " // update time cost
+                            << total_index << " " // total index of space
+                            << (float) dynamic_obstacles.occ_pt_count_ / total_index << " " // ratio of occ grid
+                            << max_obs_move_distance << " "
+                            << occ_ratio << " "
+                            << printDimInfo<N>(dim) << " " // dimension length
+                                    ;
+                        strs.push_back(ss1.str());
                         if (!file_path.empty()) {
                             writeToFile<N>(strs, file_path);
                             std::cout << "write test data to " << file_path << std::endl;
