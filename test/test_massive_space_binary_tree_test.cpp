@@ -28,7 +28,7 @@ void varify_thread(DimensionLength* temp_dim,
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
 
-std::string file_path = "../test/SBT_LOS_second.txt";
+std::string file_path = "../test/SBT_LOS.txt";
 
 int main() {
 //TEST(massiveSBTLOSCompareTest, test) {
@@ -52,7 +52,7 @@ int main() {
                                                           1,
                                                           {800},
                    //{600, 700, 800},
-                                                          {20, 40, 80, 160},
+                                                          {40, 80, 160},
                                                           file_path,
                                                           1e5,
                                                           1e3,
