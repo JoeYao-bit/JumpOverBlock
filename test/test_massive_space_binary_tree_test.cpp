@@ -46,13 +46,13 @@ int main() {
         //                                                 4);
 
 
-       for(int k=0; k<1; k++) {
+       for(int k=0; k<5; k++) {
 
            massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(1,
                                                           1,
                                                           {800},
                    //{600, 700, 800},
-                                                          {40, 80, 160},
+                                                          {40, 80, 160, 240},
                                                           file_path,
                                                           1e5,
                                                           1e3,
