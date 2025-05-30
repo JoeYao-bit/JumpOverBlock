@@ -253,16 +253,35 @@ dim_color_map = {
 
 file_path = "../test/SBT_LOS.txt"
 
-all_compare_data = loadDataFromfile(file_path)
+# all_compare_data = loadDataFromfile(file_path)
 
-drawSBTInitData(all_compare_data, 3)
-drawSBTInitData(all_compare_data, 2)
+# drawSBTInitData(all_compare_data, 3)
+# drawSBTInitData(all_compare_data, 2)
 
-for max_dist in [1, 2, 3, 4]:
-    drawSBTUpdateData(all_compare_data, 3, max_dist)
-    drawSBTUpdateData(all_compare_data, 2, max_dist)
+# for max_dist in [1, 2, 3, 4]:
+#     drawSBTUpdateData(all_compare_data, 3, max_dist)
+#     drawSBTUpdateData(all_compare_data, 2, max_dist)
 
-drawCompareData(all_compare_data, 3)
-drawCompareData(all_compare_data, 2)
+# drawCompareData(all_compare_data, 3)
+# drawCompareData(all_compare_data, 2)
 
 
+def drawTauAndAcc():
+    acc_ratio = [0.747425,  0.700162, 0.648823, 0.640607, 0.815295, 1.30309, 1.62883, 1.64793]
+    tau = ["$2^1$", "$2^2$", "$2^3$", "$2^4$", "$2^5$", "$2^6$", "$2^7$", "$2^8$"]
+
+    fig=plt.figure(figsize=(5,2.5)) #添加绘图框
+
+    plt.plot(tau, acc_ratio, markersize=5, label="周活")
+    
+    #ax = plt.axes()
+    plt.ylabel("Acc ratio", fontsize = 13)
+    plt.xlabel(r'$\tau$', fontsize = 16)    
+    save_path = "../test/pic/"
+    save_path = save_path + "acc_and_tau"    
+    plt.savefig(save_path, dpi = 200, bbox_inches='tight')   
+    plt.close()
+    #plt.show()
+    print("save picture to "+save_path)        
+
+drawTauAndAcc()
