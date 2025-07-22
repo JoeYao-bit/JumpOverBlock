@@ -47,7 +47,7 @@ namespace freeNav::JOB {
         //std::cout << " minimum_step_to_exit " << minimum_step_to_exit << std::endl;
         if(minimum_step_to_exit > line.step - index) {
             //std::cout << " reach end of line" << std::endl;
-            return line.step - index - 1;
+            return line.step - index;// - 1;
         }
         return std::max((line.step*minimum_step_to_exit - 1).floor(), 0);
     }

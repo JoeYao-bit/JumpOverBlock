@@ -3,7 +3,7 @@
 //
 
 #include "gtest/gtest.h"
-#include "../algorithm/space_binary_tree/space_binary_tree.h"
+#include "../algorithm/space_binary_tree/space_binary_tree_raw.h"
 #include "dynamic_obstacles.h"
 #include "../freeNav-base/visualization/canvas/canvas.h"
 #include "dependencies.h"

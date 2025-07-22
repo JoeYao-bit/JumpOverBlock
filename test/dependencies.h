@@ -5,7 +5,7 @@
 #ifndef JUMPOVERBLOCK_DEPENDENCIES_H
 #define JUMPOVERBLOCK_DEPENDENCIES_H
 
-#include "../algorithm/space_binary_tree/space_binary_tree.h"
+#include "../algorithm/space_binary_tree/space_binary_tree_raw.h"
 #include "dynamic_obstacles.h"
 #include <fstream>
 

@@ -20,9 +20,12 @@
 //#include "../algorithm/block_detector_greedy.h"
 //#include "../algorithm/line_of_sight_jump_between_block.h"
 
+#include "../algorithm/space_binary_tree/space_binary_tree_raw.h"
 #include "../algorithm/space_binary_tree/space_binary_tree.h"
+
 #include "../freeNav-base/dependencies/3d_textmap/voxel_loader.h"
 #include "dependencies.h"
+
 
 using namespace freeNav::JOB;
 using namespace freeNav;
