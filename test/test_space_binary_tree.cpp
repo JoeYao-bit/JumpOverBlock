@@ -122,16 +122,16 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
 int zoom_rate = 1;
 
-//TEST(SpaceBinaryTree2D, test) {
-int main() {
+TEST(SpaceBinaryTree2D, test) {
+//int main() {
     auto dimension = loader.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreeAnyDimensionRaw<2> sbt(is_occupied, dimension);
-//    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dimension);
+//    SpaceBinaryTreeAnyDimensionRaw<2> sbt(is_occupied, dimension);
+    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dimension);
     sbt.initialize();
     gettimeofday(&tv_after, &tz);
 
@@ -145,8 +145,8 @@ int main() {
         assert(is_occupied(pt) == sbt.isOccupied(pt));
     }
     //return 0;
-    //std::vector<TreeNodeNewPtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
-    std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
+    std::vector<TreeNodeNewPtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
+    //std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
 
     BlockPtrs<2> block_ptrs;
     for(const auto& leaf_node : free_leaf_nodes) {
@@ -217,12 +217,13 @@ int main() {
 // A1 10000 LOS test, mean raw LOS time cost = 0.0077252, mean SBT LOS time cost = 0.0059969
 // Complex 1000000 LOS test, mean raw LOS time cost = 0.00199108, mean SBT LOS time cost = 0.00311197
 // MapTestConfig_Complex
-auto map_test_config_3D = MapTestConfig_A1;
+auto map_test_config_3D = MapTestConfig_Complex; // 3780.27
 
 TextMapLoader_3D loader3D(map_test_config_3D.at("map_path"));
 
 
-TEST(SpaceBinaryTree3D, test) {
+//TEST(SpaceBinaryTree3D, test) {
+int main() {
     auto dimension = loader3D.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<3> & pt) -> bool { return loader3D.isOccupied(pt); };
@@ -232,7 +233,8 @@ TEST(SpaceBinaryTree3D, test) {
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreeAnyDimensionRaw<3> sbt(is_occupied, dimension);
+//    SpaceBinaryTreeAnyDimensionRaw<3> sbt(is_occupied, dimension);
+    SpaceBinaryTreeAnyDimension<3> sbt(is_occupied, dimension);
     sbt.initialize();
 
     gettimeofday(&tv_after, &tz);
