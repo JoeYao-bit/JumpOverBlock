@@ -54,7 +54,7 @@ TEST(dynamic_obstacles_2D, test) {
 
     dynamic_obstacles.random();
 
-    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTreeAnyDimension<2> >(is_occupied, dim);
+    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTreeAnyDimensionRaw<2> >(is_occupied, dim);
     sbt->initialize();
 
     Canvas canvas("dynamic_obstacles_2D", dim[0], dim[1], .05, 1000/std::max(dim[0], dim[1]));
@@ -213,16 +213,16 @@ int main() {
 //                                                       true,
 //                                                       4);
 
-        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(5,
-                                                       1,
-                                                       {200,300,400,500,700,800,900, 1000},
-                                                       {10, 20, 40, 60, 80, 160},
-                                                       file_path,
-                                                       1e5,
-                                                       1e3,
-                                                       {1,4,8,16,32,0},
-                                                       true,
-                                                       4);
+        massiveSBTLOSCompareTest<2, SpaceBinaryTree2DRaw>(5,
+                                                          1,
+                                                          {200,300,400,500,700,800,900, 1000},
+                                                          {10, 20, 40, 60, 80, 160},
+                                                          file_path,
+                                                          1e5,
+                                                          1e3,
+                                                          {1,4,8,16,32,0},
+                                                          true,
+                                                          4);
 
 //        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
 //                                                       1,

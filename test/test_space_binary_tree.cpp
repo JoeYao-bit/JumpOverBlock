@@ -50,7 +50,7 @@ TEST(getIndex, test) {
         return false;
     };
 
-    SpaceBinaryTree2D sbt(is_occupied, dim);
+    SpaceBinaryTree2DRaw sbt(is_occupied, dim);
     sbt.initialize();
     sbt.printTree();
 
@@ -79,7 +79,7 @@ TEST(setOccupiedState, test) {
         return false;
     };
 
-    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dim);
+    SpaceBinaryTreeAnyDimensionRaw<2> sbt(is_occupied, dim);
     sbt.initialize();
     sbt.printTree();
 
@@ -109,6 +109,7 @@ TEST(setOccupiedState, test) {
 
 }
 
+// MapTestConfig_Shanghai_0_512
 auto map_test_config = MapTestConfig_Shanghai_0_512;
 std::string vis_file_path    = map_test_config.at("vis_path");
 
@@ -121,14 +122,16 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
 int zoom_rate = 1;
 
-TEST(SpaceBinaryTree2D, test) {
+//TEST(SpaceBinaryTree2D, test) {
+int main() {
     auto dimension = loader.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dimension);
+    SpaceBinaryTreeAnyDimensionRaw<2> sbt(is_occupied, dimension);
+//    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dimension);
     sbt.initialize();
     gettimeofday(&tv_after, &tz);
 
@@ -141,11 +144,16 @@ TEST(SpaceBinaryTree2D, test) {
         Pointi<2> pt = IdToPointi<2>(id, dimension);
         assert(is_occupied(pt) == sbt.isOccupied(pt));
     }
-
+    //return 0;
+    //std::vector<TreeNodeNewPtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
     std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
+
     BlockPtrs<2> block_ptrs;
     for(const auto& leaf_node : free_leaf_nodes) {
+//        std::cout << "leaf_node = " << leaf_node << std::endl;
         BlockPtr<2> block_ptr = std::make_shared<Block<2> >();
+//        std::cout << "leaf node depth_ = " << leaf_node->depth_ << std::endl;
+//        std::cout << "leaf_node->base_pt_ = " << leaf_node->base_pt_ << std::endl;
         block_ptr->min_ = leaf_node->base_pt_;
         Pointi<2> offset; offset.setAll(sbt.pow_2_[sbt.max_depth_-leaf_node->depth_]-1);
         block_ptr->max_ = leaf_node->base_pt_ + offset;
@@ -158,7 +166,7 @@ TEST(SpaceBinaryTree2D, test) {
 //        Pointi<2> pt = IdToPointi<2>(id, dimension);
 //        sbt.setOccupiedState(pt, !is_occupied(pt));
 //    }
-
+    //return 0;
     Canvas canvas("SpaceBinaryTree2D",dimension[0],dimension[1], .05, zoom_rate);
     bool draw_free_leaf = true,
          draw_block = false;
@@ -224,7 +232,7 @@ TEST(SpaceBinaryTree3D, test) {
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreeAnyDimension<3> sbt(is_occupied, dimension);
+    SpaceBinaryTreeAnyDimensionRaw<3> sbt(is_occupied, dimension);
     sbt.initialize();
 
     gettimeofday(&tv_after, &tz);
@@ -254,7 +262,7 @@ void LineOfSightTest2D(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<2>& iso
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTree2D>(isoc_temp, temp_dim, min_block_depth_width);
+    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTree2DRaw>(isoc_temp, temp_dim, min_block_depth_width);
 
     sbt->initialize();
 
@@ -309,7 +317,7 @@ void LineOfSightTest(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<N>& isoc_
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreePtr<N> sbt = std::make_shared<SpaceBinaryTreeAnyDimension<N> >(isoc_temp, temp_dim, 3);
+    SpaceBinaryTreePtr<N> sbt = std::make_shared<SpaceBinaryTreeAnyDimensionRaw<N> >(isoc_temp, temp_dim, 3);
     sbt->initialize();
 
     gettimeofday(&tv_after, &tz);
@@ -335,8 +343,8 @@ void LineOfSightTest(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<N>& isoc_
 // MapTestConfig_Shanghai_0_512
 // 1000000 LOS test, mean raw LOS time cost = 0.00166777, mean SBT LOS time cost = 0.00124032
 
-//TEST(LineOfSightCheck2D, test) {
-int main() {
+TEST(LineOfSightCheck2D, test) {
+//int main() {
     auto dimension = loader.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };

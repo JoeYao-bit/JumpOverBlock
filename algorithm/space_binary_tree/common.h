@@ -67,6 +67,51 @@ namespace freeNav::JOB {
 
     };
 
+
+    template<Dimension N>
+    struct TreeNodeNew;
+
+    template<Dimension N>
+    using TreeNodeNewPtr = std::shared_ptr<TreeNodeNew<N> >;
+
+    template<Dimension N>
+    using TreeNodeNewPtrs = std::vector<TreeNodeNewPtr<N> >;
+
+
+    // all leaf node's children is all nullptr
+    // if a node have non-nullptr children, it has a mixed state, part of it is passable and other part is unpassable
+    template<Dimension N>
+    struct TreeNodeNew {
+
+        explicit TreeNodeNew(TreeNodeNewPtr<N> parent = nullptr) : parent_(parent) {
+            if(parent_ != nullptr) {
+                depth_ = parent_->depth_ + 1;
+            }
+        }
+
+        // all leaf node's are occupied or unpassable, mixed_state = false
+        // otherwise, mixed_state = true
+        // when a node is mixed state, it's occ_ = true or false is meaningless
+        bool mixed_state_ = false;
+
+        TreeNodeNewPtr<N> parent_ = nullptr;
+
+        TreeNodeNewPtrs<N> children_; // have 2^N child node, fixed size, if all null, they all are the same state as this block
+
+        // location of pose and and depth can be get from accumulation of index of children and depth
+
+        // if is not a mixed_state, but a leaf node, whether it is occupied
+        // the value has meaning only when mixed_state_ = false
+        bool occ_ = true;
+
+        int depth_ = 0; // for debug, can be removed when everything is okay
+
+        Pointi<N> base_pt_; // the minimum point of the cube of current node
+
+//        BlockPtrRaw<N> block_ptr_ = nullptr;
+
+    };
+
     //    // return: current in the block or not
 //    // for a line that cross a block, find the point on it and leave obstacle
 //    // update inner index of line

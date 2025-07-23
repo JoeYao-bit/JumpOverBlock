@@ -504,10 +504,10 @@ namespace freeNav::JOB {
     // otherwise, some part of it are passable and others are occupied,
     // those passable are non-null, unpassable are null
     template<Dimension N>
-    class SpaceBinaryTreeAnyDimension : public SpaceBinaryTreeRaw<N> {
+    class SpaceBinaryTreeAnyDimensionRaw : public SpaceBinaryTreeRaw<N> {
     public:
 
-        SpaceBinaryTreeAnyDimension(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim, int min_block_depth_width = 1)
+        SpaceBinaryTreeAnyDimensionRaw(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim, int min_block_depth_width = 1)
                 : SpaceBinaryTreeRaw<N>(isoc, dim, min_block_depth_width) {
             Id total_index = getTotalIndexOfSpace<N>(this->dim_);
             occ_map_.resize(total_index, true);
@@ -545,10 +545,10 @@ namespace freeNav::JOB {
 
     };
 
-    class SpaceBinaryTree2D : public SpaceBinaryTreeRaw<2> {
+    class SpaceBinaryTree2DRaw : public SpaceBinaryTreeRaw<2> {
     public:
 
-        SpaceBinaryTree2D(const IS_OCCUPIED_FUNC<2>& isoc, DimensionLength* dim, int min_block_depth_width = 4)
+        SpaceBinaryTree2DRaw(const IS_OCCUPIED_FUNC<2>& isoc, DimensionLength* dim, int min_block_depth_width = 4)
                 : SpaceBinaryTreeRaw<2>(isoc, dim, min_block_depth_width) {
             //std::vector<bool> base_occ_map(dim[1], true);
             occ_map_.resize(dim[0]*dim[1], true);
