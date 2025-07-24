@@ -65,8 +65,8 @@ TEST(getIndex, test) {
     }
 }
 
-//TEST(setOccupiedState, test) {
-int main() {
+TEST(setOccupiedState, test) {
+//int main() {
 
     dim[0] = 8, dim[1] = 8;
 
@@ -83,19 +83,22 @@ int main() {
 //    SpaceBinaryTreeAnyDimensionRaw<2> sbt(is_occupied, dim);
     SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dim);
     sbt.initialize();
-    sbt.printTree();
+    //sbt.printTree();
 
 
     Pointi<2> pt = Pointi<2>{7, 7};
 
     sbt.setOccupiedState(pt, true);
     sbt.globalRecursiveUpdate();
-    sbt.printTree();
-//    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
+    //sbt.printTree();
+
+    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
 //
-//    sbt.setOccupiedState(pt, false);
+    sbt.setOccupiedState(pt, false);
+    sbt.globalRecursiveUpdate();
+
 //    sbt.printTree();
-//    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
+    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
 //
 //    Id total_index = getTotalIndexOfSpace<2>(dim);
 //    for(Id id=0; id<total_index; id++) {
@@ -125,16 +128,16 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
 int zoom_rate = 1;
 
-TEST(SpaceBinaryTree2D, test) {
-//int main() {
+//TEST(SpaceBinaryTree2D, test) {
+int main() {
     auto dimension = loader.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
 
     gettimeofday(&tv_pre, &tz);
 
-//    SpaceBinaryTreeAnyDimensionRaw<2> sbt(is_occupied, dimension);
-    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dimension);
+    SpaceBinaryTreeAnyDimensionRaw<2> sbt(is_occupied, dimension);
+//    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dimension);
     sbt.initialize();
     gettimeofday(&tv_after, &tz);
 
@@ -148,8 +151,8 @@ TEST(SpaceBinaryTree2D, test) {
         assert(is_occupied(pt) == sbt.isOccupied(pt));
     }
     //return 0;
-    std::vector<TreeNodeNewPtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
-    //std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
+    //std::vector<TreeNodeNewPtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
+    std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
 
     BlockPtrs<2> block_ptrs;
     for(const auto& leaf_node : free_leaf_nodes) {

@@ -166,7 +166,7 @@ namespace freeNav::JOB {
 
             previous_center_pts_.resize(obstacles.size(), Pointi<N>());
             current_center_pts_.resize(obstacles.size(), Pointi<N>());
-            random();
+            //random();
         }
 
         // update each obstacle's center to random point in the space
@@ -175,6 +175,9 @@ namespace freeNav::JOB {
             //pre_map_ = current_map_;
 
             pre_occ_ids_ = cur_occ_ids_;
+
+            new_occ_pts_.clear();
+            new_free_pts_.clear();
 
             Id total_index = getTotalIndexOfSpace<N>(dim_);
 

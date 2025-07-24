@@ -21,13 +21,13 @@ template<Dimension N>
 void varify_thread(DimensionLength* temp_dim,
                    const IS_OCCUPIED_FUNC<N>& isoc_temp,
                    const SpaceBinaryTreePtr<N>& sbt) {
-//    SpaceBinaryTreeVarify(temp_dim, isoc_temp, sbt);
-    LOSCompare<N>(temp_dim, isoc_temp, sbt);
+    SpaceBinaryTreeVarify(temp_dim, isoc_temp, sbt);
+//    LOSCompare<N>(temp_dim, isoc_temp, sbt);
 
 }
 
-TEST(dynamic_obstacles_2D, test) {
-//int main() {
+//TEST(dynamic_obstacles_2D, test) {
+int main() {
     DimensionLength* dim = new DimensionLength[2];
 
     dim[0] = 200, dim[1] = 200;
@@ -40,24 +40,24 @@ TEST(dynamic_obstacles_2D, test) {
     };
 
     ObstaclePtrs<2> obs = {
-            std::make_shared<CircleObstacle<2> >(4),
+            std::make_shared<CircleObstacle<2> >(1),
             std::make_shared<BlockObstacle<2> >(Pointi<2>{3, 5}),
             };
 
-    CircleObstaclePtrs<2> co = generateRandomCircleObstacles<2>(5, 2, 5);
+    CircleObstaclePtrs<2> co = generateRandomCircleObstacles<2>(2, 2, 5);
     obs.insert(obs.end(), co.begin(), co.end());
 
-    BlockObstaclePtrs<2> bo = generateRandomBlockObstacles<2>(5, Pointi<2>{2, 2}, Pointi<2>{5, 5});
+    BlockObstaclePtrs<2> bo = generateRandomBlockObstacles<2>(2, Pointi<2>{2, 2}, Pointi<2>{5, 5});
     obs.insert(obs.end(), co.begin(), co.end());
 
     DynamicObstacles<2> dynamic_obstacles(dim, obs);
 
-    dynamic_obstacles.random();
+    //dynamic_obstacles.random();
 
     SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTreeAnyDimensionRaw<2> >(is_occupied, dim);
     sbt->initialize();
 
-    Canvas canvas("dynamic_obstacles_2D", dim[0], dim[1], .05, 1000/std::max(dim[0], dim[1]));
+    Canvas canvas("dynamic_obstacles_2D", dim[0], dim[1], .05, 800/std::max(dim[0], dim[1]));
 
     bool draw_pre_occupy = false,
          draw_current_occupy = true,
@@ -161,12 +161,18 @@ TEST(dynamic_obstacles_2D, test) {
                 break;
             case 32: // 32 means space
                 dynamic_obstacles.random();
+                //std::cout << " new pass pt = ";
                 for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
+                    //std::cout << pre_pt << " ";
                     sbt->setOccupiedState(pre_pt, false);
                 }
+                //std::cout << std::endl;
+                //std::cout << " new occ pt = ";
                 for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
+                    //std::cout << cur_pt << " ";
                     sbt->setOccupiedState(cur_pt, true);
                 }
+                //std::cout << std::endl;
                 break;
             case 'f':
                 draw_free_leaf = !draw_free_leaf;
@@ -189,8 +195,8 @@ TEST(dynamic_obstacles_2D, test) {
 
 std::string file_path = "../test/SBT_LOS.txt";
 
-int main() {
-//TEST(massiveSBTLOSCompareTest, test) {
+//int main() {
+TEST(massiveSBTLOSCompareTest, test) {
     for(int i=0; i<1; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});

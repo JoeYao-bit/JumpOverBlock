@@ -95,6 +95,8 @@ namespace freeNav::JOB {
                 new_tree_node->mixed_state_ = false;
                 new_tree_node->depth_ = max_depth_;
                 tree_ptr_vec_[level_offset_[max_depth_] + id] = new_tree_node;
+
+                setInternalOccState(pt, new_tree_node->occ_);
             }
             // from deep to top, construct parent node
             int child_id_global;
@@ -329,30 +331,38 @@ namespace freeNav::JOB {
         }
 
         void setOccupiedState(const Pointi<N>& pt, bool is_occupied) {
-            if(getInternalOccState(pt) == is_occupied) { return; }
+            if(getInternalOccState(pt) == is_occupied) {
+                std::cout << "pt " << pt << " have the state in internal map, do not update" << std::endl;
+                return;
+            }
             setInternalOccState(pt, is_occupied);
 
             Id id = PointiToId(pt, max_dims_[max_depth_]);
             if(tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_ == is_occupied) {
+                std::cout << "pt " << pt << " have the state " << tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_
+                <<  " in SBT tree, do not update" << std::endl;
                 return ;
             }
             if(updated_ids_.find(id) == updated_ids_.end()) {
                 updated_pts_.push_back(pt);
-            } else {
                 updated_ids_.insert(id);
+            } else {
+                std::cout << "pt " << pt << " already in update_pts, do not update" << std::endl;
             }
             assert(isOccupied(pt) != is_occupied); // debug only, may cause increases in time cost
             assert(tree_ptr_vec_[id + level_offset_[max_depth_]] != nullptr);
-            assert(tree_ptr_vec_[id]->mixed_state_ == false);
-            assert(tree_ptr_vec_[id]->occ_ != is_occupied);
-            tree_ptr_vec_[id]->occ_ = is_occupied;
+            assert(tree_ptr_vec_[id + level_offset_[max_depth_]]->mixed_state_ == false);
+            assert(tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_ != is_occupied);
+            tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_ = is_occupied;
         }
 
         void globalRecursiveUpdate() {
             Pointis<N> cur_pts, next_pts;
             std::set<Id> cur_ids, next_ids;
             Pointi<N> new_pt, parent_pt;
+            std::cout << "updated_pts_ = ";
             for(const auto& pt : updated_pts_) {
+                std::cout << pt << " ";
                 new_pt = pt/2;
                 Id id = PointiToId<N>(new_pt, max_dims_[max_depth_-1]);
                 if(cur_ids.find(id) == cur_ids.end()) {
@@ -360,7 +370,7 @@ namespace freeNav::JOB {
                     cur_ids.insert(id);
                 }
             }
-
+            std::cout << std::endl;
             std::vector<TreeNodeNewPtr<N> > new_leaf_nodes;
 
             int child_id_global;
