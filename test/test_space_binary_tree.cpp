@@ -65,7 +65,8 @@ TEST(getIndex, test) {
     }
 }
 
-TEST(setOccupiedState, test) {
+//TEST(setOccupiedState, test) {
+int main() {
 
     dim[0] = 8, dim[1] = 8;
 
@@ -79,7 +80,8 @@ TEST(setOccupiedState, test) {
         return false;
     };
 
-    SpaceBinaryTreeAnyDimensionRaw<2> sbt(is_occupied, dim);
+//    SpaceBinaryTreeAnyDimensionRaw<2> sbt(is_occupied, dim);
+    SpaceBinaryTreeAnyDimension<2> sbt(is_occupied, dim);
     sbt.initialize();
     sbt.printTree();
 
@@ -87,6 +89,7 @@ TEST(setOccupiedState, test) {
     Pointi<2> pt = Pointi<2>{7, 7};
 
     sbt.setOccupiedState(pt, true);
+    sbt.globalRecursiveUpdate();
     sbt.printTree();
 //    std::cout << pt << " state = " << sbt.isOccupied(pt) << std::endl;
 //
@@ -216,14 +219,17 @@ TEST(SpaceBinaryTree2D, test) {
 //MapTestConfig_A1 109404 ms
 // A1 10000 LOS test, mean raw LOS time cost = 0.0077252, mean SBT LOS time cost = 0.0059969
 // Complex 1000000 LOS test, mean raw LOS time cost = 0.00199108, mean SBT LOS time cost = 0.00311197
-// MapTestConfig_Complex
+
+
+// MapTestConfig_Complex memory 1.5G
+// MapTestConfig_DA1
 auto map_test_config_3D = MapTestConfig_Complex; // 3780.27
 
 TextMapLoader_3D loader3D(map_test_config_3D.at("map_path"));
 
 
-//TEST(SpaceBinaryTree3D, test) {
-int main() {
+TEST(SpaceBinaryTree3D, test) {
+//int main() {
     auto dimension = loader3D.getDimensionInfo();
 
     auto is_occupied = [](const Pointi<3> & pt) -> bool { return loader3D.isOccupied(pt); };
@@ -233,21 +239,40 @@ int main() {
 
     gettimeofday(&tv_pre, &tz);
 
-//    SpaceBinaryTreeAnyDimensionRaw<3> sbt(is_occupied, dimension);
-    SpaceBinaryTreeAnyDimension<3> sbt(is_occupied, dimension);
-    sbt.initialize();
+    SpaceBinaryTreeAnyDimensionRaw<3> sbt_raw(is_occupied, dimension);
+    sbt_raw.initialize();
 
     gettimeofday(&tv_after, &tz);
 
     double time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-    std::cout << "SpaceBinaryTree3D take " << time_cost << " ms to initialize" << std::endl;
+    std::cout << "SpaceBinaryTree3D RAW take " << time_cost << " ms to initialize" << std::endl;
 
     Id total_index = getTotalIndexOfSpace<3>(dimension);
 
     for(Id id=0; id<total_index; id++) {
         Pointi<3> pt = IdToPointi<3>(id, dimension);
+        assert(is_occupied(pt) == sbt_raw.isOccupied(pt));
+    }
+
+    std::cout << "SpaceBinaryTree3D RAW num of passable leaf = " << sbt_raw.getAllPassableLeafNodes().size() << std::endl;
+    gettimeofday(&tv_pre, &tz);
+
+    SpaceBinaryTreeAnyDimension<3> sbt(is_occupied, dimension);
+    sbt.initialize();
+
+    gettimeofday(&tv_after, &tz);
+
+    time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+    std::cout << "SpaceBinaryTree3D take " << time_cost << " ms to initialize" << std::endl;
+
+    total_index = getTotalIndexOfSpace<3>(dimension);
+
+    for(Id id=0; id<total_index; id++) {
+        Pointi<3> pt = IdToPointi<3>(id, dimension);
         assert(is_occupied(pt) == sbt.isOccupied(pt));
     }
+    std::cout << "SpaceBinaryTree3D num of passable leaf = " << sbt.getAllPassableLeafNodes().size() << std::endl;
+
 }
 
 TEST(GetFloorOrCeilFlag, test) {
