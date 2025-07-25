@@ -293,6 +293,9 @@ namespace freeNav::JOB {
             }
         }
 
+        // have no real use, just keep pace with SBT new
+        void globalRecursiveUpdate() {}
+
         TreeNodePtr<N> getLeafNode(const Pointi<N>& pt) const {
             TreeNodePtr<N> buffer = root_;
             for(int dp=0; dp<=max_depth_; dp++) {

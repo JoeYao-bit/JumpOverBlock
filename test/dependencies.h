@@ -24,10 +24,10 @@ namespace freeNav::JOB {
         os.close();
     }
 
-    template<Dimension N>
+    template<Dimension N, typename SBT>
     void SpaceBinaryTreeVarify(DimensionLength* temp_dim,
                                const IS_OCCUPIED_FUNC<N>& isoc_temp,
-                               const SpaceBinaryTreePtr<N>& sbt) {
+                               const std::shared_ptr<SBT>& sbt) {
 
         struct timezone tz;
         struct timeval tv_pre;

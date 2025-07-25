@@ -423,13 +423,33 @@ namespace freeNav::JOB {
                         }
                     }
 
-                    // if pre block is a passable leaf node and now changed, need update block
+                    // store all passable leaf node
+                    for(const auto& child_id : child_global_ids) {
+                        // reserve passable child block
+                        if(tree_ptr_vec_[child_id]->mixed_state_ == false &&
+                           tree_ptr_vec_[child_id]->occ_ == false) {
+                            // limit minimum size of blocks
+                            if(tree_ptr_vec_[child_id]->depth_ >= max_depth_ - min_block_depth_width_) { continue; }
+                            new_leaf_nodes.push_back(tree_ptr_vec_[child_id]);
+                        }
+                    }
+
+
                     if(parent_need_update) {
-                        if(tree_ptr_vec_[global_cur_id]->occ_ == false &&
-                           tree_ptr_vec_[global_cur_id]->mixed_state_ == false) {
+                        // at least one of mixed_state_ and occ_ are different from previous
+                        if(tree_ptr_vec_[global_cur_id]->mixed_state_ != all_the_same) {
+                            assert(tree_ptr_vec_[global_cur_id]->mixed_state_ == false);
+                            assert(all_the_same == true);
+                            assert(tree_ptr_vec_[global_cur_id]->occ_ != is_occ);
+                        }
+                        if(tree_ptr_vec_[global_cur_id]->mixed_state_ == false &&
+                           tree_ptr_vec_[global_cur_id]->occ_ == false) {
+                            // if pre block is a passable leaf node and changed, need update block
                             new_leaf_nodes.push_back(tree_ptr_vec_[global_cur_id]);
-                        } else if(all_the_same == true && is_occ == 0) {
+                        } else if(all_the_same == true && is_occ == false) {
                             // if changed and new block is a passable leaf node, need update block
+                            // limit minimum size of blocks
+                            if(tree_ptr_vec_[global_cur_id]->depth_ >= max_depth_ - min_block_depth_width_) { continue; }
                             new_leaf_nodes.push_back(tree_ptr_vec_[global_cur_id]);
                         }
                     }
@@ -454,17 +474,27 @@ namespace freeNav::JOB {
             updated_ids_.clear();
 
             // update block ptr
-            // high level first, low level last
-            std::reverse(new_leaf_nodes.begin(), new_leaf_nodes.end());
+            // big first, small last
+//            std::reverse(new_leaf_nodes.begin(), new_leaf_nodes.end());
             for(const auto& leaf_node : new_leaf_nodes) {
-                BlockPtrRaw<N> block_ptr = nullptr;
+                if(leaf_node->occ_ != false || leaf_node->mixed_state_ != false) {
+                    BlockPtrRaw<N> block_ptr = nullptr;
+                    setBlockPtrForNode(leaf_node, block_ptr);
+                }
+            }
+            for(const auto& leaf_node : new_leaf_nodes) {
                 if(leaf_node->occ_ == false && leaf_node->mixed_state_ == false) {
+                    BlockPtrRaw<N> block_ptr = nullptr;
+                    if(leaf_node->parent_ != nullptr && leaf_node->parent_->occ_ == false &&
+                       leaf_node->parent_->mixed_state_ == false) {
+                        continue;
+                    }
                     block_ptr = std::make_shared<Block<N> >();
                     block_ptr->min_ = leaf_node->base_pt_;
                     Pointi<N> offset; offset.setAll(pow_2_[max_depth_-leaf_node->depth_]-1);
                     block_ptr->max_ = leaf_node->base_pt_ + offset;
+                    setBlockPtrForNode(leaf_node, block_ptr);
                 }
-                setBlockPtrForNode(leaf_node, block_ptr);
             }
         }
 

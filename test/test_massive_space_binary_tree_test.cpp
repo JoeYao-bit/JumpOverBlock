@@ -4,6 +4,8 @@
 
 #include "gtest/gtest.h"
 #include "../algorithm/space_binary_tree/space_binary_tree_raw.h"
+#include "../algorithm/space_binary_tree/space_binary_tree.h"
+
 #include "dynamic_obstacles.h"
 #include "../freeNav-base/visualization/canvas/canvas.h"
 #include "dependencies.h"
@@ -17,20 +19,20 @@
 using namespace freeNav::JOB;
 using namespace freeNav;
 
-template<Dimension N>
+template<Dimension N, typename SBT>
 void varify_thread(DimensionLength* temp_dim,
                    const IS_OCCUPIED_FUNC<N>& isoc_temp,
-                   const SpaceBinaryTreePtr<N>& sbt) {
+                   const std::shared_ptr<SBT>& sbt) {
     SpaceBinaryTreeVarify(temp_dim, isoc_temp, sbt);
 //    LOSCompare<N>(temp_dim, isoc_temp, sbt);
 
 }
 
-//TEST(dynamic_obstacles_2D, test) {
-int main() {
+template<typename SBT, typename TreeNode>
+void dynamic_obstacles_2D() {
     DimensionLength* dim = new DimensionLength[2];
 
-    dim[0] = 200, dim[1] = 200;
+    dim[0] = 20, dim[1] = 20;
 
     auto is_occupied = [&](const Pointi<2> & pt) -> bool {
         if(isOutOfBoundary<2>(pt, dim)) {
@@ -41,20 +43,20 @@ int main() {
 
     ObstaclePtrs<2> obs = {
             std::make_shared<CircleObstacle<2> >(1),
-            std::make_shared<BlockObstacle<2> >(Pointi<2>{3, 5}),
+            //std::make_shared<BlockObstacle<2> >(Pointi<2>{3, 5}),
             };
 
-    CircleObstaclePtrs<2> co = generateRandomCircleObstacles<2>(2, 2, 5);
-    obs.insert(obs.end(), co.begin(), co.end());
+    //CircleObstaclePtrs<2> co = generateRandomCircleObstacles<2>(2, 2, 5);
+    //obs.insert(obs.end(), co.begin(), co.end());
 
-    BlockObstaclePtrs<2> bo = generateRandomBlockObstacles<2>(2, Pointi<2>{2, 2}, Pointi<2>{5, 5});
-    obs.insert(obs.end(), co.begin(), co.end());
+    //BlockObstaclePtrs<2> bo = generateRandomBlockObstacles<2>(2, Pointi<2>{2, 2}, Pointi<2>{5, 5});
+    //obs.insert(obs.end(), co.begin(), co.end());
 
     DynamicObstacles<2> dynamic_obstacles(dim, obs);
 
     //dynamic_obstacles.random();
 
-    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTreeAnyDimensionRaw<2> >(is_occupied, dim);
+    std::shared_ptr<SBT> sbt = std::make_shared<SBT>(is_occupied, dim);
     sbt->initialize();
 
     Canvas canvas("dynamic_obstacles_2D", dim[0], dim[1], .05, 800/std::max(dim[0], dim[1]));
@@ -108,7 +110,7 @@ int main() {
             }
         }
         if(draw_free_leaf) {
-            std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt->getAllPassableLeafNodes();
+            std::vector<std::shared_ptr<TreeNode> > free_leaf_nodes = sbt->getAllPassableLeafNodes();
             BlockPtrs<2> block_ptrs;
             for(const auto& leaf_node : free_leaf_nodes) {
                 BlockPtr<2> block_ptr = std::make_shared<Block<2> >();
@@ -120,12 +122,18 @@ int main() {
             }
             for(int i=0; i<block_ptrs.size(); i++) {
                 const auto& block_ptr = block_ptrs[i];
-                const Pointi<2> pt1 = block_ptr->min_, pt2 = block_ptr->max_;
+                const Pointi<2> pt1 = block_ptr->min_, pt2 = block_ptr->max_;// + Pointi<2>{1, 1};
                 //const Pointi<2> pt1 = Pointi<2>{0, 0}, pt2 = Pointi<2>{100, 100};
-                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, false,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, false,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, false,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, false,COLOR_TABLE[i%30]);
+//                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 2, false,COLOR_TABLE[i%30]);
+//                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 2, false,COLOR_TABLE[i%30]);
+//                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 2, false,COLOR_TABLE[i%30]);
+//                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 2, false,COLOR_TABLE[i%30]);
+
+                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 2, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 2, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 2, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 2, true,COLOR_TABLE[i%30]);
+
                 //break;
             }
         }
@@ -148,7 +156,7 @@ int main() {
 //                return temp_map[temp_id];
 //            };
 
-            std::thread t(varify_thread<2>, dim, dynamic_obstacles.isoc_, sbt); // start varify thread
+            std::thread t(varify_thread<2, SBT>, dim, dynamic_obstacles.isoc_, sbt); // start varify thread
             t.detach();
         }
         char key = canvas.show(30);
@@ -172,6 +180,7 @@ int main() {
                     //std::cout << cur_pt << " ";
                     sbt->setOccupiedState(cur_pt, true);
                 }
+                sbt->globalRecursiveUpdate();
                 //std::cout << std::endl;
                 break;
             case 'f':
@@ -192,6 +201,10 @@ int main() {
 
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
+int main() {
+//    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>>();
+    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimension<2>, TreeNodeNew<2>>();
+}
 
 std::string file_path = "../test/SBT_LOS.txt";
 
