@@ -32,7 +32,7 @@ template<typename SBT, typename TreeNode>
 void dynamic_obstacles_2D() {
     DimensionLength* dim = new DimensionLength[2];
 
-    dim[0] = 20, dim[1] = 20;
+    dim[0] = 200, dim[1] = 200;
 
     auto is_occupied = [&](const Pointi<2> & pt) -> bool {
         if(isOutOfBoundary<2>(pt, dim)) {
@@ -43,14 +43,15 @@ void dynamic_obstacles_2D() {
 
     ObstaclePtrs<2> obs = {
             std::make_shared<CircleObstacle<2> >(1),
-            //std::make_shared<BlockObstacle<2> >(Pointi<2>{3, 5}),
+            std::make_shared<CircleObstacle<2> >(1),
+            std::make_shared<BlockObstacle<2> >(Pointi<2>{3, 5}),
             };
 
-    //CircleObstaclePtrs<2> co = generateRandomCircleObstacles<2>(2, 2, 5);
-    //obs.insert(obs.end(), co.begin(), co.end());
+    CircleObstaclePtrs<2> co = generateRandomCircleObstacles<2>(2, 2, 5);
+    obs.insert(obs.end(), co.begin(), co.end());
 
-    //BlockObstaclePtrs<2> bo = generateRandomBlockObstacles<2>(2, Pointi<2>{2, 2}, Pointi<2>{5, 5});
-    //obs.insert(obs.end(), co.begin(), co.end());
+    BlockObstaclePtrs<2> bo = generateRandomBlockObstacles<2>(2, Pointi<2>{2, 2}, Pointi<2>{5, 5});
+    obs.insert(obs.end(), co.begin(), co.end());
 
     DynamicObstacles<2> dynamic_obstacles(dim, obs);
 
@@ -63,7 +64,7 @@ void dynamic_obstacles_2D() {
 
     bool draw_pre_occupy = false,
          draw_current_occupy = true,
-         draw_free_leaf = false,
+         draw_free_leaf = true,
          draw_block = true,
          triger_varify = false;
 
@@ -169,19 +170,24 @@ void dynamic_obstacles_2D() {
                 break;
             case 32: // 32 means space
                 dynamic_obstacles.random();
-                //std::cout << " new pass pt = ";
                 for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
-                    //std::cout << pre_pt << " ";
                     sbt->setOccupiedState(pre_pt, false);
                 }
-                //std::cout << std::endl;
-                //std::cout << " new occ pt = ";
+                std::cout << " new pass pt = ";
+                for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
+                    std::cout << pre_pt << " ";
+                }
+                std::cout << std::endl;
                 for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
-                    //std::cout << cur_pt << " ";
                     sbt->setOccupiedState(cur_pt, true);
                 }
+                std::cout << " new occ pt = ";
+                for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
+                    std::cout << cur_pt << " ";
+                }
                 sbt->globalRecursiveUpdate();
-                //std::cout << std::endl;
+                std::cout << std::endl;
+                std::cout << "finish update dynamic obstacle" << std::endl;
                 break;
             case 'f':
                 draw_free_leaf = !draw_free_leaf;
@@ -202,7 +208,7 @@ void dynamic_obstacles_2D() {
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
 int main() {
-//    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>>();
+    //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
     dynamic_obstacles_2D<SpaceBinaryTreeAnyDimension<2>, TreeNodeNew<2>>();
 }
 

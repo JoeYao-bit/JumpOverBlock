@@ -13,7 +13,7 @@ namespace freeNav::JOB {
     class SpaceBinaryTree {
     public:
 
-        SpaceBinaryTree(const IS_OCCUPIED_FUNC <N> &isoc, DimensionLength *dim, int min_block_depth_width = 2)
+        SpaceBinaryTree(const IS_OCCUPIED_FUNC <N> &isoc, DimensionLength *dim, int min_block_depth_width = 0)
                 : isoc_(isoc), dim_(dim), min_block_depth_width_(min_block_depth_width) {
 
             std::cout << "min_block_depth_width = " << min_block_depth_width_ << std::endl;
@@ -332,23 +332,27 @@ namespace freeNav::JOB {
 
         void setOccupiedState(const Pointi<N>& pt, bool is_occupied) {
             if(getInternalOccState(pt) == is_occupied) {
-                std::cout << "pt " << pt << " have the state in internal map, do not update" << std::endl;
+                //std::cout << "pt " << pt << " have the state in internal map, do not update" << std::endl;
                 return;
             }
             setInternalOccState(pt, is_occupied);
 
             Id id = PointiToId(pt, max_dims_[max_depth_]);
             if(tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_ == is_occupied) {
-                std::cout << "pt " << pt << " have the state " << tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_
-                <<  " in SBT tree, do not update" << std::endl;
+//                std::cout << "pt " << pt << " have the state " << tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_
+//                <<  " in SBT tree, do not update" << std::endl;
                 return ;
             }
             if(updated_ids_.find(id) == updated_ids_.end()) {
                 updated_pts_.push_back(pt);
                 updated_ids_.insert(id);
             } else {
-                std::cout << "pt " << pt << " already in update_pts, do not update" << std::endl;
+               //std::cout << "pt " << pt << " already in update_pts, do not update" << std::endl;
             }
+
+//            if(!is_occupied) {
+//                std::cout << "set " << pt << " to occ = " << is_occupied << std::endl;
+//            }
             assert(isOccupied(pt) != is_occupied); // debug only, may cause increases in time cost
             assert(tree_ptr_vec_[id + level_offset_[max_depth_]] != nullptr);
             assert(tree_ptr_vec_[id + level_offset_[max_depth_]]->mixed_state_ == false);
@@ -360,9 +364,9 @@ namespace freeNav::JOB {
             Pointis<N> cur_pts, next_pts;
             std::set<Id> cur_ids, next_ids;
             Pointi<N> new_pt, parent_pt;
-            std::cout << "updated_pts_ = ";
+            //std::cout << "updated_pts_ = ";
             for(const auto& pt : updated_pts_) {
-                std::cout << pt << " ";
+                //std::cout << pt << " ";
                 new_pt = pt/2;
                 Id id = PointiToId<N>(new_pt, max_dims_[max_depth_-1]);
                 if(cur_ids.find(id) == cur_ids.end()) {
@@ -370,8 +374,8 @@ namespace freeNav::JOB {
                     cur_ids.insert(id);
                 }
             }
-            std::cout << std::endl;
-            std::vector<TreeNodeNewPtr<N> > new_leaf_nodes;
+            //std::cout << std::endl;
+            std::vector<TreeNodeNewPtr<N> > new_passable_nodes, old_passable_nodes;
 
             int child_id_global;
             Id cur_id, next_id, global_cur_id;
@@ -384,6 +388,9 @@ namespace freeNav::JOB {
                     bool all_the_same = true;
                     int is_occ = -1;
                     cur_id = PointiToId<N>(cur_pt, max_dims_[lv]);
+                    global_cur_id = level_offset_[lv] + cur_id;
+                    assert(tree_ptr_vec_[global_cur_id] != nullptr);
+
                     std::vector<Id> child_global_ids;
                     for(const auto& child_offset : flag_pts_) {
                         //std::cout << "child_id = " << child_id << std::endl;
@@ -408,49 +415,32 @@ namespace freeNav::JOB {
                             }
                         }
                     }
-                    global_cur_id = level_offset_[lv] + cur_id;
-                    assert(tree_ptr_vec_[global_cur_id] != nullptr);
+
                     bool parent_need_update = false; // if current node is updated, parent will need update
-                    if(tree_ptr_vec_[global_cur_id]->mixed_state_ == all_the_same) {
-                        // if one is mixed and another is not mixed, need update
+                    // if the node's mixed state is changed, its parent may need update
+                    if(all_the_same == tree_ptr_vec_[global_cur_id]->mixed_state_) {
                         parent_need_update = true;
-                    } else {
-                        // if all are not mixed, but occ state changed, need update
-                        if(tree_ptr_vec_[global_cur_id]->mixed_state_ == false && all_the_same == true &&
-                           tree_ptr_vec_[global_cur_id]->occ_ != is_occ
-                           ) {
+                    } else if (all_the_same == true && tree_ptr_vec_[global_cur_id]->mixed_state_ == false) {
+                        // if the node is not mixed in previous and now, but its occ state changed, its parent may need update
+                        if(is_occ != tree_ptr_vec_[global_cur_id]->occ_) {
                             parent_need_update = true;
                         }
                     }
 
-                    // store all passable leaf node
-                    for(const auto& child_id : child_global_ids) {
-                        // reserve passable child block
-                        if(tree_ptr_vec_[child_id]->mixed_state_ == false &&
-                           tree_ptr_vec_[child_id]->occ_ == false) {
+                    // if previous is unpassable or mixed, now is passable, add to new leaf nodes
+                    if(all_the_same && is_occ == false) {
+                        if(tree_ptr_vec_[global_cur_id]->mixed_state_ == true || tree_ptr_vec_[global_cur_id]->occ_ == true) {
                             // limit minimum size of blocks
-                            if(tree_ptr_vec_[child_id]->depth_ >= max_depth_ - min_block_depth_width_) { continue; }
-                            new_leaf_nodes.push_back(tree_ptr_vec_[child_id]);
+                            if(tree_ptr_vec_[global_cur_id]->depth_ < max_depth_ - min_block_depth_width_) {
+                                new_passable_nodes.push_back(tree_ptr_vec_[global_cur_id]);
+                            }
                         }
                     }
 
-
-                    if(parent_need_update) {
-                        // at least one of mixed_state_ and occ_ are different from previous
-                        if(tree_ptr_vec_[global_cur_id]->mixed_state_ != all_the_same) {
-                            assert(tree_ptr_vec_[global_cur_id]->mixed_state_ == false);
-                            assert(all_the_same == true);
-                            assert(tree_ptr_vec_[global_cur_id]->occ_ != is_occ);
-                        }
-                        if(tree_ptr_vec_[global_cur_id]->mixed_state_ == false &&
-                           tree_ptr_vec_[global_cur_id]->occ_ == false) {
-                            // if pre block is a passable leaf node and changed, need update block
-                            new_leaf_nodes.push_back(tree_ptr_vec_[global_cur_id]);
-                        } else if(all_the_same == true && is_occ == false) {
-                            // if changed and new block is a passable leaf node, need update block
-                            // limit minimum size of blocks
-                            if(tree_ptr_vec_[global_cur_id]->depth_ >= max_depth_ - min_block_depth_width_) { continue; }
-                            new_leaf_nodes.push_back(tree_ptr_vec_[global_cur_id]);
+                    // if previous is passable, now is unpassable or mixed, add to new leaf nodes
+                    if(tree_ptr_vec_[global_cur_id]->mixed_state_ == false || tree_ptr_vec_[global_cur_id]->occ_ == false) {
+                        if(all_the_same == false || is_occ == true) {
+                            old_passable_nodes.push_back(tree_ptr_vec_[global_cur_id]);
                         }
                     }
 
@@ -458,8 +448,9 @@ namespace freeNav::JOB {
                     tree_ptr_vec_[global_cur_id]->occ_ = tree_ptr_vec_[child_global_ids.front()]->occ_;
 
                     // before reach root, parent may need update
+                    //if(lv > 0) { // && parent_need_update) {
                     if(lv > 0 && parent_need_update) {
-                        parent_pt = cur_pt / 2;
+                            parent_pt = cur_pt / 2;
                         next_id = PointiToId(parent_pt, max_dims_[lv - 1]);
                         if (next_ids.find(next_id) == next_ids.end()) {
                             next_ids.insert(next_id);
@@ -474,15 +465,39 @@ namespace freeNav::JOB {
             updated_ids_.clear();
 
             // update block ptr
-            // big first, small last
-//            std::reverse(new_leaf_nodes.begin(), new_leaf_nodes.end());
-            for(const auto& leaf_node : new_leaf_nodes) {
+            for(const auto& leaf_node : old_passable_nodes) {
                 if(leaf_node->occ_ != false || leaf_node->mixed_state_ != false) {
                     BlockPtrRaw<N> block_ptr = nullptr;
                     setBlockPtrForNode(leaf_node, block_ptr);
                 }
+                if(leaf_node->mixed_state_ == true) {
+                    // set all passable leaf node's block ptr
+                    std::vector<TreeNodeNewPtr<N>> buffer = { leaf_node }, next_buffer;
+                    while(!buffer.empty()) {
+                        next_buffer.clear();
+                        for(const auto& temp_node : buffer) {
+                            // if child node too small, no need to update block ptr
+                            if(temp_node->depth_ + 1 >= max_depth_ - min_block_depth_width_) {
+                                continue;
+                            }
+                            for(const auto& temp_child : temp_node->children_) {
+                                if(temp_child->mixed_state_) {
+                                    next_buffer.push_back(temp_child);
+                                } else if(!temp_child->occ_) {
+                                    assert(temp_child->parent_->mixed_state_ || temp_child->parent_->occ_);
+                                    BlockPtrRaw<N> block_ptr = std::make_shared<Block<N> >();
+                                    block_ptr->min_ = temp_child->base_pt_;
+                                    Pointi<N> offset; offset.setAll(pow_2_[max_depth_-temp_child->depth_]-1);
+                                    block_ptr->max_ = temp_child->base_pt_ + offset;
+                                    setBlockPtrForNode(temp_child, block_ptr);
+                                }
+                            }
+                        }
+                        std::swap(buffer, next_buffer);
+                    }
+                }
             }
-            for(const auto& leaf_node : new_leaf_nodes) {
+            for(const auto& leaf_node : new_passable_nodes) {
                 if(leaf_node->occ_ == false && leaf_node->mixed_state_ == false) {
                     BlockPtrRaw<N> block_ptr = nullptr;
                     if(leaf_node->parent_ != nullptr && leaf_node->parent_->occ_ == false &&
