@@ -11,6 +11,10 @@
 #include "dependencies.h"
 
 #include <thread>
+#include "test_data.h"
+
+#include "../freeNav-base/dependencies/2d_grid/text_map_loader.h"
+
 
 // dynamic map
 // time cost of update dynamic map
@@ -28,26 +32,46 @@ void varify_thread(DimensionLength* temp_dim,
 
 }
 
+
+auto is_char_occupied1 = [](const char& value) -> bool {
+    if (value == '.') return false;
+    return true;
+};
+
+auto map_test_config = MapTestConfig_Shanghai_0_512;
+
+TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
+
+struct timezone tz;
+struct timeval tv_pre;
+struct timeval tv_after;
+
 template<typename SBT, typename TreeNode>
 void dynamic_obstacles_2D() {
-    DimensionLength* dim = new DimensionLength[2];
 
-    dim[0] = 200, dim[1] = 200;
 
-    auto is_occupied = [&](const Pointi<2> & pt) -> bool {
-        if(isOutOfBoundary<2>(pt, dim)) {
-            return true;
-        }
-        return false;
-    };
+//    DimensionLength* dim = new DimensionLength[2];
+
+//    dim[0] = 200, dim[1] = 200;
+//
+//    auto is_occupied = [&](const Pointi<2> & pt) -> bool {
+//        if(isOutOfBoundary<2>(pt, dim)) {
+//            return true;
+//        }
+//        return false;
+//    };
+
+    auto dim = loader.getDimensionInfo();
+
+    auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
 
     ObstaclePtrs<2> obs = {
-            std::make_shared<CircleObstacle<2> >(1),
-            std::make_shared<CircleObstacle<2> >(1),
+            std::make_shared<CircleObstacle<2> >(30),
+            std::make_shared<CircleObstacle<2> >(30),
             std::make_shared<BlockObstacle<2> >(Pointi<2>{3, 5}),
             };
 
-    CircleObstaclePtrs<2> co = generateRandomCircleObstacles<2>(2, 2, 5);
+    CircleObstaclePtrs<2> co = generateRandomCircleObstacles<2>(2, 26, 50);
     obs.insert(obs.end(), co.begin(), co.end());
 
     BlockObstaclePtrs<2> bo = generateRandomBlockObstacles<2>(2, Pointi<2>{2, 2}, Pointi<2>{5, 5});
@@ -56,9 +80,15 @@ void dynamic_obstacles_2D() {
     DynamicObstacles<2> dynamic_obstacles(dim, obs);
 
     //dynamic_obstacles.random();
+    gettimeofday(&tv_pre, &tz);
 
     std::shared_ptr<SBT> sbt = std::make_shared<SBT>(is_occupied, dim);
     sbt->initialize();
+    gettimeofday(&tv_after, &tz);
+    double time_cost;
+
+    time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+    std::cout << "finish initialize of map in " << time_cost << "ms" << std::endl;
 
     Canvas canvas("dynamic_obstacles_2D", dim[0], dim[1], .05, 800/std::max(dim[0], dim[1]));
 
@@ -67,7 +97,6 @@ void dynamic_obstacles_2D() {
          draw_free_leaf = true,
          draw_block = true,
          triger_varify = false;
-
     while(1) {
         canvas.resetCanvas();
         canvas.drawEmptyGrid();
@@ -130,10 +159,10 @@ void dynamic_obstacles_2D() {
 //                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 2, false,COLOR_TABLE[i%30]);
 //                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 2, false,COLOR_TABLE[i%30]);
 
-                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 2, true,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 2, true,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 2, true,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 2, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
 
                 //break;
             }
@@ -170,24 +199,29 @@ void dynamic_obstacles_2D() {
                 break;
             case 32: // 32 means space
                 dynamic_obstacles.random();
+                gettimeofday(&tv_pre, &tz);
                 for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
+                    if(is_occupied(pre_pt)) { continue; }
                     sbt->setOccupiedState(pre_pt, false);
                 }
-                std::cout << " new pass pt = ";
+                //std::cout << " new pass pt = ";
                 for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
-                    std::cout << pre_pt << " ";
+                    if(is_occupied(pre_pt)) { continue; }
+                    //std::cout << pre_pt << " ";
                 }
-                std::cout << std::endl;
+                //std::cout << std::endl;
                 for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
                     sbt->setOccupiedState(cur_pt, true);
                 }
-                std::cout << " new occ pt = ";
-                for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
-                    std::cout << cur_pt << " ";
-                }
+                //std::cout << " new occ pt = ";
+                //for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
+                //    std::cout << cur_pt << " ";
+                //}
                 sbt->globalRecursiveUpdate();
-                std::cout << std::endl;
-                std::cout << "finish update dynamic obstacle" << std::endl;
+                //std::cout << std::endl;
+                gettimeofday(&tv_after, &tz);
+                time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+                std::cout << "finish update dynamic obstacle in " << time_cost << "ms" << std::endl;
                 break;
             case 'f':
                 draw_free_leaf = !draw_free_leaf;
