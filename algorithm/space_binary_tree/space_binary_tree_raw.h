@@ -92,8 +92,7 @@ namespace freeNav::JOB {
             std::vector<TreeNodePtr<N> > free_leaf_nodes = getAllPassableLeafNodes();
             for(const auto& leaf_node : free_leaf_nodes) {
                 if(leaf_node->depth_ >= max_depth_ - min_block_depth_width_) { continue; } // limit minimum size of blocks
-//                BlockPtrRaw<N> block_ptr = new Block<N>();
-                BlockPtrRaw<N> block_ptr = std::make_shared<Block<N> >();
+                BlockPtrRaw<N> block_ptr = std::make_shared<BlockRaw<N> >();
                 block_ptr->min_ = leaf_node->base_pt_;
                 Pointi<N> offset; offset.setAll(pow_2_[max_depth_-leaf_node->depth_]-1);
                 block_ptr->max_ = leaf_node->base_pt_ + offset;
@@ -210,8 +209,7 @@ namespace freeNav::JOB {
                             // as when is_occupied = true, no block ptr will be set in recurAndUpdate
                             if(is_occupied && i != index &&
                                     (buffer->children_[i]->depth_ < max_depth_ - min_block_depth_width_) && update_block) {
-//                                BlockPtrRaw<N> block_ptr = new Block<N>();
-                                BlockPtrRaw<N> block_ptr = std::make_shared<Block<N> >();
+                                BlockPtrRaw<N> block_ptr = std::make_shared<BlockRaw<N> >();
                                 block_ptr->min_ = buffer->children_[i]->base_pt_;
                                 Pointi<N> offset; offset.setAll(pow_2_[max_depth_-buffer->children_[i]->depth_]-1);
                                 block_ptr->max_ = buffer->children_[i]->base_pt_ + offset;
@@ -276,8 +274,7 @@ namespace freeNav::JOB {
                         // limit minimum size of blocks
                         //std::cout << "create block, parent->occ_ = " << parent->occ_ << std::endl;
                         if(!parent->occ_ && (parent->depth_ < max_depth_ - min_block_depth_width_) && update_block) {
-//                            BlockPtrRaw<N> block_ptr = new Block<N>();
-                            BlockPtrRaw<N> block_ptr = std::make_shared<Block<N> >();
+                            BlockPtrRaw<N> block_ptr = std::make_shared<BlockRaw<N> >();
                             block_ptr->min_ = parent->base_pt_;
                             Pointi<N> offset; offset.setAll(pow_2_[max_depth_-parent->depth_]-1);
                             block_ptr->max_ = parent->base_pt_ + offset;
@@ -394,7 +391,7 @@ namespace freeNav::JOB {
 
                 // if in block, jump over current block
                 if(block_ptr != nullptr) {
-                    jump_step = findExitPointOfBlock(line, pt, i, block_ptr);
+                    jump_step = findExitPointOfBlock(line, pt, i, static_cast<BlockPtr<N>>(block_ptr));
                     //std::cout << " jump step " << jump_step << std::endl;
                     i = i + jump_step;
                     count_of_block ++;

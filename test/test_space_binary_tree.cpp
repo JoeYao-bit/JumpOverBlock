@@ -150,6 +150,8 @@ int main() {
         Pointi<2> pt = IdToPointi<2>(id, dimension);
         assert(is_occupied(pt) == sbt.isOccupied(pt));
     }
+
+
     //return 0;
     //std::vector<TreeNodeNewPtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();
     std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt.getAllPassableLeafNodes();

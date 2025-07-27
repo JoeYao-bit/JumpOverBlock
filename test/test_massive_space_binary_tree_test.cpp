@@ -50,20 +50,21 @@ template<typename SBT, typename TreeNode>
 void dynamic_obstacles_2D() {
 
 
-//    DimensionLength* dim = new DimensionLength[2];
+    DimensionLength* dim = new DimensionLength[2];
 
-//    dim[0] = 200, dim[1] = 200;
+    dim[0] = 10, dim[1] = 10;
+
+    auto is_occupied = [&](const Pointi<2> & pt) -> bool {
+        if(isOutOfBoundary<2>(pt, dim)) {
+            return true;
+        }
+        return false;
+    };
+
+//    auto dim = loader.getDimensionInfo();
 //
-//    auto is_occupied = [&](const Pointi<2> & pt) -> bool {
-//        if(isOutOfBoundary<2>(pt, dim)) {
-//            return true;
-//        }
-//        return false;
-//    };
+//    auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
 
-    auto dim = loader.getDimensionInfo();
-
-    auto is_occupied = [](const Pointi<2> & pt) -> bool { return loader.isOccupied(pt); };
 
     ObstaclePtrs<2> obs = {
             std::make_shared<CircleObstacle<2> >(30),
@@ -82,7 +83,7 @@ void dynamic_obstacles_2D() {
     //dynamic_obstacles.random();
     gettimeofday(&tv_pre, &tz);
 
-    std::shared_ptr<SBT> sbt = std::make_shared<SBT>(is_occupied, dim);
+    std::shared_ptr<SBT> sbt = std::make_shared<SBT>(is_occupied, dim, 1);
     sbt->initialize();
     gettimeofday(&tv_after, &tz);
     double time_cost;
@@ -90,13 +91,17 @@ void dynamic_obstacles_2D() {
     time_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
     std::cout << "finish initialize of map in " << time_cost << "ms" << std::endl;
 
+
+    sbt->mergePassableBlocksViaDecisionTree(); // only new SBT
+
     Canvas canvas("dynamic_obstacles_2D", dim[0], dim[1], .05, 800/std::max(dim[0], dim[1]));
 
     bool draw_pre_occupy = false,
          draw_current_occupy = true,
          draw_free_leaf = true,
          draw_block = true,
-         triger_varify = false;
+         triger_varify = false,
+         draw_merged_free_leaf = false;
     while(1) {
         canvas.resetCanvas();
         canvas.drawEmptyGrid();
@@ -153,18 +158,21 @@ void dynamic_obstacles_2D() {
             for(int i=0; i<block_ptrs.size(); i++) {
                 const auto& block_ptr = block_ptrs[i];
                 const Pointi<2> pt1 = block_ptr->min_, pt2 = block_ptr->max_;// + Pointi<2>{1, 1};
-                //const Pointi<2> pt1 = Pointi<2>{0, 0}, pt2 = Pointi<2>{100, 100};
-//                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 2, false,COLOR_TABLE[i%30]);
-//                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 2, false,COLOR_TABLE[i%30]);
-//                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 2, false,COLOR_TABLE[i%30]);
-//                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 2, false,COLOR_TABLE[i%30]);
-
                 canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
                 canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
                 canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
                 canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
-
-                //break;
+            }
+        }
+        if(draw_merged_free_leaf) {
+            auto merged_free_leaf_nodes = sbt->merged_block_ptrs_;
+            for(int i=0; i<merged_free_leaf_nodes.size(); i++) {
+                const auto& block_ptr = merged_free_leaf_nodes[i];
+                const Pointi<2> pt1 = block_ptr->min_pt_, pt2 = block_ptr->max_pt_;// + Pointi<2>{1, 1};
+                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
             }
         }
         if(triger_varify) {
@@ -231,6 +239,9 @@ void dynamic_obstacles_2D() {
                 break;
             case 'v':
                 triger_varify = true;
+                break;
+            case 'm':
+                draw_merged_free_leaf = !draw_merged_free_leaf;
                 break;
             default:
                 break;

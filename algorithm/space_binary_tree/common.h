@@ -24,10 +24,26 @@ namespace freeNav::JOB {
 //    using BlockPtrRaw = Block<N>*;
 
     template<Dimension N>
-    using BlockPtrRaw = std::shared_ptr<Block < N> >;
+    struct TreeNodeNew;
+
+    template<Dimension N>
+    using TreeNodeNewPtr = std::shared_ptr<TreeNodeNew<N> >;
+
+    template<Dimension N>
+    using TreeNodeNewPtrs = std::vector<TreeNodeNewPtr<N> >;
+
+    template<Dimension N>
+    struct BlockRaw : public Block<N> {
+        TreeNodeNewPtr<N> tree_node_ = nullptr;
+    };
+
+    template<Dimension N>
+    using BlockPtrRaw = std::shared_ptr<BlockRaw < N> >;
 
     template<Dimension N>
     using BlockPtrsRaw = std::vector<BlockPtrRaw<N> >;
+
+
 
     // all leaf node's children is all nullptr
     // if a node have non-nullptr children, it has a mixed state, part of it is passable and other part is unpassable
@@ -68,14 +84,7 @@ namespace freeNav::JOB {
     };
 
 
-    template<Dimension N>
-    struct TreeNodeNew;
 
-    template<Dimension N>
-    using TreeNodeNewPtr = std::shared_ptr<TreeNodeNew<N> >;
-
-    template<Dimension N>
-    using TreeNodeNewPtrs = std::vector<TreeNodeNewPtr<N> >;
 
 
     // all leaf node's children is all nullptr
