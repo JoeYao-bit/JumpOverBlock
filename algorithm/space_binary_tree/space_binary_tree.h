@@ -851,7 +851,12 @@ namespace freeNav::JOB {
                 // if in block, jump over current block
                 if(block_ptr != nullptr) {
                     assert(block_ptr->merged_block_id_ != -1);
+#if 0
                     jump_step = findExitPointOfBlock(line, pt, i, static_cast<BlockPtr<N>>(block_ptr));
+#else
+                    const auto& merged_block_ptr = merged_block_ptrs_[block_ptr->merged_block_id_];
+                    jump_step = findExitPointOfBlock(line, pt, i, merged_block_ptr->min_pt_, merged_block_ptr->max_pt_);
+#endif
                     //std::cout << " jump step " << jump_step << std::endl;
 //                    i = i + std::max(1, jump_step-1);
                     i = i + jump_step;
