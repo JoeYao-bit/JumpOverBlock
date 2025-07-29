@@ -6,6 +6,7 @@
 #define JUMPOVERBLOCK_SPACE_BINARY_TREE_H
 
 #include "common.h"
+#include "freeNav-base/basic_elements/misc.h"
 
 namespace freeNav::JOB {
 
@@ -70,6 +71,11 @@ namespace freeNav::JOB {
                 //std::cout << "max_width at level " << dp << " = " << max_width << std::endl;
             }
             // NOTICE: in override class's constructor, set all internal occ map state to occupied
+            // construct local update isoc
+            auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {
+                return getInternalOccState(pt);
+            };
+            isoc_dynamic_ = is_occupied_temp;
         }
 
         ~SpaceBinaryTree() {
@@ -213,6 +219,7 @@ namespace freeNav::JOB {
             }
 
             initBlockPtrMap();
+            mergePassableBlocksViaDecisionTree();
         }
 
         virtual void setInternalOccState(const Pointi<N>& pt, bool occ_state) = 0;
@@ -315,21 +322,21 @@ namespace freeNav::JOB {
         // find the leaf node that contain current pt, and return its occ
         bool isOccupied(const Pointi<N>& pt) const {
             Id id = PointiToId(pt, max_dims_[max_depth_]);
-            //std::cout << "*pt = " << pt << std::endl;
-            for(int dp=max_depth_; dp>=0; dp--) {
-                const int& id_in_level = PtToTreeVecId(pt, dp);
-                //std::cout << "dp = " << dp << ", gid = " << id_in_level <<" | ";
-                if(tree_ptr_vec_[id_in_level] != nullptr) {
-                    if(!tree_ptr_vec_[id_in_level]->mixed_state_) {
-                        //std::cout << std::endl;
-                        return tree_ptr_vec_[id_in_level]->occ_;
-                    }
-                }
-            }
-            //std::cout << std::endl;
-            std::cout << "find no leaf node, shouldn't reach here" << std::endl;
-            assert(0);
-            return true;
+//            //std::cout << "*pt = " << pt << std::endl;
+//            for(int dp=max_depth_; dp>=0; dp--) {
+//                const int& id_in_level = PtToTreeVecId(pt, dp);
+//                //std::cout << "dp = " << dp << ", gid = " << id_in_level <<" | ";
+//                if(tree_ptr_vec_[id_in_level] != nullptr) {
+//                    if(!tree_ptr_vec_[id_in_level]->mixed_state_) {
+//                        //std::cout << std::endl;
+//                        return tree_ptr_vec_[id_in_level]->occ_;
+//                    }
+//                }
+//            }
+//            //std::cout << std::endl;
+//            std::cout << "find no leaf node, shouldn't reach here" << std::endl;
+//            assert(0);
+            return tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_;
         }
 
         void setOccupiedState(const Pointi<N>& pt, bool is_occupied) {
@@ -515,6 +522,9 @@ namespace freeNav::JOB {
                     setBlockPtrForNode(leaf_node, block_ptr);
                 }
             }
+
+            mergePassableBlocksViaDecisionTree();
+
         }
 
 
@@ -559,35 +569,36 @@ namespace freeNav::JOB {
         struct MergedBlock {
             Pointi<N> min_pt_;
             Pointi<N> max_pt_;
-            TreeNodeNewPtrs<N> leaf_node_ptrs_; // leaf node of SBT in current block
+            BlockPtrsRaw<N> block_ptrs_; // leaf node of SBT in current block
 
             MergedBlockPtr parent_;
             MergedBlockPtrs children_;
         };
 
-        struct LeafNodeCompare {
-            bool operator()(const TreeNodeNewPtr<N>& a, const TreeNodeNewPtr<N>& b) const {
-                if(a->depth_ != b->depth_) {
-                    return a->depth_ < b->depth_;
+        struct BlockCompare {
+            bool operator()(const BlockPtrRaw<N>& a, const BlockPtrRaw<N>& b) const {
+                assert(a->tree_node_ != nullptr && b->tree_node_ != nullptr);
+                if(a->tree_node_->depth_ != b->tree_node_->depth_) {
+                    return a->tree_node_->depth_ < b->tree_node_->depth_;
                 } else {
                     for(int d=0; d<N; d++) {
-                        if(a->base_pt_[d] != b->base_pt_[d]) {
-                            return a->base_pt_[d] < b->base_pt_[d];
+                        if(a->tree_node_->base_pt_[d] != b->tree_node_->base_pt_[d]) {
+                            return a->tree_node_->base_pt_[d] < b->tree_node_->base_pt_[d];
                         }
                     }
                     //std::cout << " there should not have the same leaf node" << std::endl;
                     //assert(0);
                     // 当 comp(a, b) == false 且 comp(b, a) == false 时
                     //std::map 会认为 a 和 b 等价（即“相同”的 key），此时插入操作会覆盖已有值或失败（取决于插入方式）。
-                    return a->base_pt_[N-1] < b->base_pt_[N-1];
+                    return a->tree_node_->base_pt_[N-1] < b->tree_node_->base_pt_[N-1];
                 }
             }
         };
 
-        std::set<TreeNodeNewPtr<N> >
+        std::set<BlockPtrRaw<N> >
                 tryExpandBlockInDirection(int dim,
                                           const MergedBlockPtr& block_node,
-                                          const std::map<TreeNodeNewPtr<N>, bool, LeafNodeCompare>& leave_merged_map) {
+                                          const std::map<BlockPtrRaw<N>, bool, BlockCompare>& leave_merged_map) const {
 
             Pointi<N> dim_of_block = block_node->max_pt_ - block_node->min_pt_ + all_1_pt_;
             DimensionLength plain[N - 1];
@@ -610,58 +621,56 @@ namespace freeNav::JOB {
                 origin_of_plain[dim / 2] -= 1;
             }
             // the block in the surface must form a plain that have exact the size of the plain
-            std::cout << "new plain total index = " << total_plain_index << std::endl;
+            //std::cout << "new plain total index = " << total_plain_index << std::endl;
             //std::cout << "new plain pt at direct " << dim << ": ";
             bool expandable = true;
-            TreeNodeNewPtr<N> neighbor_block_ptr = nullptr;
+            BlockPtrRaw<N> neighbor_block_ptr = nullptr;
             int expected_num_of_neighbor_block = 0;
-            std::set<TreeNodeNewPtr<N> > neighbor_block_ptrs;
+            std::set<BlockPtrRaw<N> > neighbor_block_ptrs;
             for (Id id = 0; id < total_plain_index; id++) {
                 plain_pt = IdToPointi<N - 1>(id, plain);
                 new_plain_pt = origin_of_plain.addPlainOffset(plain_pt, dim);
-                std::cout << new_plain_pt << " " << std::endl;
+                //std::cout << new_plain_pt << " " << std::endl;
                 // if out of boundary, cannot expand
                 if(isOutOfBoundary(new_plain_pt, dim_)) {
                     expandable = false;
-                    std::cout << "out of bound, expand failed " << std::endl;
+                    //std::cout << "out of bound, expand failed " << std::endl;
                     break;
                 }
                 BlockPtrRaw<N> temp_block_ptr = getInternalBlockPtr(new_plain_pt);
                 if(temp_block_ptr == nullptr) {
                     expandable = false;
-                    std::cout << "not in block ptr, expand failed " << std::endl;
+                    //std::cout << "not in block ptr, expand failed " << std::endl;
                     break;
                 }
-                Id plain_pt_id = PointiToId<N>(new_plain_pt, max_dims_[max_depth_]);
-                int global_plain_pt_id = level_offset_[max_depth_] + plain_pt_id;
                 const auto& temp_tree_ptr = temp_block_ptr->tree_node_;
                 //std::cout << "temp_tree_ptr = " << temp_tree_ptr << ", dp = "
                 //          << temp_tree_ptr->depth_ << ", base_pt = " << temp_tree_ptr->base_pt_ << std::endl;
                 // if tree ptr is mixed state or occ is true, cannot expand
-                if(temp_tree_ptr->mixed_state_ || temp_tree_ptr->occ_ == true || leave_merged_map.at(temp_tree_ptr) == true) {
+                if(temp_tree_ptr->mixed_state_ || temp_tree_ptr->occ_ == true || leave_merged_map.at(temp_block_ptr) == true) {
                     expandable = false;
-                    std::cout << "not in leaf node or have been expand, expand failed " << std::endl;
+                    //std::cout << "not in leaf node or have been expand, expand failed " << std::endl;
                     break;
                 }
                 // cannot exceed current block's range
                 if(temp_block_ptr->max_ > block_node->max_pt_ || temp_block_ptr->min_ < block_node->min_pt_) {
                     expandable = false;
-                    std::cout << "neighbor area out of range, expand failed " << std::endl;
+                    //std::cout << "neighbor area out of range, expand failed " << std::endl;
                     break;
                 }
                 if(neighbor_block_ptr == nullptr) {
-                    neighbor_block_ptr = temp_tree_ptr;
+                    neighbor_block_ptr = temp_block_ptr;
                     neighbor_block_ptrs.insert(neighbor_block_ptr);
-                    int area_of_neighbor_node = pow(pow_2_[max_depth_-neighbor_block_ptr->depth_], N-1);
+                    int area_of_neighbor_node = pow(pow_2_[max_depth_-neighbor_block_ptr->tree_node_->depth_], N-1);
                     expected_num_of_neighbor_block = (total_plain_index + 1) / area_of_neighbor_node;
                     neighbor_block_ptrs.insert(neighbor_block_ptr);
                 } else {
-                    if(neighbor_block_ptr->depth_ != temp_tree_ptr->depth_) {
-                        std::cout << "neighbor block have not same size , expand failed " << std::endl;
+                    if(neighbor_block_ptr->tree_node_->depth_ != temp_tree_ptr->depth_) {
+                        //std::cout << "neighbor block have not same size , expand failed " << std::endl;
                         expandable = false;
                         break;
                     } else {
-                        neighbor_block_ptrs.insert(neighbor_block_ptr);
+                        neighbor_block_ptrs.insert(temp_block_ptr);
                     }
                 }
             }
@@ -669,45 +678,50 @@ namespace freeNav::JOB {
             if(!expandable) {
                 return {};
             }
-            std::cout << "expected_num_of_neighbor_block = " << expected_num_of_neighbor_block << std::endl;
-            std::cout << "neighbor_block_ptrs.size() = " << neighbor_block_ptrs.size() << std::endl;
+            //std::cout << "expected_num_of_neighbor_block = " << expected_num_of_neighbor_block << std::endl;
+            //std::cout << "neighbor_block_ptrs.size() = " << neighbor_block_ptrs.size() << std::endl;
             if(expected_num_of_neighbor_block == neighbor_block_ptrs.size()) {
                 return neighbor_block_ptrs;
             } else {
-                std::cout << "number of neighbor block not meet expected size , expand failed " << std::endl;
+                //std::cout << "number of neighbor block not meet expected size , expand failed " << std::endl;
                 return {};
             }
         }
 
-        // TODO: merge block with neighbor block until local maximize
+        // merge block with neighbor block until local maximize
         void mergePassableBlocksViaDecisionTree() {
+            MSTimer mst;
             merged_block_ptrs_.clear();
             // big block start, small block end
             const auto& all_leaves = getAllPassableLeafNodes();
-            std::map<TreeNodeNewPtr<N>, bool, LeafNodeCompare> leave_merged_map;
+            std::map<BlockPtrRaw<N>, bool, BlockCompare> leave_merged_map;
+            BlockPtrsRaw<N> all_blocks;
             for(const auto& leaf_node : all_leaves) {
+                if(leaf_node->depth_ > max_depth_ - min_block_depth_width_) { continue; }
                 //std::cout << "leaf node " << leaf_node << " dp = " << leaf_node->depth_ << ", base pt = " << leaf_node->base_pt_ << std::endl;
-                leave_merged_map.insert({leaf_node, false});
+                const auto& block_ptr = getInternalBlockPtr(leaf_node->base_pt_);
+                leave_merged_map.insert({block_ptr, false});
+                all_blocks.push_back(block_ptr);
             }
             //return ;
             //std::cout << "flag 1" << std::endl;
-            for(const auto& temp_leaf : all_leaves) {
+            for(const auto& block_ptr : all_blocks) {
+                if(block_ptr->tree_node_->depth_ > max_depth_ - min_block_depth_width_) { continue; }
                 //std::cout << "temp_leaf = " << temp_leaf << std::endl;
-                if(leave_merged_map[temp_leaf]) { continue; }
+                if(leave_merged_map[block_ptr]) { continue; }
                 // initial root block
                 MergedBlockPtr root = std::make_shared<MergedBlock>();
-                root->min_pt_ = temp_leaf->base_pt_;
-                Pointi<N> offset; offset.setAll(pow_2_[max_depth_-temp_leaf->depth_]-1);
-                root->max_pt_ = temp_leaf->base_pt_ + offset;
-                root->leaf_node_ptrs_ = {temp_leaf};
-                std::cout << "root block: min_pt_ = " << root->min_pt_ << " / max_pt = " << root->max_pt_  << std::endl;
+                root->min_pt_ = block_ptr->min_;
+                root->max_pt_ = block_ptr->max_;
+                root->block_ptrs_ = {block_ptr};
+                //std::cout << "root block: min_pt_ = " << root->min_pt_ << " / max_pt = " << root->max_pt_  << std::endl;
 
                 MergedBlockPtr largest_merged_block_ptr = root;
                 int largest_size = getTotalIndexOfSpace(largest_merged_block_ptr->max_pt_ - largest_merged_block_ptr->min_pt_);
 
                 MergedBlockPtrs buffer = {root}, next_buffer;
 
-                leave_merged_map[temp_leaf] = true;
+                leave_merged_map[block_ptr] = true;
 
                 while(!buffer.empty()) {
                     next_buffer.clear();
@@ -718,13 +732,13 @@ namespace freeNav::JOB {
                             // we say we found a legal expansion
                             auto neighbor_block_ptrs = tryExpandBlockInDirection(dim, block_node, leave_merged_map);
                             if(!neighbor_block_ptrs.empty()) {
-                                std::cout << "expand in dir " << dim << " success" << std::endl;
+                                //std::cout << "expand in dir " << dim << " success" << std::endl;
                                 MergedBlockPtr new_block_node = std::make_shared<MergedBlock>();
                                 new_block_node->min_pt_ = block_node->min_pt_;
                                 new_block_node->max_pt_ = block_node->max_pt_;
                                 new_block_node->parent_ = block_node;
-                                new_block_node->leaf_node_ptrs_ = block_node->leaf_node_ptrs_;
-                                int expand_dist = pow_2_[max_depth_ - (*neighbor_block_ptrs.begin())->depth_];
+                                new_block_node->block_ptrs_ = block_node->block_ptrs_;
+                                int expand_dist = pow_2_[max_depth_ - (*neighbor_block_ptrs.begin())->tree_node_->depth_];
                                 // update block size
                                 if(dim % 2 == 1) {
                                     new_block_node->max_pt_[dim/2] = new_block_node->max_pt_[dim/2] + expand_dist;
@@ -732,8 +746,7 @@ namespace freeNav::JOB {
                                     new_block_node->min_pt_[dim/2] = new_block_node->min_pt_[dim/2] - expand_dist;
                                 }
                                 for(const auto& neighbor_block_ptr : neighbor_block_ptrs) {
-                                    new_block_node->leaf_node_ptrs_.push_back(neighbor_block_ptr);
-                                    leave_merged_map[neighbor_block_ptr] = true;
+                                    new_block_node->block_ptrs_.push_back(neighbor_block_ptr);
                                 }
                                 block_node->children_.push_back(new_block_node);
                                 next_buffer.push_back(new_block_node);
@@ -743,28 +756,142 @@ namespace freeNav::JOB {
                                     largest_merged_block_ptr = new_block_node;
                                     largest_size = new_size;
                                 }
-                                std::cout << "merged block from " << block_node->min_pt_ << "<->" << block_node->max_pt_ << " to "
-                                          << new_block_node->min_pt_ << "<->" << new_block_node->max_pt_ << std::endl;
+                                //std::cout << "merged block from " << block_node->min_pt_ << "<->" << block_node->max_pt_ << " to "
+                                //          << new_block_node->min_pt_ << "<->" << new_block_node->max_pt_ << std::endl;
                             } else {
-                                std::cout << "expand in dir " << dim << " failed" << std::endl;
+                                //std::cout << "expand in dir " << dim << " failed" << std::endl;
                             }
-                            std::cout << std::endl;
+                            //std::cout << std::endl;
                         }
                     }
                     std::swap(buffer, next_buffer);
                 }
                 merged_block_ptrs_.push_back(largest_merged_block_ptr);
+                for(const auto& neighbor_block_ptr : largest_merged_block_ptr->block_ptrs_) {
+                    leave_merged_map[neighbor_block_ptr] = true;
+                    neighbor_block_ptr->merged_block_id_ = merged_block_ptrs_.size() - 1;
+                }
                 // save the largest merged block
-                break; // debug only, means just try expand one block
+                //break; // debug only, means just try expand one block
             }
-            std::cout << "all merged block = ";
-            for(const auto& merged_block_ptr : merged_block_ptrs_) {
-                std::cout << merged_block_ptr->min_pt_ << "<->" << merged_block_ptr->max_pt_ << ", ";
-            }
-            std::cout << std::endl;
+            //std::cout << "all merged block = ";
+            //for(const auto& merged_block_ptr : merged_block_ptrs_) {
+            //    std::cout << merged_block_ptr->min_pt_ << "<->" << merged_block_ptr->max_pt_ << ", ";
+            //}
+            //std::cout << std::endl;
+            std::cout << __FUNCTION__ << " take " << mst.elapsed() << " ms" << std::endl;
         }
 
+        bool lineCrossObstacleRaw(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied) {
+            if(pt1 == pt2) return true;
+            Line<N> line(pt1, pt2);
+            int check_step = line.step;
+            Pointi<N> pt;
+            //std::cout << __FUNCTION__ << std::endl;
+            for(int i=1; i<check_step; i++) {
+                pt = line.GetPoint(i);
+                raw_visited_pt_count_ ++;
+                //std::cout << "raw_visited_pt_count_ = " << raw_visited_pt_count_ << std::endl;
+                if(is_occupied(pt)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+//        bool lineCrossObstacleSBT(const Pointi<N>& pt1, const Pointi<N>& pt2, const IS_OCCUPIED_FUNC<N>& is_occupied,
+//                                  Pointis<N>& visited_pt,
+//                                  int& count_of_block
+//        ) {
+//            //if(isOutOfBoundary(pt1, dim_) || isOutOfBoundary(pt2, dim_)) { return true; }
+//            if(pt1 == pt2) return true;
+//            //visited_pt.clear();
+//            //count_of_block = 0;
+//            Line<N> line(pt1, pt2);
+//            int check_step = line.step;
+//            Pointi<N> pt;
+//            Id id;
+//            int jump_step = 0;
+//            for(int i=1; i<check_step; i++) {
+//                pt = line.GetPoint(i);
+//                SBT_visited_pt_count_ ++;
+//                if(is_occupied(pt)) { return true; }
+//                const auto& block_ptr = getInternalBlockPtr(pt);
+//                // if in block, jump over current block
+//                if(block_ptr != nullptr) {
+//                    jump_step = findExitPointOfBlock(line, pt, i, static_cast<BlockPtr<N>>(block_ptr));
+//                    //std::cout << " jump step " << jump_step << std::endl;
+//                    i = i + jump_step;
+//                    count_of_block ++;
+//                }
+//            }
+//            return false;
+//        }
+
+        bool lineCrossObstacleSBT(const Pointi<N>& pt1, const Pointi<N>& pt2, const IS_OCCUPIED_FUNC<N>& is_occupied,
+                                  Pointis<N>& visited_pt,
+                                  int& count_of_block
+        ) {
+            //if(isOutOfBoundary(pt1, dim_) || isOutOfBoundary(pt2, dim_)) { return true; }
+            if(pt1 == pt2) return true;
+            //visited_pt.clear();
+            //count_of_block = 0;
+            Line<N> line(pt1, pt2);
+            int check_step = line.step;
+            Pointi<N> pt;
+            Id id;
+            int jump_step = 0;
+            //std::cout << __FUNCTION__ << std::endl;
+            for(int i=1; i<check_step; i++) {
+                pt = line.GetPoint(i);
+                SBT_visited_pt_count_ ++;
+                //std::cout << "SBT_visited_pt_count_ = " << SBT_visited_pt_count_ << std::endl;
+                if(is_occupied(pt)) { return true; }
+                const auto& block_ptr = getInternalBlockPtr(pt);
+                // if in block, jump over current block
+                if(block_ptr != nullptr) {
+                    assert(block_ptr->merged_block_id_ != -1);
+                    jump_step = findExitPointOfBlock(line, pt, i, static_cast<BlockPtr<N>>(block_ptr));
+                    //std::cout << " jump step " << jump_step << std::endl;
+//                    i = i + std::max(1, jump_step-1);
+                    i = i + jump_step;
+                    count_of_block ++;
+                }
+            }
+            return false;
+        }
+
+//        float getObstacleDensity() {
+//            // count passable children grid
+//            float count = 0;
+//            Id total_index = getTotalIndexOfSpace<N>(max_dims_[max_depth_]);
+//            for(int i=0; i<total_index; i++) {
+//                const auto& tree_node_ptr = tree_ptr_vec_[i + level_offset_[max_depth_]];
+//                assert(tree_node_ptr != nullptr);
+//                if(tree_node_ptr->occ_ == false && tree_node_ptr->mixed_state_ == false) {
+//                    count ++;
+//                }
+//            }
+//            return count / getTotalIndexOfSpace<N>(dim_);
+//        }
+
+        float getObstacleDensity() const {
+            // count passable children grid
+            float count = 0;
+            Id total_index = getTotalIndexOfSpace<N>(dim_);
+            for(int i=0; i<total_index; i++) {
+                Pointi<N> pt = IdToPointi<N>(i, dim_);
+                if(!getInternalOccState(pt)) {
+                    count ++;
+                }
+            }
+            return count / getTotalIndexOfSpace<N>(dim_);
+        }
+
+
         Pointi<N> all_1_pt_; // a point that all coordinate is 1
+
+        IS_OCCUPIED_FUNC<N> isoc_dynamic_;  // notice, set state will change it
 
         IS_OCCUPIED_FUNC <N> isoc_; // notice, setOccupiedState will not change it,
         // so it is wrong after call setOccupiedState after initialize
@@ -793,6 +920,8 @@ namespace freeNav::JOB {
         std::set<Id> updated_ids_; // avoid repeat of pt cause extra calculation
 
         MergedBlockPtrs merged_block_ptrs_;
+
+        int raw_visited_pt_count_ = 0, SBT_visited_pt_count_ = 0;// for debug
 
     };
 
@@ -837,6 +966,104 @@ namespace freeNav::JOB {
         }
 
         BlockPtrsRaw<N> block_ptr_map_; // save all grid's block ptr need lots space, but reduce time cost
+
+        std::vector<bool> occ_map_; // save all grid's state need lots space, but reduce time cost
+
+
+    };
+
+
+    class SpaceBinaryTree2D : public SpaceBinaryTree<2> {
+    public:
+
+        SpaceBinaryTree2D(const IS_OCCUPIED_FUNC<2>& isoc, DimensionLength* dim, int min_block_depth_width = 4)
+                : SpaceBinaryTree<2>(isoc, dim, min_block_depth_width) {
+            //std::vector<bool> base_occ_map(dim[1], true);
+            occ_map_.resize(dim[0]*dim[1], true);
+            //std::vector<BlockPtrRaw<2> > base_block_map(dim[1], nullptr);
+            block_ptr_map_.resize(dim[0]*dim[1], nullptr);
+            std::cout << "start initialize of SBT2D" << std::endl;
+        }
+
+        virtual void setInternalOccState(const Pointi<2>& pt, bool occ_state) override {
+            if(isOutOfBoundary(pt, this->dim_)) { return; }
+            occ_map_[pt[0] + pt[1]*dim_[0]] = occ_state;
+        }
+
+        virtual bool getInternalOccState(const Pointi<2>& pt) const override {
+//            if(isOutOfBoundary(pt, this->dim_)) { return true; }
+            if(pt[0] < 0 || pt[0] >= dim_[0] || pt[1] < 0 || pt[1] >= dim_[1]) { return true; }
+            auto index = pt[1]*dim_[0] + pt[0];
+            return occ_map_[index];
+        }
+
+        virtual void setInternalBlockPtr(const Pointi<2>& pt, const BlockPtrRaw<2>& block_ptr) override {
+            if(pt[0] < 0 || pt[0] >= dim_[0] || pt[1] < 0 || pt[1] >= dim_[1]) { return; }
+            block_ptr_map_[pt[0] + pt[1]*dim_[0]] = block_ptr;
+        }
+
+        virtual const BlockPtrRaw<2>& getInternalBlockPtr(const Pointi<2>& pt) const override {
+            if(pt[0] < 0 || pt[0] >= dim_[0] || pt[1] < 0 || pt[1] >= dim_[1]) { return nullptr; }
+            return block_ptr_map_[pt[0] + pt[1]*dim_[0]];
+        }
+
+        virtual void clearInternalBlockPtr() {
+            block_ptr_map_ = BlockPtrsRaw<2>(getTotalIndexOfSpace<2>(dim_), nullptr);
+        }
+
+        BlockPtrsRaw<2> block_ptr_map_; // save all grid's block ptr need lots space, but reduce time cost
+
+        std::vector<bool> occ_map_; // save all grid's state need lots space, but reduce time cost
+
+
+    };
+
+
+    class SpaceBinaryTree3D : public SpaceBinaryTree<3> {
+    public:
+
+        SpaceBinaryTree3D(const IS_OCCUPIED_FUNC<3>& isoc, DimensionLength* dim, int min_block_depth_width = 3)
+                : SpaceBinaryTree<3>(isoc, dim, min_block_depth_width) {
+            //std::vector<bool> base_occ_map(dim[1], true);
+            occ_map_.resize(dim[0]*dim[1]*dim[2], true);
+            //std::vector<BlockPtrRaw<2> > base_block_map(dim[1], nullptr);
+            block_ptr_map_.resize(dim[0]*dim[1]*dim[2], nullptr);
+            std::cout << "start initialize of SBT3D" << std::endl;
+        }
+
+        virtual void setInternalOccState(const Pointi<3>& pt, bool occ_state) override {
+            if(isOutOfBoundary(pt, this->dim_)) { return; }
+//            occ_map_[PointiToId(pt, dim_)] = occ_state;
+            occ_map_[pt[0] + pt[1]*dim_[0] + pt[2]*dim_[0]*dim_[1]] = occ_state;
+        }
+
+        virtual bool getInternalOccState(const Pointi<3>& pt) const override {
+            if(isOutOfBoundary(pt, this->dim_)) { return true; }
+//            if(pt[0] < 0 || pt[0] >= dim_[0] || pt[1] < 0 || pt[1] >= dim_[1] || pt[2] < 0 || pt[2] >= dim_[2]) { return true; }
+            auto index = pt[1]*dim_[0] + pt[0] + pt[2]*dim_[0]*dim_[1];
+            return occ_map_[index];
+//            return occ_map_[PointiToId(pt, dim_)];
+        }
+
+        virtual void setInternalBlockPtr(const Pointi<3>& pt, const BlockPtrRaw<3>& block_ptr) override {
+//            if(pt[0] < 0 || pt[0] >= dim_[0] || pt[1] < 0 || pt[1] >= dim_[1] || pt[2] < 0 || pt[2] >= dim_[2]) { return ; }
+            block_ptr_map_[pt[0] + pt[1]*dim_[0] + pt[2]*dim_[0]*dim_[1]] = block_ptr;
+            //if(isOutOfBoundary(pt, this->dim_)) { return ; }
+            //block_ptr_map_[PointiToId(pt, dim_)] = block_ptr;
+        }
+
+        virtual const BlockPtrRaw<3>& getInternalBlockPtr(const Pointi<3>& pt) const override {
+//            if(pt[0] < 0 || pt[0] >= dim_[0] || pt[1] < 0 || pt[1] >= dim_[1] || pt[2] < 0 || pt[2] >= dim_[2]) { return nullptr; }
+            return block_ptr_map_[pt[0] + pt[1]*dim_[0] + pt[2]*dim_[0]*dim_[1]];
+//            if(isOutOfBoundary(pt, this->dim_)) { return nullptr; }
+//            return block_ptr_map_[PointiToId(pt, dim_)];
+        }
+
+        virtual void clearInternalBlockPtr() {
+            block_ptr_map_ = BlockPtrsRaw<3>(getTotalIndexOfSpace<3>(dim_), nullptr);
+        }
+
+        BlockPtrsRaw<3> block_ptr_map_; // save all grid's block ptr need lots space, but reduce time cost
 
         std::vector<bool> occ_map_; // save all grid's state need lots space, but reduce time cost
 

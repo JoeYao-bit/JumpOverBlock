@@ -49,6 +49,10 @@ namespace freeNav::JOB {
             std::cout << "min_block_depth_width = " << min_block_depth_width_ << std::endl;
 
             // NOTICE: in override class's constructor, set all internal occ map state to occupied
+            auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {
+                return getInternalOccState(pt);
+            };
+            isoc_dynamic_ = is_occupied_temp;
         }
 
         void releaseLeafNodes() {
@@ -474,6 +478,22 @@ namespace freeNav::JOB {
             return retv;
         }
 
+        float getObstacleDensity() const {
+            // count passable children grid
+            float count = 0;
+            Id total_index = getTotalIndexOfSpace<N>(dim_);
+            for(int i=0; i<total_index; i++) {
+                Pointi<N> pt = IdToPointi<N>(i, dim_);
+                if(!getInternalOccState(pt)) {
+                    count ++;
+                }
+            }
+            return count / getTotalIndexOfSpace<N>(dim_);
+        }
+
+        IS_OCCUPIED_FUNC<N> isoc_dynamic_; // notice, set state will change it
+
+
         IS_OCCUPIED_FUNC<N> isoc_; // notice, setOccupiedState will not change it,
         // so it is wrong after call setOccupiedState after initialize
 
@@ -591,10 +611,10 @@ namespace freeNav::JOB {
     };
 
 
-    class SpaceBinaryTree3D : public SpaceBinaryTreeRaw<3> {
+    class SpaceBinaryTree3DRAW : public SpaceBinaryTreeRaw<3> {
     public:
 
-        SpaceBinaryTree3D(const IS_OCCUPIED_FUNC<3>& isoc, DimensionLength* dim, int min_block_depth_width = 3)
+        SpaceBinaryTree3DRAW(const IS_OCCUPIED_FUNC<3>& isoc, DimensionLength* dim, int min_block_depth_width = 3)
                 : SpaceBinaryTreeRaw<3>(isoc, dim, min_block_depth_width) {
             //std::vector<bool> base_occ_map(dim[1], true);
             occ_map_.resize(dim[0]*dim[1]*dim[2], true);

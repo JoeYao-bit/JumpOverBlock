@@ -21,14 +21,54 @@ namespace freeNav {
                     {"output_path", "../test/test_data/Shanghai_0_512.txt"}
             };
 
-    // Shanghai_0_512.map
-    SingleMapTestConfig<2> MapTestConfig_Simple_2D =
+    // den312d.map
+    SingleMapTestConfig<2> MapTestConfig_den312d =
             {
-                    {"map_name",    "Simple_2D"},
-                    {"map_path",    "../test/test_data/Simple_2D.map"},
-                    {"vis_path",    "../test/test_data/Simple_2D_ENLSVG.vis"},
-                    {"config_path", "../test/test_data/Simple_2D.map.scen"},
-                    {"output_path", "../test/test_data/Simple_2D.txt"}
+                    {"map_name",    "den312"},
+                    {"map_path",    "../test/test_data/den312d.map"},
+                    {"vis_path",    "../test/test_data/den312d_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/den312d.map.scen"},
+                    {"output_path", "../test/test_data/den312d.txt"}
+            };
+
+    // den520d.map
+    SingleMapTestConfig<2> MapTestConfig_den520d =
+            {
+                    {"map_name",    "den520d"},
+                    {"map_path",    "../test/test_data/den520d.map"},
+                    {"vis_path",    "../test/test_data/den520_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/den520d.map.scen"},
+                    {"output_path", "../test/test_data/den520d.txt"}
+            };
+
+    // lak303d.map
+    SingleMapTestConfig<2> MapTestConfig_lak303d =
+            {
+                    {"map_name",    "lak303d"},
+                    {"map_path",    "../test/test_data/lak303d.map"},
+                    {"vis_path",    "../test/test_data/lak303d_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/lak303d.map.scen"},
+                    {"output_path", "../test/test_data/lak303d.txt"}
+            };
+
+    // orz900d.map
+    SingleMapTestConfig<2> MapTestConfig_orz900d =
+            {
+                    {"map_name",    "orz900d"},
+                    {"map_path",    "../test/test_data/orz900d.map"},
+                    {"vis_path",    "../test/test_data/orz900d_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/orz900d.map.scen"},
+                    {"output_path", "../test/test_data/orz900d.txt"}
+            };
+
+    // ost003d.map
+    SingleMapTestConfig<2> MapTestConfig_ost003d =
+            {
+                    {"map_name",    "ost003d"},
+                    {"map_path",    "../test/test_data/ost003d.map"},
+                    {"vis_path",    "../test/test_data/ost003d_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/ost003d.map.scen"},
+                    {"output_path", "../test/test_data/ost003d.txt"}
             };
 
     SingleMapTestConfig<3> MapTestConfig_Simple =

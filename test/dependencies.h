@@ -41,7 +41,7 @@ namespace freeNav::JOB {
         //        and each block is passable
         for(Id id=0; id<total_index; id++) {
             Pointi<N> pt = IdToPointi<N>(id, temp_dim);
-            assert(isoc_temp(pt) == sbt->isOccupied(pt));
+            assert(isoc_temp(pt) == sbt->isoc_dynamic_(pt));
             if(sbt->getInternalBlockPtr(pt) != nullptr) {
                 assert(isoc_temp(pt) == false);
             }
@@ -84,10 +84,9 @@ namespace freeNav::JOB {
 
     // times_of_test do how many times of LOS compare
     // each compare use how many times of sample to find a point
-    template<Dimension N>
+    template<Dimension N, typename SBT>
     void LOSCompare(DimensionLength* temp_dim,
-                    const SpaceBinaryTreePtr<N>& sbt,
-                    const DynamicObstacles<N>& dynamic_obstacles,
+                    const std::shared_ptr<SBT>& sbt,
                     std::vector<std::string>& output_strings,
                     int times_of_test = 1e5,
                     int max_sample_times = 1e3) {
@@ -113,34 +112,34 @@ namespace freeNav::JOB {
             while(count >= 0) {
                 id1 = rand() % total_index;
                 pt1 = IdToPointi<N>(id1, temp_dim);
-                if (!dynamic_obstacles.isoc_(pt1)) {
+                if (!sbt->isoc_dynamic_(pt1)) {
                     break;
                 } else {
                     count --;
                 }
             }
-            if (dynamic_obstacles.isoc_(pt1)) {
+            if (sbt->isoc_dynamic_(pt1)) {
                 continue;
             }
             count = max_sample_times;
             while(count >= 0) {
                 id2 = rand() % total_index;
                 pt2 = IdToPointi<N>(id2, temp_dim);
-                if (!dynamic_obstacles.isoc_(pt2)) {
+                if (!sbt->isoc_dynamic_(pt1)) {
                     break;
                 } else {
                     count --;
                 }
             }
-            if (dynamic_obstacles.isoc_(pt2)) {
+            if (sbt->isoc_dynamic_(pt2)) {
                 continue;
             }
 
-            sbt->raw_visited_pt_count_ = 0, sbt->SBT_visited_pt_count_ = 0;
+            //sbt->raw_visited_pt_count_ = 0, sbt->SBT_visited_pt_count_ = 0;
 
             //std::cout << "do LOS between " << pt1 << ", " << pt2 <<  std::endl;
             gettimeofday(&tv_pre, &tz);
-            bool isoc1 = sbt->lineCrossObstacleRaw(pt1, pt2, dynamic_obstacles.isoc_);
+            bool isoc1 = sbt->lineCrossObstacleRaw(pt1, pt2, sbt->isoc_dynamic_);
 
             gettimeofday(&tv_after, &tz);
             double time_cost1 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
@@ -148,7 +147,7 @@ namespace freeNav::JOB {
             Pointis<N> visited_pt;
             int count_of_block;
             gettimeofday(&tv_pre, &tz);
-            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, dynamic_obstacles.isoc_, visited_pt, count_of_block);
+            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, sbt->isoc_dynamic_, visited_pt, count_of_block);
             //bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, dynamic_obstacles.isoc_);
 
             gettimeofday(&tv_after, &tz);
@@ -169,8 +168,8 @@ namespace freeNav::JOB {
                 Pointi<N> pt, occ_pt;
                 for(int i=1; i<check_step; i++) {
                     pt = line.GetPoint(i);
-                    std::cout << pt << "(" << dynamic_obstacles.isoc_(pt) << ")， ";
-                    if(dynamic_obstacles.isoc_(pt)) {
+                    std::cout << pt << "(" << sbt->isoc_dynamic_(pt) << ")， ";
+                    if(sbt->isoc_dynamic_(pt)) {
                         occ_pt = pt;
                         break;
                     }
@@ -183,7 +182,7 @@ namespace freeNav::JOB {
                 std::cout << "SBT visited_pt = ";
 
                 for(const auto& vpt : visited_pt) {
-                    std::cout << vpt << "(" << dynamic_obstacles.isoc_(vpt) << "), ";
+                    std::cout << vpt << "(" << sbt->isoc_dynamic_(vpt) << "), ";
                 }
                 std::cout << std::endl;
 
@@ -191,7 +190,6 @@ namespace freeNav::JOB {
                 std::cout << "occ_pt in block = " << sbt->getInternalBlockPtr(occ_pt) << std::endl;
 
                 std::cout << "dim info " << printDimInfo<N>(temp_dim) << std::endl;
-                std::cout << "dynamic obstacles = " << dynamic_obstacles << std::endl;
                 // assert classic LOS check and SBT's LOS check have the same result
                 assert(isoc1 == isoc2);
             }
@@ -200,13 +198,15 @@ namespace freeNav::JOB {
 
         }
         Id space_size = getTotalIndexOfSpace<N>(temp_dim);
+        float obstacleDensity = sbt->getObstacleDensity();
         std::cout << "dim info " << printDimInfo<N>(temp_dim) << std::endl;
-        std::cout << "dynamic obstacles " << dynamic_obstacles << std::endl;
-        std::cout << "obstacleDensity " << (float)dynamic_obstacles.occ_pt_count_ / space_size << std::endl;
+        std::cout << "obstacleDensity " << obstacleDensity << std::endl;
         std::cout << success_count <<  " LOS test, mean raw / SBT LOS time cost (us) = " << sum_1/(double)success_count
                   << " / " << sum_2/(double)success_count << std::endl;
         std::cout << "occ_ratio(LOS_pass/LOS_total) = " << (float)occ_count / success_count << std::endl;
-
+        std::cout << "SBT / raw visit pt count = " << sbt->SBT_visited_pt_count_
+                  << " / " << sbt->raw_visited_pt_count_ << " = "
+                  << ((float)sbt->SBT_visited_pt_count_)/sbt->raw_visited_pt_count_ << std::endl;
 
         std::stringstream ss;
         ss << "COMPARE " << N << " "  // Dimension
@@ -214,7 +214,7 @@ namespace freeNav::JOB {
            << sum_1/(double)success_count << " " // mean raw time cost
            << sum_2/(double)success_count << " " // mean SBT time cost
            << getTotalIndexOfSpace<N>(temp_dim) << " " // total index of space
-           << (float)dynamic_obstacles.occ_pt_count_ / space_size << " " // ratio of occ grid
+           << obstacleDensity << " " // ratio of occ grid
            << printDimInfo<N>(temp_dim) << " " // dimension length
            ;
         output_strings.push_back(ss.str());
@@ -393,7 +393,7 @@ namespace freeNav::JOB {
 
                     gettimeofday(&tv_pre, &tz);
 
-                    SpaceBinaryTreePtr<N> sbt = std::make_shared<SBTtype>(is_occupied, dim, min_block_depth_width);
+                    std::shared_ptr<SBTtype> sbt = std::make_shared<SBTtype>(is_occupied, dim, min_block_depth_width);
                     sbt->initialize();
 
                     gettimeofday(&tv_after, &tz);
@@ -467,7 +467,7 @@ namespace freeNav::JOB {
                                 ;
                         std::vector<std::string> strs;
                         strs.push_back(ss1.str());
-                        LOSCompare<N>(dim, sbt, dynamic_obstacles, strs, time_of_test, max_sample_times);
+                        LOSCompare<N, SBTtype>(dim, sbt, strs, time_of_test, max_sample_times);
                         if (!file_path.empty()) {
                             writeToFile<N>(strs, file_path);
                             std::cout << "write test data to " << file_path << std::endl;

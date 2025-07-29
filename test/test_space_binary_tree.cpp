@@ -321,7 +321,7 @@ void LineOfSightTest3D(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<3>& iso
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreePtr<3> sbt = std::make_shared<SpaceBinaryTree3D>(isoc_temp, temp_dim, min_block_depth_width);
+    SpaceBinaryTreePtr<3> sbt = std::make_shared<SpaceBinaryTree3DRAW>(isoc_temp, temp_dim, min_block_depth_width);
 
     sbt->initialize();
 

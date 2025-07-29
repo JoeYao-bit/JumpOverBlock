@@ -34,7 +34,10 @@ namespace freeNav::JOB {
 
     template<Dimension N>
     struct BlockRaw : public Block<N> {
+
         TreeNodeNewPtr<N> tree_node_ = nullptr;
+        int merged_block_id_  = -1;
+
     };
 
     template<Dimension N>
