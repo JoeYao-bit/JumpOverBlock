@@ -294,7 +294,7 @@ void LineOfSightTest2D(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<2>& iso
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreePtr<2> sbt = std::make_shared<SpaceBinaryTree2DRaw>(isoc_temp, temp_dim, min_block_depth_width);
+    SpaceBinaryTreeRawPtr<2> sbt = std::make_shared<SpaceBinaryTree2DRaw>(isoc_temp, temp_dim, min_block_depth_width);
 
     sbt->initialize();
 
@@ -321,7 +321,7 @@ void LineOfSightTest3D(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<3>& iso
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreePtr<3> sbt = std::make_shared<SpaceBinaryTree3DRAW>(isoc_temp, temp_dim, min_block_depth_width);
+    SpaceBinaryTreeRawPtr<3> sbt = std::make_shared<SpaceBinaryTree3DRAW>(isoc_temp, temp_dim, min_block_depth_width);
 
     sbt->initialize();
 
@@ -349,7 +349,7 @@ void LineOfSightTest(DimensionLength* temp_dim, const IS_OCCUPIED_FUNC<N>& isoc_
 
     gettimeofday(&tv_pre, &tz);
 
-    SpaceBinaryTreePtr<N> sbt = std::make_shared<SpaceBinaryTreeAnyDimensionRaw<N> >(isoc_temp, temp_dim, 3);
+    SpaceBinaryTreeRawPtr<N> sbt = std::make_shared<SpaceBinaryTreeAnyDimensionRaw<N> >(isoc_temp, temp_dim, 3);
     sbt->initialize();
 
     gettimeofday(&tv_after, &tz);

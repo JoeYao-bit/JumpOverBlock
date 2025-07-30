@@ -17,7 +17,7 @@ namespace freeNav::JOB {
         SpaceBinaryTree(const IS_OCCUPIED_FUNC <N> &isoc, DimensionLength *dim, int min_block_depth_width = 0)
                 : isoc_(isoc), dim_(dim), min_block_depth_width_(min_block_depth_width) {
 
-            std::cout << "min_block_depth_width = " << min_block_depth_width_ << std::endl;
+            //std::cout << "min_block_depth_width = " << min_block_depth_width_ << std::endl;
             all_1_pt_.setAll(1);
 
             // initialize
@@ -26,7 +26,7 @@ namespace freeNav::JOB {
             for (int i = 0; i < N; i++) {
                 max_dim = std::max(max_dim, dim_[i]);
             }
-            std::cout << "max_dim_length = " << max_dim << std::endl;
+//            std::cout << "max_dim_length = " << max_dim << std::endl;
             max_depth_ = 1;
             while (true) {
                 if (pow(2, max_depth_) < max_dim) {
@@ -35,7 +35,7 @@ namespace freeNav::JOB {
                     break;
                 }
             }
-            std::cout << "max_depth = " << max_depth_ << std::endl;
+//            std::cout << "max_depth = " << max_depth_ << std::endl;
             // precomputation of pow(2, x)
             for (int dp = 0; dp <= max_depth_*(int)N; dp++) {
                 pow_2_.push_back(pow(2, dp));
@@ -50,15 +50,14 @@ namespace freeNav::JOB {
                 size_of_vec = size_of_vec + pow_2_[d*N];
                 level_offset_.push_back(level_offset_.back() + pow(2, (d-1)*N));
             }
-            std::cout << "size_of_vec = " << size_of_vec << std::endl;
-            std::cout << " level_offset_ = ";
-            for(int d=0; d<=max_depth_; d++) {
-                std::cout << level_offset_[d] << " ";
-            }
-            std::cout << std::endl;
+//            std::cout << "size_of_vec = " << size_of_vec << std::endl;
+//            std::cout << " level_offset_ = ";
+//            for(int d=0; d<=max_depth_; d++) {
+//                std::cout << level_offset_[d] << " ";
+//            }
+//            std::cout << std::endl;
 
             tree_ptr_vec_.resize(size_of_vec, nullptr);
-            std::cout << "flag 0" << std::endl;
 
             max_dims_.resize(max_depth_+1, nullptr);
 
@@ -233,7 +232,7 @@ namespace freeNav::JOB {
         virtual void clearInternalBlockPtr() = 0;
 
         void initBlockPtrMap() {
-            std::cout << "start " << __FUNCTION__ << std::endl;
+            //std::cout << "start " << __FUNCTION__ << std::endl;
             clearInternalBlockPtr();
 
             std::vector<TreeNodeNewPtr<N> > free_leaf_nodes = getAllPassableLeafNodes();
@@ -248,7 +247,7 @@ namespace freeNav::JOB {
                 //leaf_node->block_ptr_ = block_ptr;
                 setBlockPtrForNode(leaf_node, block_ptr);
             }
-            std::cout << "finish " << __FUNCTION__ << std::endl;
+            //std::cout << "finish " << __FUNCTION__ << std::endl;
         }
 
         // set all grid in current node range to the same block_ptr
@@ -539,17 +538,17 @@ namespace freeNav::JOB {
                     if(nodes[i]->depth_ < max_depth_) {
                         assert(nodes[i]->children_.size() == pow_2_[N]);
                     }
-                    std::cout << nodes[i] << "(occ:" << nodes[i]->occ_
-                              << ", mixed_state:" << nodes[i]->mixed_state_
-                              << ", depth:" << nodes[i]->depth_
-                              << ", base_pt:" << nodes[i]->base_pt_
-                              << ")" << "->";
+//                    std::cout << nodes[i] << "(occ:" << nodes[i]->occ_
+//                              << ", mixed_state:" << nodes[i]->mixed_state_
+//                              << ", depth:" << nodes[i]->depth_
+//                              << ", base_pt:" << nodes[i]->base_pt_
+//                              << ")" << "->";
                     if(!nodes[i]->mixed_state_ && nodes[i]->depth_ < max_depth_) {
                         for(int j=0; j<pow_2_[N]; j++) {
                             if(nodes[i]->children_[j] != nullptr) {
-                                std::cout << nodes[i]->children_[j]
-                                          << "(occ:" << nodes[i]->children_[j]->occ_
-                                          << ", mixed_state:" << nodes[i]->children_[j]->mixed_state_ << ") / ";
+//                                std::cout << nodes[i]->children_[j]
+//                                          << "(occ:" << nodes[i]->children_[j]->occ_
+//                                          << ", mixed_state:" << nodes[i]->children_[j]->mixed_state_ << ") / ";
                                 next_nodes.push_back(nodes[i]->children_[j]);
                             }
                         }
@@ -930,6 +929,8 @@ namespace freeNav::JOB {
 
     };
 
+    template<Dimension N>
+    using SpaceBinaryTreePtr = std::shared_ptr<SpaceBinaryTree<N> >;
 
     // store all passable block
     // if a block (tree node)'s all children node is nullptr, it is passable

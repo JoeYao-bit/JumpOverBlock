@@ -217,10 +217,10 @@ void dynamic_obstacles_2D() {
                     sbt->setOccupiedState(pre_pt, false);
                 }
                 //std::cout << " new pass pt = ";
-                for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
-                    if(is_occupied(pre_pt)) { continue; }
+                //for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
+                    //if(is_occupied(pre_pt)) { continue; }
                     //std::cout << pre_pt << " ";
-                }
+                //}
                 //std::cout << std::endl;
                 for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
                     sbt->setOccupiedState(cur_pt, true);
@@ -254,15 +254,15 @@ void dynamic_obstacles_2D() {
 
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
-int main() {
-    //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
-    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimension<2>, TreeNodeNew<2>>();
-}
+//int main() {
+//    //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
+//    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimension<2>, TreeNodeNew<2>>();
+//}
 
 std::string file_path = "../test/SBT_LOS.txt";
 
-//int main() {
-TEST(massiveSBTLOSCompareTest, test) {
+int main() {
+//TEST(massiveSBTLOSCompareTest, test) {
     for(int i=0; i<1; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
@@ -285,10 +285,10 @@ TEST(massiveSBTLOSCompareTest, test) {
 //                                                       true,
 //                                                       4);
 
-        massiveSBTLOSCompareTest<2, SpaceBinaryTree2DRaw>(5,
+        massiveSBTLOSCompareTest<2>(5,
                                                           1,
-                                                          {200,300,400,500,700,800,900, 1000},
-                                                          {10, 20, 40, 60, 80, 160},
+                                                          {400,500,600}, // 200,300,400,500,700,800,900, 1000
+                                                          {10, 20},
                                                           file_path,
                                                           1e5,
                                                           1e3,
