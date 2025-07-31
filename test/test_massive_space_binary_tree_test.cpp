@@ -263,7 +263,7 @@ std::string file_path = "../test/SBT_LOS.txt";
 
 int main() {
 //TEST(massiveSBTLOSCompareTest, test) {
-    for(int i=0; i<1; i++) {
+    for(int i=0; i<2; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
 //        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(10, 100,
@@ -285,17 +285,6 @@ int main() {
 //                                                       true,
 //                                                       4);
 
-        massiveSBTLOSCompareTest<2>(5,
-                                                          1,
-                                                          {400,500,600}, // 200,300,400,500,700,800,900, 1000
-                                                          {10, 20},
-                                                          file_path,
-                                                          1e5,
-                                                          1e3,
-                                                          {1,4,8,16,32,0},
-                                                          true,
-                                                          4);
-
 //        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
 //                                                       1,
 //                                                       {200, 300, 400, 500, 600, 700, 800},
@@ -306,6 +295,28 @@ int main() {
 //                                                       {1,2,4,6,8,10,20,40},
 //                                                       true,
 //                                                       4);
+
+        massiveSBTLOSCompareTest<2>(1,
+                                    1,
+                                    {200, 300}, // 200,300,400,500,700,800,900, 1000
+                                    {10, 20},
+                                    file_path,
+                                    1e5,
+                                    1e3,
+                                    {1,4,8,16,0},
+                                    true,
+                                    4);
+
+        massiveSBTLOSCompareTest<3>(1,
+                                                       1,
+                                                       {50, 100},
+                                                       {10, 20},
+                                                       file_path,
+                                                       1e5,
+                                                       1e3,
+                                                       {1,4,16,0},
+                                                       true,
+                                                       4);
 
     }
 }

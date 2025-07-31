@@ -827,9 +827,9 @@ namespace freeNav::JOB {
 //            return false;
 //        }
 
-        bool lineCrossObstacleSBT(const Pointi<N>& pt1, const Pointi<N>& pt2, const IS_OCCUPIED_FUNC<N>& is_occupied,
-                                  Pointis<N>& visited_pt,
-                                  int& count_of_block
+        bool lineCrossObstacleSBT(const Pointi<N>& pt1, const Pointi<N>& pt2, const IS_OCCUPIED_FUNC<N>& is_occupied
+                                  //,Pointis<N>& visited_pt
+                                  , int& count_of_block
         ) {
             //if(isOutOfBoundary(pt1, dim_) || isOutOfBoundary(pt2, dim_)) { return true; }
             if(pt1 == pt2) return true;

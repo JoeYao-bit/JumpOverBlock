@@ -82,6 +82,50 @@ namespace freeNav::JOB {
         std::cout << "finish SpaceBinaryTree varify in " << time_cost << " ms" << std::endl;
     }
 
+
+    template<Dimension N>
+    std::vector<std::pair<Pointi<N>, Pointi<N>>> getLOSTestCases(DimensionLength* dim,
+                                                                 const IS_OCCUPIED_FUNC<N>& isoc,
+                                                                 int times_of_test = 1e5,
+                                                                 int max_sample_times = 1e3) {
+        Id total_index = getTotalIndexOfSpace<N>(dim);
+        std::vector<std::pair<Pointi<N>, Pointi<N>>> retv;
+        for(int i=0; i<times_of_test; i++) {
+            // random pick two passable point
+            Id id1 = 0, id2 = 0;
+            Pointi<N> pt1, pt2;
+            int count = max_sample_times;
+            while(count >= 0) {
+                id1 = rand() % total_index;
+                pt1 = IdToPointi<N>(id1, dim);
+                if (!isoc(pt1)) {
+                    break;
+                } else {
+                    count --;
+                }
+            }
+            if (isoc(pt1)) {
+                continue;
+            }
+            count = max_sample_times;
+            while(count >= 0) {
+                id2 = rand() % total_index;
+                pt2 = IdToPointi<N>(id2, dim);
+                if (!isoc(pt1)) {
+                    break;
+                } else {
+                        count --;
+                    }
+            }
+            if (isoc(pt2)) {
+                continue;
+            }
+            //std::cout << "do LOS between " << pt1 << ", " << pt2 <<  std::endl;
+            retv.push_back({pt1, pt2});
+        }
+        return retv;
+    }
+
     // times_of_test do how many times of LOS compare
     // each compare use how many times of sample to find a point
     template<Dimension N, typename SBT>
@@ -148,7 +192,7 @@ namespace freeNav::JOB {
             Pointis<N> visited_pt;
             int count_of_block;
             gettimeofday(&tv_pre, &tz);
-            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, sbt->isoc_dynamic_, visited_pt, count_of_block);
+            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, sbt->isoc_dynamic_, count_of_block);
             //bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, dynamic_obstacles.isoc_);
 
             gettimeofday(&tv_after, &tz);
@@ -285,7 +329,7 @@ namespace freeNav::JOB {
             Pointis<N> visited_pt;
             int count_of_block;
             gettimeofday(&tv_pre, &tz);
-            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, isoc_temp, visited_pt, count_of_block);
+            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, isoc_temp, count_of_block);
             gettimeofday(&tv_after, &tz);
             double time_cost2 = (tv_after.tv_sec - tv_pre.tv_sec)*1e6 + (tv_after.tv_usec - tv_pre.tv_usec);
             sum_2 = sum_2 + time_cost2;
@@ -448,7 +492,6 @@ namespace freeNav::JOB {
                             ;
                         std::vector<std::string> strs;
                         strs.push_back(ss1.str());
-                        LOSCompare<N, SpaceBinaryTreeRaw<N>>(dim, sbt_raw, strs, std::string("RAW"), time_of_test, max_sample_times);
 
                         mst.reset();
                         // only update changed node
@@ -481,11 +524,92 @@ namespace freeNav::JOB {
                                 ;
                         strs.push_back(ss2.str());
 
-                        LOSCompare<N, SpaceBinaryTree<N>>(dim, sbt, strs, std::string("NEW"), time_of_test, max_sample_times);
 //                        if (!file_path.empty()) {
 //                            writeToFile<N>(strs, file_path);
 //                            std::cout << "write test data to " << file_path << std::endl;
 //                        }
+                        int success_count = 0, occ_count = 0;
+                        auto test_cases = getLOSTestCases<N>(dim, sbt->isoc_dynamic_, 1e5);
+                        std::cout << "times_of_LOS_compare_test  = " << test_cases.size() << std::endl;
+                        if(test_cases.empty()) { continue; }
+                        double sum_1 = 0, sum_2 = 0, sum_3 = 0;
+                        int sum_count_of_block_1 = 0, sum_count_of_block_2 = 0;
+                        USTimer ust;
+                        sbt_raw->raw_visited_pt_count_ = 0;
+                        sbt_raw->SBT_visited_pt_count_ = 0;
+
+                        sbt->raw_visited_pt_count_ = 0;
+                        sbt->SBT_visited_pt_count_ = 0;
+                        for(const auto& test_case : test_cases) {
+                            const auto& pt1 = test_case.first;
+                            const auto& pt2 = test_case.second;
+                            ust.reset();
+                            bool isoc  = sbt_raw->lineCrossObstacleRaw(pt1, pt2, sbt_raw->isoc_dynamic_);
+                            sum_1 = sum_1 + ust.elapsed();
+
+                            ust.reset();
+                            bool isoc1 = sbt_raw->lineCrossObstacleSBT(pt1, pt2, sbt_raw->isoc_dynamic_, sum_count_of_block_1);
+                            sum_2 = sum_2 + ust.elapsed();
+
+                            ust.reset();
+                            bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, sbt_raw->isoc_dynamic_, sum_count_of_block_2);
+                            sum_3 = sum_3 + ust.elapsed();
+
+                            assert(isoc == isoc1);
+                            assert(isoc == isoc2);
+
+                            if(isoc) { occ_count ++; }
+                            success_count++;
+
+                        }
+                        float obstacleDensity_1 = sbt->getObstacleDensity();
+//                        float obstacleDensity_2 = temp_sbt_raw->getObstacleDensity();
+                        std::cout << "dim info " << printDimInfo<N>(dim) << std::endl;
+                        std::cout << "obstacleDensity 1 " << obstacleDensity_1 << std::endl;
+                        //std::cout << "obstacleDensity 2 " << obstacleDensity_2 << std::endl;
+                        std::cout << "occ_ratio(LOS_pass/LOS_total) = " << (float)occ_count / success_count << std::endl;
+
+                        std::cout << success_count <<  " LOS test, mean raw / SBT / new SBT LOS time cost (us) = "
+                                  << sum_1/(double)success_count << " / "
+                                  << sum_2/(double)success_count << " / "
+                                  << sum_3/(double)success_count << " / "
+                                  << std::endl;
+
+                        std::cout << "raw / raw SBT / new SBT compare with raw LOS visit pt count = "
+                                  << (double)sbt_raw->raw_visited_pt_count_/success_count << " / "
+                                  << (double)sbt_raw->SBT_visited_pt_count_/success_count << " / "
+                                  << (double)sbt->SBT_visited_pt_count_/success_count  << " "
+                                  << std::endl;
+
+                        std::cout << "mean raw SBT / new SBT LOS visit block count = "
+                                  << (double)sum_count_of_block_1/success_count << " / "
+                                  << (double)sum_count_of_block_2/success_count << " "
+                                  << std::endl;
+
+                        std::stringstream ss3;
+                        ss3 << "COMPARE" << " " << N << " "  // Dimension
+                            << (float)occ_count / success_count << " " // occ ratio
+                            << sum_1/success_count << " " // mean raw time cost
+                            << sum_2/success_count << " " // mean raw SBT time cost
+                            << sum_3/success_count << " " // mean new SBT time cost
+
+                            << (double)sbt_raw->raw_visited_pt_count_/success_count << " " // mean raw visited pt
+                            << (double)sbt_raw->SBT_visited_pt_count_/success_count << " " // mean raw SBT visited pt
+                            << (double)sbt->SBT_visited_pt_count_/success_count << " " // mean new SBTvisited pt
+
+                            << (double)sum_count_of_block_1/success_count << " " // mean raw SBT visited block
+                            << (double)sum_count_of_block_2/success_count << " " // mean new SBT visited block
+
+                            << getTotalIndexOfSpace<N>(dim) << " " // total index of space
+                            << obstacleDensity_1 << " " // ratio of occ grid
+                            << printDimInfo<N>(dim) << " " // dimension length
+                                ;
+                        strs.push_back(ss3.str());
+
+                        if (!file_path.empty()) {
+                            writeToFile<N>(strs, file_path);
+                            std::cout << "write test data to " << file_path << std::endl;
+                        }
                     }
                 }
             }
