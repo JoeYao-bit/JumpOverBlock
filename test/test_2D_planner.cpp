@@ -80,8 +80,14 @@ int main() {
         return !sbt.lineCrossObstacleSBT(p1, p2, is_occupied, count_block);
     };
 
-    LazyThetaStar::MyAdaptor2D my_adapter2D(dimension, is_occupied, is_line_free_new_sbt);
-    LazyThetaStar::Pathfinder pathfinder(my_adapter2D, 100.f /*weight*/);
+    LazyThetaStar::MyAdaptor2D my_adapter2D1(dimension, is_occupied, is_line_free_raw);
+    LazyThetaStar::Pathfinder pathfinder1(my_adapter2D1, 100.f /*weight*/);
+
+    LazyThetaStar::MyAdaptor2D my_adapter2D2(dimension, is_occupied, is_line_free_raw_sbt);
+    LazyThetaStar::Pathfinder pathfinder2(my_adapter2D2, 100.f /*weight*/);
+
+    LazyThetaStar::MyAdaptor2D my_adapter2D3(dimension, is_occupied, is_line_free_new_sbt);
+    LazyThetaStar::Pathfinder pathfinder3(my_adapter2D3, 100.f /*weight*/);
 
     Canvas canvas("2D planner test",dimension[0], dimension[1], .05, zoom_rate);
 
@@ -120,12 +126,24 @@ int main() {
         if(plan_path) {
             plan_path = false;
             result_path.clear();
-            auto nodePath = pathfinder.search(PointiToId<2>(pt1, dimension), PointiToId<2>(pt2, dimension));
-            if(nodePath.empty()) {
+
+            USTimer ust;
+            auto nodePath1 = pathfinder1.search(PointiToId<2>(pt1, dimension), PointiToId<2>(pt2, dimension));
+            std::cout << "LazyThetaStar raw LOS finish in " << ust.elapsed() << "us" << std::endl;
+
+            ust.reset();
+            auto nodePath2 = pathfinder2.search(PointiToId<2>(pt1, dimension), PointiToId<2>(pt2, dimension));
+            std::cout << "LazyThetaStar raw SBT finish in " << ust.elapsed() << "us" << std::endl;
+
+            ust.reset();
+            auto nodePath3 = pathfinder3.search(PointiToId<2>(pt1, dimension), PointiToId<2>(pt2, dimension));
+            std::cout << "LazyThetaStar new SBT finish in " << ust.elapsed() << "us" << std::endl;
+
+            if(nodePath3.empty()) {
                 std::cout << "plan from " << pt1 << " to " << pt2 << " failed" << std::endl;
             } else {
                 std::cout << "plan from " << pt1 << " to " << pt2 << " success" << std::endl;
-                for(const auto& id : nodePath) {
+                for(const auto& id : nodePath3) {
                     result_path.push_back(IdToPointi<2>(id, dimension));
                 }
             }
