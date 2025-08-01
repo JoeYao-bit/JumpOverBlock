@@ -832,7 +832,7 @@ namespace freeNav::JOB {
                                   , int& count_of_block
         ) {
             //if(isOutOfBoundary(pt1, dim_) || isOutOfBoundary(pt2, dim_)) { return true; }
-            if(pt1 == pt2) return true;
+            if(pt1 == pt2) return is_occupied(pt1);
             //visited_pt.clear();
             //count_of_block = 0;
             Line<N> line(pt1, pt2);

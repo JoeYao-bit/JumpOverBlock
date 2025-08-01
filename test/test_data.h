@@ -21,6 +21,16 @@ namespace freeNav {
                     {"output_path", "../test/test_data/Shanghai_0_512.txt"}
             };
 
+    // Simple_2D
+    SingleMapTestConfig<2> MapTestConfig_Simple_2D =
+            {
+                    {"map_name",    "Simple_2D"},
+                    {"map_path",    "../test/test_data/Simple_2D.map"},
+                    {"vis_path",    "../test/test_data/Simple_2D_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/Simple_2D.map.scen"},
+                    {"output_path", "../test/test_data/Simple_2D.txt"}
+            };
+
     // den312d.map
     SingleMapTestConfig<2> MapTestConfig_den312d =
             {

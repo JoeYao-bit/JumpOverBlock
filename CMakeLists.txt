@@ -46,3 +46,8 @@ target_link_libraries(test_space_binary_tree freeNav-base)
 
 add_executable(test_massive_space_binary_tree_test test/test_massive_space_binary_tree_test.cpp)
 target_link_libraries(test_massive_space_binary_tree_test freeNav-base)
+
+add_executable(test_lazy_theta_star third_party/LazyThetaStar/main.cpp)
+
+add_executable(test_2D_planner test/test_2D_planner.cpp)
+target_link_libraries(test_2D_planner freeNav-base)
