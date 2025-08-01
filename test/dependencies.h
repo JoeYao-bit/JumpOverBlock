@@ -616,7 +616,9 @@ namespace freeNav::JOB {
         }
     }
 
-
+    // if the line is collision free, return true, otherwise false
+    template <Dimension N>
+    using PATH_PLANNING_FUNC = std::function<Pointis<N>(const Pointi<N>&, const Pointi<N>&)>;
 
 }
 

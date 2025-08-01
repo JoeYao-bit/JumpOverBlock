@@ -13,6 +13,7 @@
 #include "../third_party/LazyThetaStar/pathfinding.hpp"
 #include "../third_party/LazyThetaStar/JOB_adapter.h"
 
+#include "../test/dependencies.h"
 
 using namespace freeNav::JOB;
 using namespace freeNav;
@@ -84,11 +85,58 @@ int main() {
 //    LazyThetaStar::LazyThetaStar pathfinder1(my_adapter2D1, 100.f /*weight*/);
     LazyThetaStar::ThetaStar pathfinder1(my_adapter2D1, 100.f /*weight*/);
 
+    PATH_PLANNING_FUNC<2> pp1 = [&](const Pointi<2> & p1, const Pointi<2> & p2) -> Pointis<2> {
+        USTimer ust;
+        auto nodePath1 = pathfinder1.search(PointiToId<2>(p1, dimension), PointiToId<2>(p2, dimension));
+        Pointis<2> retv;
+        if(nodePath1.empty()) {
+            std::cout << "Theta raw LOS plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+        } else {
+            std::cout << "Theta raw LOS plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            for(const auto& id : nodePath1) {
+                retv.push_back(IdToPointi<2>(id, dimension));
+            }
+        }
+        return retv;
+    };
+
     LazyThetaStar::MyAdaptor2D my_adapter2D2(dimension, is_occupied, is_line_free_raw_sbt);
     LazyThetaStar::LazyThetaStar pathfinder2(my_adapter2D2, 100.f /*weight*/);
 
+    PATH_PLANNING_FUNC<2> pp2 = [&](const Pointi<2> & p1, const Pointi<2> & p2) -> Pointis<2> {
+        USTimer ust;
+        auto nodePath1 = pathfinder2.search(PointiToId<2>(p1, dimension), PointiToId<2>(p2, dimension));
+        Pointis<2> retv;
+        if(nodePath1.empty()) {
+            std::cout << "LazyTheta raw SBT plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+        } else {
+            std::cout << "LazyTheta raw SBT plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            for(const auto& id : nodePath1) {
+                retv.push_back(IdToPointi<2>(id, dimension));
+            }
+        }
+        return retv;
+    };
+
     LazyThetaStar::MyAdaptor2D my_adapter2D3(dimension, is_occupied, is_line_free_new_sbt);
     LazyThetaStar::LazyThetaStar pathfinder3(my_adapter2D3, 100.f /*weight*/);
+
+    PATH_PLANNING_FUNC<2> pp3 = [&](const Pointi<2> & p1, const Pointi<2> & p2) -> Pointis<2> {
+        USTimer ust;
+        auto nodePath1 = pathfinder3.search(PointiToId<2>(p1, dimension), PointiToId<2>(p2, dimension));
+        Pointis<2> retv;
+        if(nodePath1.empty()) {
+            std::cout << "LazyTheta new SBT plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+        } else {
+            std::cout << "LazyTheta new SBT plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            for(const auto& id : nodePath1) {
+                retv.push_back(IdToPointi<2>(id, dimension));
+            }
+        }
+        return retv;
+    };
+
+    std::vector<PATH_PLANNING_FUNC<2> > path_plannings = {pp1, pp2, pp3};
 
     Canvas canvas("2D planner test",dimension[0], dimension[1], .05, zoom_rate);
 
@@ -126,28 +174,12 @@ int main() {
 
         if(plan_path) {
             plan_path = false;
-            result_path.clear();
-
-            USTimer ust;
-            auto nodePath1 = pathfinder1.search(PointiToId<2>(pt1, dimension), PointiToId<2>(pt2, dimension));
-            std::cout << "LazyThetaStar raw LOS success " << !nodePath1.empty() << " in " << ust.elapsed() << "us" << std::endl;
-
-            ust.reset();
-            auto nodePath2 = pathfinder2.search(PointiToId<2>(pt1, dimension), PointiToId<2>(pt2, dimension));
-            std::cout << "LazyThetaStar raw LOS success " << !nodePath2.empty() << " in " << ust.elapsed() << "us" << std::endl;
-
-            ust.reset();
-            auto nodePath3 = pathfinder3.search(PointiToId<2>(pt1, dimension), PointiToId<2>(pt2, dimension));
-            std::cout << "LazyThetaStar raw LOS success " << !nodePath3.empty() << " in " << ust.elapsed() << "us" << std::endl;
-
-            if(nodePath1.empty()) {
-                std::cout << "plan from " << pt1 << " to " << pt2 << " failed" << std::endl;
-            } else {
-                std::cout << "plan from " << pt1 << " to " << pt2 << " success" << std::endl;
-                for(const auto& id : nodePath1) {
-                    result_path.push_back(IdToPointi<2>(id, dimension));
-                }
+            std::vector<Pointis<2>> paths;
+            for(const auto& path_planning : path_plannings) {
+                auto retv = path_planning(pt1, pt2);
+                paths.push_back(retv);
             }
+            result_path = paths[0];
         }
         if(draw_path) {
             if(result_path.size() >= 2) {
