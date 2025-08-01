@@ -8,61 +8,59 @@
 
 namespace LazyThetaStar {
 
-    class Pathfinder {
+    using NodeId = int;
+    using Cost = float;
+
+    //The pathfinder is a general algorithm that can be used for mutliple purpose
+    //So it use adaptor
+    class PathfinderAdaptor {
     public:
 
-        using NodeId = int;
-        using Cost = float;
+        virtual size_t getNodeCount() const = 0;
 
-        //The pathfinder is a general algorithm that can be used for mutliple purpose
-        //So it use adaptor
-        class PathfinderAdaptor {
-        public:
-            friend Pathfinder;
+        virtual Cost distance(const NodeId n1, const NodeId n2) const = 0;
 
-            virtual size_t getNodeCount() const = 0;
+        virtual bool lineOfSight(const NodeId n1, const NodeId n2) const = 0;
 
-            virtual Cost distance(const NodeId n1, const NodeId n2) const = 0;
+        virtual std::vector<std::pair<NodeId, Cost>> getNodeNeighbors(const NodeId id) const = 0;
+    };
 
-            virtual bool lineOfSight(const NodeId n1, const NodeId n2) const = 0;
+    static constexpr const float EPSILON = 0.00001f;
+    static constexpr Cost INFINITE_COST = std::numeric_limits<Cost>::max();
 
-            virtual std::vector<std::pair<NodeId, Cost>> getNodeNeighbors(const NodeId id) const = 0;
-        };
+    enum ListType {
+        NO_LIST, OPEN_LIST, CLOSED_LIST
+    };
 
-        static constexpr const float EPSILON = 0.00001f;
-        static constexpr Cost INFINITE_COST = std::numeric_limits<Cost>::max();
+    struct Node {
+        std::vector<std::pair<NodeId, Cost>> neighbors;
+        uint32_t searchIndex = 0; //The last search at which it has bean generated, bassicacly used to decide if the node need to be reseted before we use it
+        NodeId parent;    // Parent of the node.
+        Cost g;            // Initialized to infinity when generated.
+        Cost h;            // Initialized to the heuristic distance to the goal when generated.
+        ListType list;  // Initially NO_LIST, can be changed to OPEN_LIST or CLOSED_LIST.
+    };
 
-        enum ListType {
-            NO_LIST, OPEN_LIST, CLOSED_LIST
-        };
+    struct HeapElement {
+        NodeId id;
+        Cost g;    // Used for tie-breaking
+        Cost f;    // Main key
 
-        struct Node {
-            std::vector<std::pair<NodeId, Cost>> neighbors;
-            uint32_t searchIndex = 0; //The last search at which it has bean generated, bassicacly used to decide if the node need to be reseted before we use it
-            NodeId parent;    // Parent of the node.
-            Cost g;            // Initialized to infinity when generated.
-            Cost h;            // Initialized to the heuristic distance to the goal when generated.
-            ListType list;  // Initially NO_LIST, can be changed to OPEN_LIST or CLOSED_LIST.
-        };
-
-        struct HeapElement {
-            NodeId id;
-            Cost g;    // Used for tie-breaking
-            Cost f;    // Main key
-
-            //inverted so that the smaller is at the end of the vector
-            bool operator<(const HeapElement &rhs) const {
-                if (abs(f - rhs.f) < EPSILON)
+        //inverted so that the smaller is at the end of the vector
+        bool operator<(const HeapElement &rhs) const {
+            if (abs(f - rhs.f) < EPSILON)
 //                return g > rhs.g;
-                    return g < rhs.g;
+                return g < rhs.g;
 
 //            return f < rhs.f;
-                return f > rhs.f;
-            }
-        };
+            return f > rhs.f;
+        }
+    };
 
+    class LazyThetaStar {
+    public:
 
-        Pathfinder(PathfinderAdaptor &adaptor, Cost weight = 1.0f) : adaptor(adaptor), weight(weight) {
+        LazyThetaStar(PathfinderAdaptor &adaptor, Cost weight = 1.0f) : adaptor(adaptor), weight(weight) {
             generateNodes();
         }
 
@@ -80,7 +78,7 @@ namespace LazyThetaStar {
             return finalPath;
         }
 
-        std::vector<NodeId> search(const NodeId startId, const NodeId endId) {
+        virtual std::vector<NodeId> search(const NodeId startId, const NodeId endId) {
             openList.clear();
 
             currentSearch++;
@@ -166,7 +164,7 @@ namespace LazyThetaStar {
                 node.neighbors = adaptor.getNodeNeighbors(current++);
         }
 
-    private:
+    //private:
 
         std::vector<Node> nodes;
         std::vector<HeapElement> openList;
@@ -180,9 +178,9 @@ namespace LazyThetaStar {
         void generateState(NodeId s, NodeId goal) {
             if (nodes[s].searchIndex != currentSearch) {
                 nodes[s].searchIndex = currentSearch;
-                nodes[s].h = adaptor.distance(s, goal) * weight;
-                nodes[s].g = INFINITE_COST;
-                nodes[s].list = NO_LIST;
+                nodes[s].h = adaptor.distance(s, goal) * weight; // dist to target, in estimation
+                nodes[s].g = INFINITE_COST; // dist to start
+                nodes[s].list = NO_LIST; // whether current node in OPEN set or CLOSED set
             }
         }
 
@@ -232,6 +230,86 @@ namespace LazyThetaStar {
                             item
                     );
         }
+    };
+
+    class ThetaStar : public LazyThetaStar {
+    public:
+
+        ThetaStar(PathfinderAdaptor &adaptor, Cost weight = 1.0f) : LazyThetaStar(adaptor, weight) {
+            //
+        }
+
+        std::vector<NodeId> search(const NodeId startId, const NodeId endId) override{
+            this->openList.clear();
+
+            currentSearch++;
+
+            generateState(startId, endId);
+            generateState(endId, endId);
+
+            nodes[startId].g = 0;
+            nodes[startId].parent = startId;
+
+            addToOpen(startId);
+
+            int count = 0;
+            while (!openList.empty() && nodes[endId].g > getMin().f + EPSILON) {
+//                std::cout << count << " th iteration, open list size = " << openList.size() << std::endl;
+                count ++;
+                NodeId currId = getMin().id;
+                popMin();
+
+                for (const auto neighborInfo : nodes[currId].neighbors) {
+
+                    auto neighborId = neighborInfo.first;
+
+                    generateState(neighborId, endId);
+
+                    NodeId newParent = nodes[currId].parent;
+
+                    if (nodes[neighborId].list != CLOSED_LIST) {
+
+                        if(adaptor.lineOfSight(newParent, neighborId)) {
+                            // set neighborId's parent to newParent
+                            Cost newG = nodes[newParent].g + adaptor.distance(newParent, neighborId);
+
+                            if (newG + EPSILON < nodes[neighborId].g) {
+                                nodes[neighborId].g = newG;
+                                nodes[neighborId].parent = newParent;
+                                addToOpen(neighborId);
+                            }
+                        } else {
+                            // set neighborId's parent to cur id
+                            Cost newG = nodes[currId].g + adaptor.distance(currId, neighborId);
+
+                            if (newG + EPSILON < nodes[neighborId].g) {
+                                nodes[neighborId].g = newG;
+                                nodes[neighborId].parent = currId;
+                                addToOpen(neighborId);
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            std::vector<NodeId> path;
+
+            if (nodes[endId].g < INFINITE_COST) {
+                //        ValidateParent(endId, endId);
+                NodeId curr = endId;
+                while (curr != startId) {
+                    path.push_back(curr);
+                    curr = nodes[curr].parent;
+                }
+
+                path.push_back(curr);
+                std::reverse(path.begin(), path.end());
+            }
+
+            return path;
+        }
+
     };
 
 }

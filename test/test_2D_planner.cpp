@@ -27,7 +27,7 @@ using namespace freeNav;
 // MapTestConfig_Shanghai_0_512 // ok
 
 
-auto map_test_config = MapTestConfig_Shanghai_0_512;
+auto map_test_config = MapTestConfig_orz900d;
 std::string vis_file_path    = map_test_config.at("vis_path");
 
 auto is_char_occupied1 = [](const char& value) -> bool {
@@ -81,13 +81,14 @@ int main() {
     };
 
     LazyThetaStar::MyAdaptor2D my_adapter2D1(dimension, is_occupied, is_line_free_raw);
-    LazyThetaStar::Pathfinder pathfinder1(my_adapter2D1, 100.f /*weight*/);
+//    LazyThetaStar::LazyThetaStar pathfinder1(my_adapter2D1, 100.f /*weight*/);
+    LazyThetaStar::ThetaStar pathfinder1(my_adapter2D1, 100.f /*weight*/);
 
     LazyThetaStar::MyAdaptor2D my_adapter2D2(dimension, is_occupied, is_line_free_raw_sbt);
-    LazyThetaStar::Pathfinder pathfinder2(my_adapter2D2, 100.f /*weight*/);
+    LazyThetaStar::LazyThetaStar pathfinder2(my_adapter2D2, 100.f /*weight*/);
 
     LazyThetaStar::MyAdaptor2D my_adapter2D3(dimension, is_occupied, is_line_free_new_sbt);
-    LazyThetaStar::Pathfinder pathfinder3(my_adapter2D3, 100.f /*weight*/);
+    LazyThetaStar::LazyThetaStar pathfinder3(my_adapter2D3, 100.f /*weight*/);
 
     Canvas canvas("2D planner test",dimension[0], dimension[1], .05, zoom_rate);
 
@@ -129,21 +130,21 @@ int main() {
 
             USTimer ust;
             auto nodePath1 = pathfinder1.search(PointiToId<2>(pt1, dimension), PointiToId<2>(pt2, dimension));
-            std::cout << "LazyThetaStar raw LOS finish in " << ust.elapsed() << "us" << std::endl;
+            std::cout << "LazyThetaStar raw LOS success " << !nodePath1.empty() << " in " << ust.elapsed() << "us" << std::endl;
 
             ust.reset();
             auto nodePath2 = pathfinder2.search(PointiToId<2>(pt1, dimension), PointiToId<2>(pt2, dimension));
-            std::cout << "LazyThetaStar raw SBT finish in " << ust.elapsed() << "us" << std::endl;
+            std::cout << "LazyThetaStar raw LOS success " << !nodePath2.empty() << " in " << ust.elapsed() << "us" << std::endl;
 
             ust.reset();
             auto nodePath3 = pathfinder3.search(PointiToId<2>(pt1, dimension), PointiToId<2>(pt2, dimension));
-            std::cout << "LazyThetaStar new SBT finish in " << ust.elapsed() << "us" << std::endl;
+            std::cout << "LazyThetaStar raw LOS success " << !nodePath3.empty() << " in " << ust.elapsed() << "us" << std::endl;
 
-            if(nodePath3.empty()) {
+            if(nodePath1.empty()) {
                 std::cout << "plan from " << pt1 << " to " << pt2 << " failed" << std::endl;
             } else {
                 std::cout << "plan from " << pt1 << " to " << pt2 << " success" << std::endl;
-                for(const auto& id : nodePath3) {
+                for(const auto& id : nodePath1) {
                     result_path.push_back(IdToPointi<2>(id, dimension));
                 }
             }

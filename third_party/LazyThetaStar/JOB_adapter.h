@@ -15,11 +15,9 @@ namespace LazyThetaStar {
 //The pathfinder is a general algorithm that can be used for mutliple purpose
 //So it use adaptor
 //This adaptor is for tile grid
-    class MyAdaptor2D : public Pathfinder::PathfinderAdaptor {
+    class MyAdaptor2D : public PathfinderAdaptor {
     public:
 
-        using NodeId = Pathfinder::NodeId;
-        using Cost = Pathfinder::Cost;
 
         MyAdaptor2D(freeNav::DimensionLength* dim, const freeNav::IS_OCCUPIED_FUNC<2>& isoc,
                     const freeNav::IS_LINE_COLLISION_FREE_FUNC<2>& lsfr)
@@ -47,7 +45,7 @@ namespace LazyThetaStar {
         virtual std::vector<std::pair<NodeId, Cost>> getNodeNeighbors(const NodeId id) const override {
             auto pos = idToPos(id);
 
-            const Pathfinder::Cost cost = 1;
+            const Cost cost = 1;
 
             std::vector<std::pair<NodeId, Cost>> neighbors;
 
@@ -69,12 +67,12 @@ namespace LazyThetaStar {
         }
 
         //custom function used to map tile to id
-        Pathfinder::NodeId posToId(const Vectori &pos) const {
+        NodeId posToId(const Vectori &pos) const {
             return pos.y * mMapSize.x + pos.x;
         }
 
         //custom function used to map id to tile
-        Vectori idToPos(const Pathfinder::NodeId id) const {
+        Vectori idToPos(const NodeId id) const {
             return {id % mMapSize.x, id / mMapSize.x};
         }
 

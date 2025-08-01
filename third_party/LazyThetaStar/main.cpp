@@ -32,7 +32,7 @@ int main()
     //passing the map size and a lambda that return false if the tile is a wall
     TileAdaptor adaptor({mapSizeX, mapSizeY}, [&map](const Vectori& vec){return map[vec.x][vec.y] != '#';});
     //This is a bit of an exageration here for the weight, but it did make my performance test go from 8s to 2s
-    Pathfinder pathfinder(adaptor, 100.f /*weight*/);
+    LazyThetaStar pathfinder(adaptor, 100.f /*weight*/);
 
     //set everythings to space
     for(auto& cs : map)
