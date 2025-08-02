@@ -620,6 +620,12 @@ namespace freeNav::JOB {
     template <Dimension N>
     using PATH_PLANNING_FUNC = std::function<Pointis<N>(const Pointi<N>&, const Pointi<N>&)>;
 
+    template <Dimension N>
+    using PATH_PLANNING_FUNC_WITH_LINE = std::function<Pointis<N>(const Pointi<N>&,
+                                                                  const Pointi<N>&,
+                                                                  const IS_LINE_COLLISION_FREE_FUNC<N>&,
+                                                                  const std::string&)>;
+
 }
 
 #endif //JUMPOVERBLOCK_DEPENDENCIES_H

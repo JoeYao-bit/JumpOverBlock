@@ -15,6 +15,14 @@
 
 #include "../test/dependencies.h"
 
+#include "../third_party/ros_motion_planner/rrt.h"
+#include "../third_party/ros_motion_planner/rrt_star.h"
+#include "../third_party/ros_motion_planner/rrt_connect.h"
+#include "../third_party/ros_motion_planner/informed_rrt.h"
+#include "../third_party/ros_motion_planner/informed_rrt.h"
+#include "../third_party/ros_motion_planner/theta_star.h"
+#include "../third_party/ros_motion_planner/lazy_theta_star.h"
+
 using namespace freeNav::JOB;
 using namespace freeNav;
 
@@ -26,9 +34,9 @@ using namespace freeNav;
 // MapTestConfig_den520d // ok
 // MapTestConfig_den312d // ok
 // MapTestConfig_Shanghai_0_512 // ok
+// MapTestConfig_Simple_2D
 
-
-auto map_test_config = MapTestConfig_orz900d;
+auto map_test_config = MapTestConfig_Shanghai_0_512;
 std::string vis_file_path    = map_test_config.at("vis_path");
 
 auto is_char_occupied1 = [](const char& value) -> bool {
@@ -49,6 +57,8 @@ bool draw_path = true;
 Pointi<2> pt1 = {127, 272}, pt2 = {197, 397};
 //Pointi<2> pt1 = {13, 3}, pt2 = {20, 12};
 
+int path_index = 0;
+
 int main() {
 
     auto dimension = loader.getDimensionInfo();
@@ -57,8 +67,10 @@ int main() {
         return loader.isOccupied(pt);
     };
 
+
+
     MSTimer mst;
-    SpaceBinaryTree2DRaw sbt_raw(is_occupied, dimension, 0);
+    SpaceBinaryTree2DRaw sbt_raw(is_occupied, dimension, 1);
     sbt_raw.initialize();
 
     std::cout << "raw SBT init in " << mst.elapsed() << "ms" << std::endl;
@@ -81,54 +93,70 @@ int main() {
         return !sbt.lineCrossObstacleSBT(p1, p2, is_occupied, count_block);
     };
 
-    LazyThetaStar::MyAdaptor2D my_adapter2D1(dimension, is_occupied, is_line_free_raw);
-//    LazyThetaStar::LazyThetaStar pathfinder1(my_adapter2D1, 100.f /*weight*/);
-    LazyThetaStar::ThetaStar pathfinder1(my_adapter2D1, 100.f /*weight*/);
+    std::vector<std::pair<IS_LINE_COLLISION_FREE_FUNC<2>, std::string > >
+                los_funcs = {{is_line_free_raw, "raw LOS"},
+                             {is_line_free_raw_sbt, "raw SBT LOS"},
+                             {is_line_free_new_sbt, "new SBT LOS"}
+                            };
 
-    PATH_PLANNING_FUNC<2> pp1 = [&](const Pointi<2> & p1, const Pointi<2> & p2) -> Pointis<2> {
+
+    unsigned char* cost_move_base_2d = new unsigned char[(dimension[0]+2)*(dimension[1]+2)];
+    global_planner::getMap(cost_move_base_2d, dimension, is_occupied);
+
+
+    auto pp1 = [&](const Pointi<2> & p1, const Pointi<2> & p2,
+                   const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                   const std::string& identifier) -> Pointis<2> {
+        LazyThetaStar::MyAdaptor2D my_adapter2D(dimension, is_occupied, ilfr);
+        LazyThetaStar::LazyThetaStar pathfinder(my_adapter2D, 100.f /*weight*/);
         USTimer ust;
-        auto nodePath1 = pathfinder1.search(PointiToId<2>(p1, dimension), PointiToId<2>(p2, dimension));
+        auto nodePath = pathfinder.search(PointiToId<2>(p1, dimension), PointiToId<2>(p2, dimension));
         Pointis<2> retv;
-        if(nodePath1.empty()) {
-            std::cout << "Theta raw LOS plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+        if(nodePath.empty()) {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
         } else {
-            std::cout << "Theta raw LOS plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
-            for(const auto& id : nodePath1) {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            for(const auto& id : nodePath) {
                 retv.push_back(IdToPointi<2>(id, dimension));
             }
         }
         return retv;
     };
 
-    LazyThetaStar::MyAdaptor2D my_adapter2D2(dimension, is_occupied, is_line_free_raw_sbt);
-    LazyThetaStar::LazyThetaStar pathfinder2(my_adapter2D2, 100.f /*weight*/);
-
-    PATH_PLANNING_FUNC<2> pp2 = [&](const Pointi<2> & p1, const Pointi<2> & p2) -> Pointis<2> {
+    auto pp2 = [&](const Pointi<2> & p1, const Pointi<2> & p2,
+                   const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                   const std::string& identifier) -> Pointis<2> {
+        LazyThetaStar::MyAdaptor2D my_adapter2D(dimension, is_occupied, ilfr);
+        LazyThetaStar::LazyThetaStar pathfinder(my_adapter2D, 100.f /*weight*/);
         USTimer ust;
-        auto nodePath1 = pathfinder2.search(PointiToId<2>(p1, dimension), PointiToId<2>(p2, dimension));
+        auto nodePath = pathfinder.search(PointiToId<2>(p1, dimension), PointiToId<2>(p2, dimension));
         Pointis<2> retv;
-        if(nodePath1.empty()) {
-            std::cout << "LazyTheta raw SBT plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+        if(nodePath.empty()) {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
         } else {
-            std::cout << "LazyTheta raw SBT plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
-            for(const auto& id : nodePath1) {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            for(const auto& id : nodePath) {
                 retv.push_back(IdToPointi<2>(id, dimension));
             }
         }
         return retv;
     };
 
-    LazyThetaStar::MyAdaptor2D my_adapter2D3(dimension, is_occupied, is_line_free_new_sbt);
-    LazyThetaStar::LazyThetaStar pathfinder3(my_adapter2D3, 100.f /*weight*/);
 
-    PATH_PLANNING_FUNC<2> pp3 = [&](const Pointi<2> & p1, const Pointi<2> & p2) -> Pointis<2> {
+    //LazyThetaStar::ThetaStar pathfinder3(my_adapter2D3, 100.f /*weight*/);
+
+    auto pp3 = [&](const Pointi<2> & p1, const Pointi<2> & p2,
+                   const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                   const std::string& identifier) -> Pointis<2> {
+        LazyThetaStar::MyAdaptor2D my_adapter2D3(dimension, is_occupied, ilfr);
+        LazyThetaStar::LazyThetaStar pathfinder3(my_adapter2D3, 100.f /*weight*/);
         USTimer ust;
         auto nodePath1 = pathfinder3.search(PointiToId<2>(p1, dimension), PointiToId<2>(p2, dimension));
         Pointis<2> retv;
         if(nodePath1.empty()) {
-            std::cout << "LazyTheta new SBT plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
         } else {
-            std::cout << "LazyTheta new SBT plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
             for(const auto& id : nodePath1) {
                 retv.push_back(IdToPointi<2>(id, dimension));
             }
@@ -136,7 +164,139 @@ int main() {
         return retv;
     };
 
-    std::vector<PATH_PLANNING_FUNC<2> > path_plannings = {pp1, pp2, pp3};
+    auto pp_rrt = [&](const Pointi<2> & p1, const Pointi<2> & p2,
+                      const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                      const std::string& identifier) -> Pointis<2> {
+        USTimer ust;
+        auto temp_path = global_planner::RRTRimJump(cost_move_base_2d,
+                                                    dimension,
+                                                    0.1,
+                                                    ilfr,
+                                                    pt1, pt2,
+                                                    1e5,
+                                                    std::max(dimension[0], dimension[1])/3);
+        Pointis<2> retv;
+        if(temp_path.empty()) {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+        } else {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            retv = temp_path;
+        }
+        return retv;
+    };
+
+    auto pp_rrt_star = [&](const Pointi<2> & p1, const Pointi<2> & p2,
+                           const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                           const std::string& identifier) -> Pointis<2> {
+        USTimer ust;
+        auto temp_path = global_planner::RRTStarRimJump(cost_move_base_2d,
+                                                        dimension,
+                                                        0.1,
+                                                        ilfr,
+                                                        pt1, pt2,
+                                                        1e5,
+                                                        std::max(dimension[0], dimension[1])/10,
+                                                        std::max(dimension[0], dimension[1])/3);
+        Pointis<2> retv;
+        if(temp_path.empty()) {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+        } else {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            retv = temp_path;
+        }
+        return retv;
+    };
+
+    auto pp_rrt_connect = [&](const Pointi<2> & p1, const Pointi<2> & p2,
+                              const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                              const std::string& identifier) -> Pointis<2> {
+        USTimer ust;
+        auto temp_path = global_planner::RRTConnectRimJump(cost_move_base_2d,
+                                                           dimension,
+                                                           0.1,
+                                                           ilfr,
+                                                           pt1, pt2,
+                                                           1e5,
+                                                           std::max(dimension[0], dimension[1])/10);
+        Pointis<2> retv;
+        if(temp_path.empty()) {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+        } else {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            retv = temp_path;
+        }
+        return retv;
+    };
+
+    // InformedRRTRimJump not ok
+    auto pp_rrt_informed = [&](const Pointi<2> & p1, const Pointi<2> & p2,
+                               const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                               const std::string& identifier) -> Pointis<2> {
+        USTimer ust;
+        auto temp_path = global_planner::InformedRRTRimJump(cost_move_base_2d,
+                                                           dimension,
+                                                           0.1,
+                                                           ilfr,
+                                                           pt1, pt2,
+                                                           1e5,
+                                                           std::max(dimension[0], dimension[1])/10,
+                                                           std::max(dimension[0], dimension[1])/3);
+        Pointis<2> retv;
+        if(temp_path.empty()) {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+        } else {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            retv = temp_path;
+        }
+        return retv;
+    };
+
+    auto pp_theta_star = [&](const Pointi<2> & p1, const Pointi<2> & p2,
+                             const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                             const std::string& identifier) -> Pointis<2> {
+        USTimer ust;
+        auto temp_path = global_planner::ThetaStarRimJump(cost_move_base_2d,
+                                                          dimension,
+                                                          ilfr,
+                                                          pt1, pt2);
+        Pointis<2> retv;
+        if(temp_path.empty()) {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+        } else {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            retv = temp_path;
+        }
+        return retv;
+    };
+
+    auto pp_lazy_theta_star = [&](const Pointi<2> & p1, const Pointi<2> & p2,
+                                  const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                                  const std::string& identifier) -> Pointis<2> {
+        USTimer ust;
+        auto temp_path = global_planner::ThetaStarRimJump(cost_move_base_2d,
+                                                          dimension,
+                                                          ilfr,
+                                                          pt1, pt2);
+        Pointis<2> retv;
+        if(temp_path.empty()) {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
+        } else {
+            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
+            retv = temp_path;
+        }
+        return retv;
+    };
+
+
+//    std::vector<PATH_PLANNING_FUNC<2> > path_plannings = {pp1, pp2, pp3}; // ok
+//    std::vector<PATH_PLANNING_FUNC<2> > path_plannings = {pp_rrt, pp_rrt_star, pp_rrt_connect}; // ok
+    std::vector<std::pair<PATH_PLANNING_FUNC_WITH_LINE<2>, std::string> >
+            path_plannings = {{pp_rrt, "RRT"},
+                              {pp_rrt_star, "RRTStar"},
+                              {pp_rrt_connect, "RRTConnect"},
+                              //{pp_rrt_informed, "InformedRRT"},
+                              {pp_theta_star, "ThetaStar"},
+                              {pp_lazy_theta_star, "LazyThetaStar"}}; // ok
 
     Canvas canvas("2D planner test",dimension[0], dimension[1], .05, zoom_rate);
 
@@ -162,7 +322,7 @@ int main() {
     canvas.setMouseCallBack(callback);
 
     bool plan_path = false;
-    Pointis<2> result_path;
+    std::vector<Pointis<2> > result_paths;
     while(1) {
         canvas.resetCanvas();
         canvas.drawEmptyGrid();
@@ -175,20 +335,23 @@ int main() {
         if(plan_path) {
             plan_path = false;
             std::vector<Pointis<2>> paths;
-            for(const auto& path_planning : path_plannings) {
-                auto retv = path_planning(pt1, pt2);
-                paths.push_back(retv);
+            for(int i=0; i<path_plannings.size(); i++) {
+                for(int j=0; j<los_funcs.size(); j++) {
+                    const auto& pp = path_plannings[i];
+                    const auto& los = los_funcs[j];
+                    auto retv = pp.first(pt1, pt2, los.first, pp.second + std::string(" with ") + los.second);
+                    paths.push_back(retv);
+                }
             }
-            result_path = paths[0];
+            result_paths = paths;
         }
         if(draw_path) {
-            if(result_path.size() >= 2) {
-                for(int i=0; i<result_path.size()-1; i++) {
-                    int x1 = result_path[i][0];
-                    int y1 = result_path[i][1];
-                    int x2 = result_path[i+1][0];
-                    int y2 = result_path[i+1][1];
-
+            if(!result_paths.empty() && result_paths[path_index].size() >= 2) {
+                for(int i=0; i<result_paths[path_index].size()-1; i++) {
+                    int x1 = result_paths[path_index][i][0];
+                    int y1 = result_paths[path_index][i][1];
+                    int x2 = result_paths[path_index][i+1][0];
+                    int y2 = result_paths[path_index][i+1][1];
                     canvas.drawLineInt(x1, y1, x2, y2, true, 2, cv::Vec3b(0,255,0));
                 }
             }
@@ -200,9 +363,24 @@ int main() {
                 break;
             case 'p':
                 draw_path = !draw_path;
+                break;
+            case 'w':
+                if(!result_paths.empty()) {
+                    path_index = (path_index + 1) % result_paths.size();
+                    std::cout << "path index = " << path_index << std::endl;
+                }
+                break;
+            case 's':
+                if(!result_paths.empty()) {
+                    path_index = (path_index + result_paths.size() - 1) % result_paths.size();
+                    std::cout << "path index = " << path_index << std::endl;
+                }
+                break;
             default:
                 break;
         }
     }
+
+    delete [] cost_move_base_2d;
 
 }
