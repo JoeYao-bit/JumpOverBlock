@@ -115,8 +115,21 @@ TEST(setOccupiedState, test) {
 
 }
 
-// MapTestConfig_Shanghai_0_512
-auto map_test_config = MapTestConfig_Shanghai_0_512;
+// MapTestConfig_ost003d // ok
+// MapTestConfig_orz900d // ok
+// MapTestConfig_lak303d // ok
+// MapTestConfig_den520d // ok
+// MapTestConfig_den312d // ok
+// MapTestConfig_Shanghai_0_512 // ok
+// MapTestConfig_Simple_2D
+
+// MapTestConfig_fr101 // ok
+// MapTestConfig_edmonton // ok
+// MapTestConfig_intel // ok, too small
+// MapTestConfig_mexico // ok
+// MapTestConfig_fhw_rec_001 // ok
+
+auto map_test_config = MapTestConfig_fr101;
 std::string vis_file_path    = map_test_config.at("vis_path");
 
 auto is_char_occupied1 = [](const char& value) -> bool {
@@ -124,9 +137,21 @@ auto is_char_occupied1 = [](const char& value) -> bool {
     return true;
 };
 
+auto is_grid_occupied1 = [](const cv::Vec3b& color) -> bool {
+    if (color != cv::Vec3b::all(255)) return true;
+    return false;
+};
 
+auto is_grid_occupied2 = [](const cv::Vec3b& color) -> bool {
+    if (color[0] <= 240 || color[1] <= 240 || color[2] <= 240) return true;
+    return false;
+};
+
+#if 1
+PictureLoader loader(map_test_config.at("map_path"), is_grid_occupied2);
+#else
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
-int zoom_rate = 1;
+#endif
 
 //TEST(SpaceBinaryTree2D, test) {
 int main() {
@@ -175,7 +200,10 @@ int main() {
 //        sbt.setOccupiedState(pt, !is_occupied(pt));
 //    }
     //return 0;
-    Canvas canvas("SpaceBinaryTree2D",dimension[0],dimension[1], .05, zoom_rate);
+    float zoom_ratio = std::min(1800./dimension[0], 1000./dimension[1]);
+    std::cout << "std::min(1800./dimension[0], 1000./dimension[1]) = " << zoom_ratio << std::endl;
+
+    Canvas canvas("SpaceBinaryTree2D",dimension[0],dimension[1], .05, zoom_ratio);
     bool draw_free_leaf = true,
          draw_block = false;
     while(1) {

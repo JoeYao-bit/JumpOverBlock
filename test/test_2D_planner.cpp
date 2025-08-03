@@ -36,7 +36,14 @@ using namespace freeNav;
 // MapTestConfig_Shanghai_0_512 // ok
 // MapTestConfig_Simple_2D
 
-auto map_test_config = MapTestConfig_Shanghai_0_512;
+// MapTestConfig_fr101 // ok
+// MapTestConfig_edmonton // ok
+// MapTestConfig_intel // ok, too small
+// MapTestConfig_mexico // ok
+// MapTestConfig_fhw_rec_001 // ok
+
+auto map_test_config = MapTestConfig_fhw_rec_001;
+
 std::string vis_file_path    = map_test_config.at("vis_path");
 
 auto is_char_occupied1 = [](const char& value) -> bool {
@@ -44,9 +51,22 @@ auto is_char_occupied1 = [](const char& value) -> bool {
     return true;
 };
 
+auto is_grid_occupied1 = [](const cv::Vec3b& color) -> bool {
+    if (color != cv::Vec3b::all(255)) return true;
+    return false;
+};
 
+auto is_grid_occupied2 = [](const cv::Vec3b& color) -> bool {
+    if (color[0] <= 240 || color[1] <= 240 || color[2] <= 240) return true;
+    return false;
+};
+
+#if 1
+PictureLoader loader(map_test_config.at("map_path"), is_grid_occupied2);
+#else
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
-int zoom_rate = 1;
+#endif
+
 
 bool set_pt1 = true;
 bool new_pair = false;
@@ -104,11 +124,11 @@ int main() {
     global_planner::getMap(cost_move_base_2d, dimension, is_occupied);
 
 
-    auto pp1 = [&](const Pointi<2> & p1, const Pointi<2> & p2,
+    auto theta_star = [&](const Pointi<2> & p1, const Pointi<2> & p2,
                    const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
                    const std::string& identifier) -> Pointis<2> {
         LazyThetaStar::MyAdaptor2D my_adapter2D(dimension, is_occupied, ilfr);
-        LazyThetaStar::LazyThetaStar pathfinder(my_adapter2D, 100.f /*weight*/);
+        LazyThetaStar::ThetaStar pathfinder(my_adapter2D, 100.f /*weight*/);
         USTimer ust;
         auto nodePath = pathfinder.search(PointiToId<2>(p1, dimension), PointiToId<2>(p2, dimension));
         Pointis<2> retv;
@@ -123,7 +143,7 @@ int main() {
         return retv;
     };
 
-    auto pp2 = [&](const Pointi<2> & p1, const Pointi<2> & p2,
+    auto lazy_theta_star = [&](const Pointi<2> & p1, const Pointi<2> & p2,
                    const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
                    const std::string& identifier) -> Pointis<2> {
         LazyThetaStar::MyAdaptor2D my_adapter2D(dimension, is_occupied, ilfr);
@@ -136,28 +156,6 @@ int main() {
         } else {
             std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
             for(const auto& id : nodePath) {
-                retv.push_back(IdToPointi<2>(id, dimension));
-            }
-        }
-        return retv;
-    };
-
-
-    //LazyThetaStar::ThetaStar pathfinder3(my_adapter2D3, 100.f /*weight*/);
-
-    auto pp3 = [&](const Pointi<2> & p1, const Pointi<2> & p2,
-                   const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
-                   const std::string& identifier) -> Pointis<2> {
-        LazyThetaStar::MyAdaptor2D my_adapter2D3(dimension, is_occupied, ilfr);
-        LazyThetaStar::LazyThetaStar pathfinder3(my_adapter2D3, 100.f /*weight*/);
-        USTimer ust;
-        auto nodePath1 = pathfinder3.search(PointiToId<2>(p1, dimension), PointiToId<2>(p2, dimension));
-        Pointis<2> retv;
-        if(nodePath1.empty()) {
-            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " failed in " << ust.elapsed()/1e3 << "ms" << std::endl;
-        } else {
-            std::cout << identifier << " plan from " << pt1 << " to " << pt2 << " success in " << ust.elapsed()/1e3 << "ms" << std::endl;
-            for(const auto& id : nodePath1) {
                 retv.push_back(IdToPointi<2>(id, dimension));
             }
         }
@@ -291,14 +289,22 @@ int main() {
 //    std::vector<PATH_PLANNING_FUNC<2> > path_plannings = {pp1, pp2, pp3}; // ok
 //    std::vector<PATH_PLANNING_FUNC<2> > path_plannings = {pp_rrt, pp_rrt_star, pp_rrt_connect}; // ok
     std::vector<std::pair<PATH_PLANNING_FUNC_WITH_LINE<2>, std::string> >
-            path_plannings = {{pp_rrt, "RRT"},
+            path_plannings = {
+                              {theta_star, "ThetaStar 1"},
+                              {lazy_theta_star, "LazyThetaStar 1"},
+                              {pp_rrt, "RRT"},
                               {pp_rrt_star, "RRTStar"},
                               {pp_rrt_connect, "RRTConnect"},
-                              //{pp_rrt_informed, "InformedRRT"},
-                              {pp_theta_star, "ThetaStar"},
-                              {pp_lazy_theta_star, "LazyThetaStar"}}; // ok
+                              //{pp_rrt_informed, "InformedRRT"}, // not ok
+//                              {pp_theta_star, "ThetaStar"}, // slow than previous one
+//                              {pp_lazy_theta_star, "LazyThetaStar"} // slow than previous one
+                              }; // ok
 
-    Canvas canvas("2D planner test",dimension[0], dimension[1], .05, zoom_rate);
+    float zoom_ratio = std::min(1800./dimension[0], 1000./dimension[1]);
+    std::cout << "std::min(1800./dimension[0], 1000./dimension[1]) = " << zoom_ratio << std::endl;
+
+    Canvas canvas("2D planner test",dimension[0], dimension[1],
+                  .05, zoom_ratio);
 
     auto callback = [](int event, int x, int y, int flags, void *) {
         if(event == cv::EVENT_LBUTTONDOWN) {
@@ -326,7 +332,7 @@ int main() {
     while(1) {
         canvas.resetCanvas();
         canvas.drawEmptyGrid();
-        canvas.drawGridMap(dimension, is_occupied);
+        canvas.drawGridMap(dimension, is_occupied, cv::Vec3b::all(160));
 
         //canvas.drawLineInt(pt1[0], pt1[1], pt2[0], pt2[1], true, 2, cv::Vec3b(0,255,0));
         canvas.drawCircleInt(pt1[0], pt1[1], 5, true, -1, cv::Vec3b(0,255,0));

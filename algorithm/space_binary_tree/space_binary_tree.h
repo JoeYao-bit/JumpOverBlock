@@ -892,6 +892,9 @@ namespace freeNav::JOB {
             return count / getTotalIndexOfSpace<N>(dim_);
         }
 
+        TreeNodeNewPtr<N> getTreeNodeOfPt(const Pointi<N>& pt) const {
+            return tree_ptr_vec_[level_offset_[max_depth_] + PointiToId<N>(pt, max_dims_[max_depth_])];
+        }
 
         Pointi<N> all_1_pt_; // a point that all coordinate is 1
 

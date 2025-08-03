@@ -30,7 +30,7 @@ void varify_thread(DimensionLength* temp_dim,
                    const IS_OCCUPIED_FUNC<N>& isoc_temp) {
     std::vector<std::string> output_strings;
     //SpaceBinaryTreeVarify(temp_dim, isoc_temp, sbt);
-    LOSCompare<N, SBT>(temp_dim, sbt, output_strings, 1e4);
+    LOSCompare<N, SBT>(temp_dim, sbt, output_strings, "", 1e4);
 
 }
 
@@ -47,12 +47,32 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 // MapTestConfig_den520d // ok
 // MapTestConfig_den312d // ok
 // MapTestConfig_Shanghai_0_512 // ok
+// MapTestConfig_Simple_2D
+
+// MapTestConfig_fr101 // ok
+// MapTestConfig_edmonton // ok
+// MapTestConfig_intel // ok, too small
+// MapTestConfig_mexico // ok
+// MapTestConfig_fhw_rec_001 // ok
 
 
-auto map_test_config = MapTestConfig_Shanghai_0_512;
+auto map_test_config = MapTestConfig_edmonton;
 
+auto is_grid_occupied1 = [](const cv::Vec3b& color) -> bool {
+    if (color != cv::Vec3b::all(255)) return true;
+    return false;
+};
+
+auto is_grid_occupied2 = [](const cv::Vec3b& color) -> bool {
+    if (color[0] <= 240 || color[1] <= 240 || color[2] <= 240) return true;
+    return false;
+};
+
+#if 1
+PictureLoader loader(map_test_config.at("map_path"), is_grid_occupied2);
+#else
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
-
+#endif
 
 template<typename SBT, typename TreeNode>
 void dynamic_obstacles_2D() {
@@ -97,8 +117,10 @@ void dynamic_obstacles_2D() {
     std::cout << "finish initialize of map in " << mst.elapsed() << "ms" << std::endl;
 
 
-    int zoom_ratio = 800/std::max(dim[0], dim[1]);
-    Canvas canvas("dynamic_obstacles_2D", dim[0], dim[1], .05, std::max(1, zoom_ratio));
+    float zoom_ratio = std::min(1800./dim[0], 1000./dim[1]);
+    std::cout << "std::min(1800./dimension[0], 1000./dimension[1]) = " << zoom_ratio << std::endl;
+
+    Canvas canvas("dynamic_obstacles_2D", dim[0], dim[1], .05, zoom_ratio);
 
     bool draw_pre_occupy = false,
          draw_current_occupy = true,
@@ -169,14 +191,25 @@ void dynamic_obstacles_2D() {
             }
         }
         if(draw_merged_free_leaf) {
-            auto merged_free_leaf_nodes = sbt->merged_block_ptrs_;
-            for(int i=0; i<merged_free_leaf_nodes.size(); i++) {
-                const auto& block_ptr = merged_free_leaf_nodes[i];
-                const Pointi<2> pt1 = block_ptr->min_pt_, pt2 = block_ptr->max_pt_;// + Pointi<2>{1, 1};
-                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
+//            auto merged_free_leaf_nodes = sbt->merged_block_ptrs_;
+//            for(int i=0; i<merged_free_leaf_nodes.size(); i++) {
+//                const auto& block_ptr = merged_free_leaf_nodes[i];
+//                const Pointi<2> pt1 = block_ptr->min_pt_, pt2 = block_ptr->max_pt_;// + Pointi<2>{1, 1};
+//                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
+//                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
+//                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
+//                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
+//            }
+            for(int x=0; x<dim[0]; x++) {
+                for(int y=0; y<dim[1]; y++) {
+                    Pointi<2> pt{x, y};
+                    auto block_ptr = sbt->getInternalBlockPtr(pt);
+                    if(block_ptr == nullptr) { continue; }
+                    if(block_ptr->merged_block_id_ != -1) {
+                        Id indicator = block_ptr->merged_block_id_;
+                        canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
+                    }
+                }
             }
         }
         if(triger_varify) {
@@ -254,15 +287,16 @@ void dynamic_obstacles_2D() {
 
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
-//int main() {
-//    //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
-//    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimension<2>, TreeNodeNew<2>>();
-//}
+int main() {
+    //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
+    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimension<2>, TreeNodeNew<2>>();
+    return 0;
+}
 
 std::string file_path = "../test/SBT_LOS.txt";
 
-int main() {
-//TEST(massiveSBTLOSCompareTest, test) {
+//int main() {
+TEST(massiveSBTLOSCompareTest, test) {
     for(int i=0; i<2; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});

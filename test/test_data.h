@@ -31,6 +31,51 @@ namespace freeNav {
                     {"output_path", "../test/test_data/Simple_2D.txt"}
             };
 
+    // fr101.carmen.gfs.png
+    SingleMapTestConfig<2> MapTestConfig_fr101 =
+            {
+                    {"map_name",    "fr101"},
+                    {"map_path",    "../test/test_data/fr101.carmen.gfs.png"},
+                    {"vis_path",    "../test/test_data/fr101_ENLSVG.vis"},
+                    {"output_path", "../test/test_data/fr101.txt"}
+            };
+
+    // edmonton.gfs.png
+    SingleMapTestConfig<2> MapTestConfig_edmonton =
+            {
+                    {"map_name",    "edmonton"},
+                    {"map_path",    "../test/test_data/edmonton.gfs.png"},
+                    {"vis_path",    "../test/test_data/edmonton_ENLSVG.vis"},
+                    {"output_path", "../test/test_data/edmonton.txt"}
+            };
+
+    // intel.gfs.png
+    SingleMapTestConfig<2> MapTestConfig_intel =
+            {
+                    {"map_name",    "intel"},
+                    {"map_path",    "../test/test_data/intel.gfs.png"},
+                    {"vis_path",    "../test/test_data/intel_ENLSVG.vis"},
+                    {"output_path", "../test/test_data/intel.txt"}
+            };
+
+    // mexico.gfs.png
+    SingleMapTestConfig<2> MapTestConfig_mexico =
+            {
+                    {"map_name",    "mexico"},
+                    {"map_path",    "../test/test_data/mexico.gfs.png"},
+                    {"vis_path",    "../test/test_data/mexico_ENLSVG.vis"},
+                    {"output_path", "../test/test_data/mexico.txt"}
+            };
+
+    // fhw-rec-001.gfs.png
+    SingleMapTestConfig<2> MapTestConfig_fhw_rec_001 =
+            {
+                    {"map_name",    "fhw_rec_001"},
+                    {"map_path",    "../test/test_data/fhw-rec-001.gfs.png"},
+                    {"vis_path",    "../test/test_data/fhw_rec_001_ENLSVG.vis"},
+                    {"output_path", "../test/test_data/fhw_rec_001.txt"}
+            };
+
     // den312d.map
     SingleMapTestConfig<2> MapTestConfig_den312d =
             {
