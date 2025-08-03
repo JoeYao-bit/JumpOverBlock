@@ -56,7 +56,7 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 // MapTestConfig_fhw_rec_001 // ok
 
 
-auto map_test_config = MapTestConfig_edmonton;
+auto map_test_config = MapTestConfig_fhw_rec_001;
 
 auto is_grid_occupied1 = [](const cv::Vec3b& color) -> bool {
     if (color != cv::Vec3b::all(255)) return true;
@@ -287,17 +287,17 @@ void dynamic_obstacles_2D() {
 
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
-int main() {
-    //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
-    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimension<2>, TreeNodeNew<2>>();
-    return 0;
-}
+//int main() {
+//    //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
+//    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimension<2>, TreeNodeNew<2>>();
+//    return 0;
+//}
 
 std::string file_path = "../test/SBT_LOS.txt";
 
-//int main() {
-TEST(massiveSBTLOSCompareTest, test) {
-    for(int i=0; i<2; i++) {
+int main() {
+//TEST(massiveSBTLOSCompareTest, test) {
+    for(int i=0; i<10; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
 //        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(10, 100,
@@ -340,17 +340,17 @@ TEST(massiveSBTLOSCompareTest, test) {
                                     {1,4,8,16,0},
                                     true,
                                     4);
-
-        massiveSBTLOSCompareTest<3>(1,
-                                                       1,
-                                                       {50, 100},
-                                                       {10, 20},
-                                                       file_path,
-                                                       1e5,
-                                                       1e3,
-                                                       {1,4,16,0},
-                                                       true,
-                                                       4);
+//
+//        massiveSBTLOSCompareTest<3>(1,
+//                                                       1,
+//                                                       {50, 100},
+//                                                       {10, 20},
+//                                                       file_path,
+//                                                       1e5,
+//                                                       1e3,
+//                                                       {1,4,16,0},
+//                                                       true,
+//                                                       4);
 
     }
 }

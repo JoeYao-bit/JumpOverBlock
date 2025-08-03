@@ -689,7 +689,7 @@ namespace freeNav::JOB {
 
         // merge block with neighbor block until local maximize
         void mergePassableBlocksViaDecisionTree() {
-            MSTimer mst;
+//            MSTimer mst;
             merged_block_ptrs_.clear();
             // big block start, small block end
             const auto& all_leaves = getAllPassableLeafNodes();
@@ -778,7 +778,7 @@ namespace freeNav::JOB {
             //    std::cout << merged_block_ptr->min_pt_ << "<->" << merged_block_ptr->max_pt_ << ", ";
             //}
             //std::cout << std::endl;
-            std::cout << __FUNCTION__ << " take " << mst.elapsed() << " ms" << std::endl;
+//            std::cout << __FUNCTION__ << " take " << mst.elapsed() << " ms" << std::endl;
         }
 
         bool lineCrossObstacleRaw(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied) {

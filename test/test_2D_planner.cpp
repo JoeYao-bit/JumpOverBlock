@@ -290,8 +290,8 @@ int main() {
 //    std::vector<PATH_PLANNING_FUNC<2> > path_plannings = {pp_rrt, pp_rrt_star, pp_rrt_connect}; // ok
     std::vector<std::pair<PATH_PLANNING_FUNC_WITH_LINE<2>, std::string> >
             path_plannings = {
-                              {theta_star, "ThetaStar 1"},
-                              {lazy_theta_star, "LazyThetaStar 1"},
+                              {theta_star, "ThetaStar"},
+                              {lazy_theta_star, "LazyThetaStar"},
                               {pp_rrt, "RRT"},
                               {pp_rrt_star, "RRTStar"},
                               {pp_rrt_connect, "RRTConnect"},

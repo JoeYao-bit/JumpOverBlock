@@ -6,6 +6,7 @@ import os
 from PIL import Image
 import matplotlib.image as mpimg
 import math
+from scipy.ndimage import uniform_filter1d
 
 def loadDataFromfile(file_path):
     print("file_path = ", file_path)
@@ -171,10 +172,23 @@ def drawCompareTimeCost(all_data, dim):
             x = map_value["colli_ratio"]
             y = map_value["time_cost"]
             scatter = ax.scatter(x, y, marker='.')
+
+            # 按x排序
+            sort_idx = np.argsort(x)
+
+            x_sorted = list()
+            y_sorted = list()
+            for idx in sort_idx:
+                x_sorted.append(x[idx])
+                y_sorted.append(y[idx])
+            # 计算移动平均
+            window_size = math.ceil(len(x)/5)  # 控制平滑程度
+            y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
+            plt.plot(x_sorted, y_smooth, label=label_map_of_type[type_key]+'_width='+str(map_key))
             
-            coefficients = np.polyfit(x, y, deg=1)
-            trend_line = np.poly1d(coefficients)
-            plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_'+'width='+str(map_key))
+            # coefficients = np.polyfit(x, y, deg=1)
+            # trend_line = np.poly1d(coefficients)
+            # plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_'+'width='+str(map_key))
         
     plt.legend(ncol=2)    
     # plt.show()     
@@ -268,10 +282,23 @@ def drawSBTInitData(all_data, dim):
             x = map_value["occ_ratio"]
             y = map_value["init_time_cost"]
             scatter = ax.scatter(x, y, marker='.')
-            
-            coefficients = np.polyfit(x, y, deg=1)
-            trend_line = np.poly1d(coefficients)
-            plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_width='+str(map_key))
+
+            # 按x排序
+            sort_idx = np.argsort(x)
+
+            x_sorted = list()
+            y_sorted = list()
+            for idx in sort_idx:
+                x_sorted.append(x[idx])
+                y_sorted.append(y[idx])
+            # 计算移动平均
+            window_size = math.ceil(len(x)/5)  # 控制平滑程度
+            y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
+            plt.plot(x_sorted, y_smooth, label=label_map_of_type[type_key]+'_width='+str(map_key))
+
+            # coefficients = np.polyfit(x, y, deg=1)
+            # trend_line = np.poly1d(coefficients)
+            # plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_width='+str(map_key))
         
     plt.legend(ncol=2)    
     # plt.show()     
@@ -316,10 +343,24 @@ def drawSBTUpdateData(all_data, dim, max_obs_move_dist):
             x = map_value["occ_ratio"]
             y = map_value["update_time_cost"]
             scatter = ax.scatter(x, y, marker='.')
+
+            # 按x排序
+            sort_idx = np.argsort(x)
+
+            x_sorted = list()
+            y_sorted = list()
+            for idx in sort_idx:
+                x_sorted.append(x[idx])
+                y_sorted.append(y[idx])
+            # 计算移动平均
+            window_size = math.ceil(len(x)/5)  # 控制平滑程度
+            y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
+            plt.plot(x_sorted, y_smooth, label=label_map_of_type[type_key]+'_width='+str(map_key))
+
             # print('x/y size = ', len(x), " / ", len(y))
-            coefficients = np.polyfit(x, y, deg=1)
-            trend_line = np.poly1d(coefficients)
-            plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_width='+str(map_key))
+            # coefficients = np.polyfit(x, y, deg=1)
+            # trend_line = np.poly1d(coefficients)
+            # plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_width='+str(map_key))
         
     plt.legend(ncol=2)    
     # plt.show()     
@@ -362,5 +403,25 @@ drawCompareTimeCost(all_compare_data, 2)
 printStatistic(all_compare_data, 3)
 printStatistic(all_compare_data, 2)
 
-# drawCompareVisitBc(all_compare_data, 3)
-# drawCompareVisitBc(all_compare_data, 2)
+
+
+# # 生成示例数据
+# np.random.seed(42)
+# x = np.linspace(0, 10, 500)
+# y = np.sin(x) + np.random.normal(0, 0.5, len(x))
+
+# # 按x排序
+# sort_idx = np.argsort(x)
+# x_sorted, y_sorted = x[sort_idx], y[sort_idx]
+
+# # 计算移动平均
+# window_size = 30  # 控制平滑程度
+# y_smooth = uniform_filter1d(y_sorted, size=window_size)
+
+# plt.figure(figsize=(12, 6))
+# plt.scatter(x, y, alpha=0.3, label='Raw Data', s=10)
+# plt.plot(x_sorted, y_smooth, 'r-', lw=3, label=f'Moving Average (window={window_size})')
+# plt.title('Moving Average Smoothing')
+# plt.legend()
+# plt.grid(True)
+# plt.show()

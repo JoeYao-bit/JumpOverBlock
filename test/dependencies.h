@@ -401,14 +401,8 @@ namespace freeNav::JOB {
                                   int time_of_test = 1e6,
                                   int max_sample_times = 1e3,
                                   const std::vector<int>& max_obs_move_distances = {10},
-                                  bool update_block_ptr_realtime = false,
+                                  bool update_block_ptr_realtime = true,
                                   int  min_block_depth_width = 4) {
-
-        struct timezone tz;
-        struct timeval tv_pre;
-        struct timeval tv_after;
-
-
 
         for(const auto& width : width_of_space) {
             for(const auto& count : number_of_obstacles) {
@@ -436,7 +430,7 @@ namespace freeNav::JOB {
                         return false;
                     };
 
-                    MSTimer mst;
+                    USTimer mst;
 
                     DynamicObstacles<N> dynamic_obstacles(dim, obs);
                     Id total_index = getTotalIndexOfSpace<N>(dim);
@@ -469,17 +463,17 @@ namespace freeNav::JOB {
                         if (!update_block_ptr_realtime) {
                             sbt_raw->initBlockPtrMap();
                         }
-                        double time_cost_update = mst.elapsed();
+                        double time_cost_update = mst.elapsed()/1e3;
 
                         std::cout << "raw dynamicUpdateTimeCost " << time_cost_update << " ms" << std::endl;
 //                    SpaceBinaryTreeVarify(dim, dynamic_obstacles.isoc_, sbt);
                         mst.reset();
                         SpaceBinaryTreeRawPtr<N> temp_sbt_raw =
                                 std::make_shared<SpaceBinaryTreeAnyDimensionRaw<N>>(dynamic_obstacles.isoc_, dim,
-                                                                                   0);
+                                                                                   1);
                         temp_sbt_raw->initialize();
 
-                        double time_cost_init = mst.elapsed();
+                        double time_cost_init = mst.elapsed()/1e3;
                         std::cout << "raw SBT_init_time_cost " << time_cost_init << " ms" << std::endl;
                         std::stringstream ss1;
                         ss1 << "SBT_RAW " << N << " "  // Dimension
@@ -502,7 +496,7 @@ namespace freeNav::JOB {
                             sbt->setOccupiedState(new_occ, true);
                         }
                         sbt->globalRecursiveUpdate();
-                        time_cost_update = mst.elapsed();
+                        time_cost_update = mst.elapsed()/1e3;
 
                         std::cout << "new dynamicUpdateTimeCost " << time_cost_update << " ms" << std::endl;
 //                    SpaceBinaryTreeVarify(dim, dynamic_obstacles.isoc_, sbt);
@@ -511,7 +505,7 @@ namespace freeNav::JOB {
                                 std::make_shared<SpaceBinaryTreeAnyDimension<N> >(dynamic_obstacles.isoc_, dim,
                                                                               min_block_depth_width);
                         temp_sbt->initialize();
-                        time_cost_init = mst.elapsed();
+                        time_cost_init = mst.elapsed()/1e3;
                         std::cout << "new SBT_init_time_cost " << time_cost_init << " ms" << std::endl;
                         std::stringstream ss2;
                         ss2 << "SBT " << N << " "  // Dimension
