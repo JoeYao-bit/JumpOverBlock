@@ -8,17 +8,19 @@
 #include "block_detect.h"
 namespace freeNav::JOB {
 
+
+
     // return: current in the block or not
     // for a line that cross a block, find the point on it and leave obstacle
     // update inner index of line
     template<Dimension N>
-    int findExitPointOfBlock(Line<N>& line, const Pointi<N>& current_pt, const int& index, const BlockPtr<N>& block_ptr) {
+    int findExitPointOfBlock(Line<N>& line, const Pointi<N>& current_pt, const int& index, const Pointi<N>& min_pt, const Pointi<N>& max_pt) {
         // check whether the line reach end of line
         if(index >= line.step - 1) {return 0; }
         //Pointi<N> current_pt = line.GetPoint(index);
         // check whether current line's last traveled point in the block
         //if(!block_ptr->PointiInBlock(current_pt)) {
-            //std::cout << " not in block" << std::endl;
+        //std::cout << " not in block" << std::endl;
         //    return 0;
         //}
         //bool line_increase = (line.step_length > 0);
@@ -30,10 +32,10 @@ namespace freeNav::JOB {
                 continue;
             } else {
                 if(line.parameter[dim].second > 0) {
-                    future_step = (Fraction(block_ptr->max_[dim] - current_pt[dim]) /
+                    future_step = (Fraction(max_pt[dim] - current_pt[dim]) /
                                    line.parameter[dim].second).toAbs();
                 } else {
-                    future_step = (Fraction(block_ptr->min_[dim] - current_pt[dim]) /
+                    future_step = (Fraction(min_pt[dim] - current_pt[dim]) /
                                    line.parameter[dim].second).toAbs();
                 }
                 //std::cout << " dim " << dim << " / future_step " << future_step.toFloat() << std::endl;
@@ -50,6 +52,14 @@ namespace freeNav::JOB {
             return line.step - index;// - 1;
         }
         return std::max((line.step*minimum_step_to_exit - 1).floor(), 0);
+    }
+
+    // return: current in the block or not
+    // for a line that cross a block, find the point on it and leave obstacle
+    // update inner index of line
+    template<Dimension N>
+    int findExitPointOfBlock(Line<N>& line, const Pointi<N>& current_pt, const int& index, const BlockPtr<N>& block_ptr) {
+        return findExitPointOfBlock(line, current_pt, index, block_ptr->min_, block_ptr->max_);
     }
 
     template <Dimension N>

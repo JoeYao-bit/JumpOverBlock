@@ -23,11 +23,18 @@ else()
     message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
 endif()
 
+aux_source_directory(third_party/ros_motion_planner ros_src)
+add_library(ros_lib ${ros_src})
+
 add_subdirectory(freeNav-base)
 
 
-add_executable(test_space_binary_tree test/test_space_binary_tree.cpp)
-target_link_libraries(test_space_binary_tree freeNav-base)
+add_executable(test_massive_los_check_with_random_map test/test_massive_los_check_with_random_map.cpp)
+target_link_libraries(test_massive_los_check_with_random_map freeNav-base)
+
 
 add_executable(test_massive_space_binary_tree_test test/test_massive_space_binary_tree_test.cpp)
 target_link_libraries(test_massive_space_binary_tree_test freeNav-base)
+
+add_executable(test_lazy_theta_star third_party/LazyThetaStar/main.cpp)
+

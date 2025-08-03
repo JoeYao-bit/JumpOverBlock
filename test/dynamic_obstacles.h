@@ -6,7 +6,7 @@
 #define JUMPOVERBLOCK_DYNAMIC_OBSTACLES_H
 
 #include <random>
-#include "../freeNav-base/basic_elements/point.h"
+#include "freeNav-base/basic_elements/point.h"
 
 namespace freeNav::JOB {
 
@@ -166,7 +166,15 @@ namespace freeNav::JOB {
 
             previous_center_pts_.resize(obstacles.size(), Pointi<N>());
             current_center_pts_.resize(obstacles.size(), Pointi<N>());
-            random();
+
+            // construct local update isoc
+            auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {
+                if(isOutOfBoundary(pt, dim_)) {
+                    return true;
+                }
+                return false;
+            };
+            isoc_ = is_occupied_temp;
         }
 
         // update each obstacle's center to random point in the space
@@ -176,6 +184,9 @@ namespace freeNav::JOB {
 
             pre_occ_ids_ = cur_occ_ids_;
 
+            new_occ_pts_.clear();
+            new_free_pts_.clear();
+
             Id total_index = getTotalIndexOfSpace<N>(dim_);
 
             current_map_ = std::vector<bool>(total_index, false);
@@ -184,35 +195,19 @@ namespace freeNav::JOB {
             srand(time(0)); // use time as seed of generate random number
             for(int i=0; i<obstacles_.size(); i++) {
                 Pointi<N> center_pt = previous_center_pts_[i];
-//                for(int d=0; d<N; d++) {
-//                    if(max_random_move_distance == 0) {
-//                        center_pt[d] = rand() % dim_[d];
-//                    } else {
-//                        center_pt[d] = center_pt[d] + max_random_move_distance - rand() % (2*max_random_move_distance);
-//                        // avoid negative number
-//                        while(center_pt[d] < 0) {
-//                            center_pt[d] = center_pt[d] + dim_[d];
-//                        }
-//                        // avoid out of range
-//                        center_pt[d] = center_pt[d] % dim_[d];
-//                    }
-//                }
-
-                int d = rand() % N;
-                if(max_random_move_distance == 0) {
-                    for(int d=0; d<N; d++) {
+                for(int d=0; d<N; d++) {
+                    if(max_random_move_distance == 0) {
                         center_pt[d] = rand() % dim_[d];
+                    } else {
+                        center_pt[d] = center_pt[d] + max_random_move_distance - rand() % (2*max_random_move_distance);
+                        // avoid negative number
+                        while(center_pt[d] < 0) {
+                            center_pt[d] = center_pt[d] + dim_[d];
+                        }
+                        // avoid out of range
+                        center_pt[d] = center_pt[d] % dim_[d];
                     }
-                } else {
-                    center_pt[d] = center_pt[d] + max_random_move_distance - rand() % (2 * max_random_move_distance);
                 }
-                // avoid negative number
-                while(center_pt[d] < 0) {
-                    center_pt[d] = center_pt[d] + dim_[d];
-                }
-                // avoid out of range
-                center_pt[d] = center_pt[d] % dim_[d];
-
                 current_center_pts_.push_back(center_pt);
             }
 

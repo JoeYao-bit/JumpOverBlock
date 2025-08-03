@@ -21,6 +21,111 @@ namespace freeNav {
                     {"output_path", "../test/test_data/Shanghai_0_512.txt"}
             };
 
+    // Simple_2D
+    SingleMapTestConfig<2> MapTestConfig_Simple_2D =
+            {
+                    {"map_name",    "Simple_2D"},
+                    {"map_path",    "../test/test_data/Simple_2D.map"},
+                    {"vis_path",    "../test/test_data/Simple_2D_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/Simple_2D.map.scen"},
+                    {"output_path", "../test/test_data/Simple_2D.txt"}
+            };
+
+    // fr101.carmen.gfs.png
+    SingleMapTestConfig<2> MapTestConfig_fr101 =
+            {
+                    {"map_name",    "fr101"},
+                    {"map_path",    "../test/test_data/fr101.carmen.gfs.png"},
+                    {"vis_path",    "../test/test_data/fr101_ENLSVG.vis"},
+                    {"output_path", "../test/test_data/fr101.txt"}
+            };
+
+    // edmonton.gfs.png
+    SingleMapTestConfig<2> MapTestConfig_edmonton =
+            {
+                    {"map_name",    "edmonton"},
+                    {"map_path",    "../test/test_data/edmonton.gfs.png"},
+                    {"vis_path",    "../test/test_data/edmonton_ENLSVG.vis"},
+                    {"output_path", "../test/test_data/edmonton.txt"}
+            };
+
+    // intel.gfs.png
+    SingleMapTestConfig<2> MapTestConfig_intel =
+            {
+                    {"map_name",    "intel"},
+                    {"map_path",    "../test/test_data/intel.gfs.png"},
+                    {"vis_path",    "../test/test_data/intel_ENLSVG.vis"},
+                    {"output_path", "../test/test_data/intel.txt"}
+            };
+
+    // mexico.gfs.png
+    SingleMapTestConfig<2> MapTestConfig_mexico =
+            {
+                    {"map_name",    "mexico"},
+                    {"map_path",    "../test/test_data/mexico.gfs.png"},
+                    {"vis_path",    "../test/test_data/mexico_ENLSVG.vis"},
+                    {"output_path", "../test/test_data/mexico.txt"}
+            };
+
+    // fhw-rec-001.gfs.png
+    SingleMapTestConfig<2> MapTestConfig_fhw_rec_001 =
+            {
+                    {"map_name",    "fhw_rec_001"},
+                    {"map_path",    "../test/test_data/fhw-rec-001.gfs.png"},
+                    {"vis_path",    "../test/test_data/fhw_rec_001_ENLSVG.vis"},
+                    {"output_path", "../test/test_data/fhw_rec_001.txt"}
+            };
+
+    // den312d.map
+    SingleMapTestConfig<2> MapTestConfig_den312d =
+            {
+                    {"map_name",    "den312"},
+                    {"map_path",    "../test/test_data/den312d.map"},
+                    {"vis_path",    "../test/test_data/den312d_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/den312d.map.scen"},
+                    {"output_path", "../test/test_data/den312d.txt"}
+            };
+
+    // den520d.map
+    SingleMapTestConfig<2> MapTestConfig_den520d =
+            {
+                    {"map_name",    "den520d"},
+                    {"map_path",    "../test/test_data/den520d.map"},
+                    {"vis_path",    "../test/test_data/den520_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/den520d.map.scen"},
+                    {"output_path", "../test/test_data/den520d.txt"}
+            };
+
+    // lak303d.map
+    SingleMapTestConfig<2> MapTestConfig_lak303d =
+            {
+                    {"map_name",    "lak303d"},
+                    {"map_path",    "../test/test_data/lak303d.map"},
+                    {"vis_path",    "../test/test_data/lak303d_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/lak303d.map.scen"},
+                    {"output_path", "../test/test_data/lak303d.txt"}
+            };
+
+    // orz900d.map
+    SingleMapTestConfig<2> MapTestConfig_orz900d =
+            {
+                    {"map_name",    "orz900d"},
+                    {"map_path",    "../test/test_data/orz900d.map"},
+                    {"vis_path",    "../test/test_data/orz900d_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/orz900d.map.scen"},
+                    {"output_path", "../test/test_data/orz900d.txt"}
+            };
+
+    // ost003d.map
+    SingleMapTestConfig<2> MapTestConfig_ost003d =
+            {
+                    {"map_name",    "ost003d"},
+                    {"map_path",    "../test/test_data/ost003d.map"},
+                    {"vis_path",    "../test/test_data/ost003d_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/ost003d.map.scen"},
+                    {"output_path", "../test/test_data/ost003d.txt"}
+            };
+
     SingleMapTestConfig<3> MapTestConfig_Simple =
 
             {
