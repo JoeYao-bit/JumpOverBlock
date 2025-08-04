@@ -389,8 +389,8 @@ label_map_of_type = {
 
 line_map_of_type = {
     "RAW":"-",
-    "SBT":"--",
-    "SBT_RAW":"-."
+    "SBT_RAW":"--",
+    "SBT":":"
 }
 
 file_path = "../test/SBT_LOS.txt"
