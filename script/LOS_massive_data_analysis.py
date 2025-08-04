@@ -390,20 +390,19 @@ file_path = "../test/SBT_LOS.txt"
 
 all_compare_data = loadDataFromfile(file_path)
 
-drawSBTInitData(all_compare_data, 3)
 drawSBTInitData(all_compare_data, 2)
-
 for max_dist in [1, 4, 16, 0]:
-    drawSBTUpdateData(all_compare_data, 3, max_dist)
     drawSBTUpdateData(all_compare_data, 2, max_dist)
 
-drawCompareTimeCost(all_compare_data, 3)
 drawCompareTimeCost(all_compare_data, 2)
-
-printStatistic(all_compare_data, 3)
 printStatistic(all_compare_data, 2)
 
+# drawSBTInitData(all_compare_data, 3)
+# for max_dist in [1, 4, 16, 0]:
+#     drawSBTUpdateData(all_compare_data, 3, max_dist)
 
+# drawCompareTimeCost(all_compare_data, 3)
+# printStatistic(all_compare_data, 3)
 
 # # 生成示例数据
 # np.random.seed(42)
