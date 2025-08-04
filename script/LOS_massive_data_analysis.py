@@ -391,6 +391,7 @@ file_path = "../test/SBT_LOS.txt"
 all_compare_data = loadDataFromfile(file_path)
 
 drawSBTInitData(all_compare_data, 2)
+
 for max_dist in [1, 4, 16, 0]:
     drawSBTUpdateData(all_compare_data, 2, max_dist)
 

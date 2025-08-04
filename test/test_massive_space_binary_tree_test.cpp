@@ -88,17 +88,17 @@ int main() {
 //        massiveSBTLOSCompareTest2D(1, 1, {600}, {40});
 
         //massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
-
-//       massiveSBTLOSCompareTest<2>(1,
-//                                                      1,
-//                                                      {200, 300, 400, 500, 700, 800, 900, 1000},
-//                                                      {10,20,30,40,50,60,70,80},
-//                                                      file_path,
-//                                                      1e5,
-//                                                      1e3,
-//                                                      {10,20,40},
-//                                                      true,
-//                                                      4);
+ 
+      massiveSBTLOSCompareTest<2>(1,
+                                                     1,
+                                                     {200, 300, 400, 500, 700, 800, 900, 1000},
+                                                     {10,20,30,40,50,60,70,80},
+                                                     file_path,
+                                                     1e5,
+                                                     1e3,
+                                                     {1, 2, 4, 16},
+                                                     true,
+                                                     4);
 
 //        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
 //                                                       1,
