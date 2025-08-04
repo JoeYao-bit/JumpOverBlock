@@ -100,27 +100,27 @@ int main() {
     //                                                  true,
     //                                                  4);
 
-       massiveSBTLOSCompareTest<3>(5,
-                                                      1,
-                                                      {400, 600, 800},
-                                                      {20, 40},
-                                                      file_path,
-                                                      1e5,
-                                                      1e3,
-                                                      {16},
-                                                      true,
-                                                      4);
+//       massiveSBTLOSCompareTest<3>(5,
+//                                                      1,
+//                                                      {400, 600, 800},
+//                                                      {20, 40},
+//                                                      file_path,
+//                                                      1e5,
+//                                                      1e3,
+//                                                      {16},
+//                                                      true,
+//                                                      4);
 
-//         massiveSBTLOSCompareTest<2>(1,
-//                                     1,
-//                                     {400, 500}, // 200,300,400,500,700,800,900, 1000
-//                                     {10, 20},
-//                                     file_path,
-//                                     1e5,
-//                                     1e3,
-//                                     {10,20,40},
-//                                     true,
-//                                     4);
+         massiveSBTLOSCompareTest<2>(1,
+                                     1,
+                                     {400, 500, 600}, // 200,300,400,500,700,800,900, 1000
+                                     {10, 20},
+                                     file_path,
+                                     1e5,
+                                     1e3,
+                                     {1, 10, 40},
+                                     true,
+                                     4);
 //
 //        massiveSBTLOSCompareTest<3>(1,
 //                                                       1,

@@ -37,7 +37,7 @@ namespace freeNav::JOB {
             }
 //            std::cout << "max_depth = " << max_depth_ << std::endl;
             // precomputation of pow(2, x)
-            for (int dp = 0; dp <= max_depth_*(int)N; dp++) {
+            for (int dp = 0; dp <= max_depth_ * (int) N; dp++) {
                 pow_2_.push_back(pow(2, dp));
             }
             // precomputation of flag points
@@ -46,9 +46,9 @@ namespace freeNav::JOB {
 
             int size_of_vec = 1;
             level_offset_ = {0};
-            for(int d=1; d<=max_depth_; d++) {
-                size_of_vec = size_of_vec + pow_2_[d*N];
-                level_offset_.push_back(level_offset_.back() + pow(2, (d-1)*N));
+            for (int d = 1; d <= max_depth_; d++) {
+                size_of_vec = size_of_vec + pow_2_[d * N];
+                level_offset_.push_back(level_offset_.back() + pow(2, (d - 1) * N));
             }
 //            std::cout << "size_of_vec = " << size_of_vec << std::endl;
 //            std::cout << " level_offset_ = ";
@@ -59,9 +59,9 @@ namespace freeNav::JOB {
 
             tree_ptr_vec_.resize(size_of_vec, nullptr);
 
-            max_dims_.resize(max_depth_+1, nullptr);
+            max_dims_.resize(max_depth_ + 1, nullptr);
 
-            for(int dp=0; dp<=max_depth_; dp++) {
+            for (int dp = 0; dp <= max_depth_; dp++) {
                 int max_width = pow_2_[dp];
                 max_dims_[dp] = new DimensionLength[N];
                 for (int i = 0; i < N; i++) {
@@ -71,21 +71,21 @@ namespace freeNav::JOB {
             }
             // NOTICE: in override class's constructor, set all internal occ map state to occupied
             // construct local update isoc
-            auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {
+            auto is_occupied_temp = [&](const Pointi<N> &pt) -> bool {
                 return getInternalOccState(pt);
             };
             isoc_dynamic_ = is_occupied_temp;
         }
 
         ~SpaceBinaryTree() {
-            for(int dp=0; dp<=max_depth_; dp++) {
+            for (int dp = 0; dp <= max_depth_; dp++) {
                 delete max_dims_[dp];
                 max_dims_[dp] = nullptr;
             }
         }
 
-        int PtToTreeVecId(const Pointi<N>& pt, int level) const {
-            Pointi<N> local_pt = pt / pow_2_[(max_depth_-level)];
+        int PtToTreeVecId(const Pointi <N> &pt, int level) const {
+            Pointi<N> local_pt = pt / pow_2_[(max_depth_ - level)];
             return level_offset_[level] + PointiToId(local_pt, max_dims_[level]);
         }
 
@@ -93,7 +93,7 @@ namespace freeNav::JOB {
             // initialize max depth level tree node
             Pointi<N> pt;
             int max_id = getTotalIndexOfSpace<N>(max_dims_[max_depth_]);
-            for(int id=0; id<max_id; id++) {
+            for (int id = 0; id < max_id; id++) {
                 pt = IdToPointi<N>(id, max_dims_[max_depth_]);
                 auto new_tree_node = std::make_shared<TreeNodeNew<N> >(nullptr);
                 new_tree_node->base_pt_ = pt;
@@ -106,13 +106,13 @@ namespace freeNav::JOB {
             }
             // from deep to top, construct parent node
             int child_id_global;
-            for(int cur_level = max_depth_-1; cur_level>=0; cur_level--) {
+            for (int cur_level = max_depth_ - 1; cur_level >= 0; cur_level--) {
                 int cur_level_vec_offset = level_offset_[cur_level];
-                int next_level_vec_offset = level_offset_[cur_level+1];
+                int next_level_vec_offset = level_offset_[cur_level + 1];
 //                std::cout << "cur_level = " << cur_level <<  ", cur / next level_vec_offset = "
 //                          << cur_level_vec_offset << " / " << next_level_vec_offset << std::endl;
                 //std::cout << "pow_2_[cur_level] = " << pow_2_[cur_level] << std::endl;
-                for(int id=0; id<pow_2_[cur_level*N]; id++) {
+                for (int id = 0; id < pow_2_[cur_level * N]; id++) {
                     bool all_the_same = true;
                     int is_occ = -1;
                     Pointi<N> cur_pt = IdToPointi<N>(id, max_dims_[cur_level]);
@@ -120,24 +120,24 @@ namespace freeNav::JOB {
                     // number of child node os pow(2, N)
                     //std::cout << "next offset = " << next_level_vec_offset + id*pow_2_[N] << std::endl;
                     std::vector<Id> child_global_ids;
-                    for(const auto& child_offset : flag_pts_) {
+                    for (const auto &child_offset : flag_pts_) {
                         //std::cout << "child_id = " << child_id << std::endl;
-                        Pointi<N> child_pt = cur_pt*2 + child_offset;
+                        Pointi<N> child_pt = cur_pt * 2 + child_offset;
 //                        std::cout << "child_pt = " << child_pt << std::endl;
 //                        std::cout << "child pt local id = " << PointiToId<N>(child_pt, max_dims_[cur_level+1])  << std::endl;
-                        child_id_global = next_level_vec_offset + PointiToId<N>(child_pt, max_dims_[cur_level+1]);
+                        child_id_global = next_level_vec_offset + PointiToId<N>(child_pt, max_dims_[cur_level + 1]);
 //                        std::cout << "child_id_global = " << child_id_global << std::endl;
                         child_global_ids.push_back(child_id_global);
                         //std::cout << "child_id_global = " << child_id_global << std::endl;
                         assert(tree_ptr_vec_[child_id_global] != nullptr);
-                        if(tree_ptr_vec_[child_id_global]->mixed_state_) {
+                        if (tree_ptr_vec_[child_id_global]->mixed_state_) {
                             all_the_same = false;
                             //break;
                         }
-                        if(is_occ == -1) {
+                        if (is_occ == -1) {
                             is_occ = tree_ptr_vec_[child_id_global]->occ_;
                         } else {
-                            if(is_occ != tree_ptr_vec_[child_id_global]->occ_) {
+                            if (is_occ != tree_ptr_vec_[child_id_global]->occ_) {
                                 all_the_same = false;
                                 //break;
                             }
@@ -192,8 +192,8 @@ namespace freeNav::JOB {
 //                        }
 //                    }
 
-                    for(int i=0; i<child_global_ids.size(); i++) {
-                        const auto& child_id_global = child_global_ids[i];
+                    for (int i = 0; i < child_global_ids.size(); i++) {
+                        const auto &child_id_global = child_global_ids[i];
                         assert(tree_ptr_vec_[child_id_global] != nullptr);
                         assert(tree_ptr_vec_[child_id_global]->parent_ == nullptr);
                         tree_ptr_vec_[child_id_global]->parent_ = new_tree_node;
@@ -204,13 +204,13 @@ namespace freeNav::JOB {
 
                     //std::cout << "non_null_ptr node id = " << cur_level_vec_offset + id << std::endl;
 
-                    if(cur_level == 0) {
+                    if (cur_level == 0) {
                         root_ = new_tree_node;
                     }
                 }
                 //break;
-                for(int node_id=cur_level_vec_offset; node_id<next_level_vec_offset; node_id++) {
-                    if(tree_ptr_vec_[node_id] == nullptr) {
+                for (int node_id = cur_level_vec_offset; node_id < next_level_vec_offset; node_id++) {
+                    if (tree_ptr_vec_[node_id] == nullptr) {
                         //std::cout << "node id " << node_id << " = nullptr" << std::endl;
                         assert(tree_ptr_vec_[node_id] != nullptr);
                     }
@@ -221,13 +221,13 @@ namespace freeNav::JOB {
             mergePassableBlocksViaDecisionTree();
         }
 
-        virtual void setInternalOccState(const Pointi<N>& pt, bool occ_state) = 0;
+        virtual void setInternalOccState(const Pointi <N> &pt, bool occ_state) = 0;
 
-        virtual bool getInternalOccState(const Pointi<N>& pt) const = 0;
+        virtual bool getInternalOccState(const Pointi <N> &pt) const = 0;
 
-        virtual void setInternalBlockPtr(const Pointi<N>& pt, const BlockPtrRaw<N>& block_ptr) = 0;
+        virtual void setInternalBlockPtr(const Pointi <N> &pt, const BlockPtrRaw <N> &block_ptr) = 0;
 
-        virtual const BlockPtrRaw<N>& getInternalBlockPtr(const Pointi<N>& pt) const = 0;
+        virtual const BlockPtrRaw <N> &getInternalBlockPtr(const Pointi <N> &pt) const = 0;
 
         virtual void clearInternalBlockPtr() = 0;
 
@@ -236,12 +236,14 @@ namespace freeNav::JOB {
             clearInternalBlockPtr();
 
             std::vector<TreeNodeNewPtr<N> > free_leaf_nodes = getAllPassableLeafNodes();
-            for(const auto& leaf_node : free_leaf_nodes) {
-                if(leaf_node->depth_ > max_depth_ - min_block_depth_width_) { continue; } // limit minimum size of blocks
+            for (const auto &leaf_node : free_leaf_nodes) {
+                if (leaf_node->depth_ >
+                    max_depth_ - min_block_depth_width_) { continue; } // limit minimum size of blocks
                 //std::cout << "leaf_node->depth_ = " << leaf_node->depth_ << std::endl;
                 BlockPtrRaw<N> block_ptr = std::make_shared<BlockRaw<N> >();
                 block_ptr->min_ = leaf_node->base_pt_;
-                Pointi<N> offset; offset.setAll(pow_2_[max_depth_-leaf_node->depth_]-1);
+                Pointi<N> offset;
+                offset.setAll(pow_2_[max_depth_ - leaf_node->depth_] - 1);
                 block_ptr->max_ = leaf_node->base_pt_ + offset;
                 block_ptr->tree_node_ = leaf_node;
                 //leaf_node->block_ptr_ = block_ptr;
@@ -251,26 +253,27 @@ namespace freeNav::JOB {
         }
 
         // set all grid in current node range to the same block_ptr
-        void setBlockPtrForNode(const TreeNodeNewPtr<N>& node, const BlockPtrRaw<N>& block_ptr) {
-            if(block_ptr != nullptr &&
-               (isOutOfBoundary(block_ptr->min_, dim_) || isOutOfBoundary(block_ptr->max_, dim_))) {
+        void setBlockPtrForNode(const TreeNodeNewPtr <N> &node, const BlockPtrRaw <N> &block_ptr) {
+            if (block_ptr != nullptr &&
+                (isOutOfBoundary(block_ptr->min_, dim_) || isOutOfBoundary(block_ptr->max_, dim_))) {
                 return;
             }
-            Pointi<N> offset; offset.setAll(pow_2_[max_depth_-node->depth_]-1);
+            Pointi<N> offset;
+            offset.setAll(pow_2_[max_depth_ - node->depth_] - 1);
             DimensionLength local_dim[N];
-            for(int d=0; d<N; d++) { local_dim[d] = offset[d]+1; }
+            for (int d = 0; d < N; d++) { local_dim[d] = offset[d] + 1; }
             Id local_total_index = getTotalIndexOfSpace<N>(local_dim), global_id;
 
             Pointi<N> local_pt, global_pt;
-            for(Id id=0; id<local_total_index; id++) {
+            for (Id id = 0; id < local_total_index; id++) {
                 local_pt = IdToPointi<N>(id, local_dim);
                 global_pt = node->base_pt_ + local_pt;
-                if(block_ptr != nullptr && isOutOfBoundary(global_pt, dim_)) {
+                if (block_ptr != nullptr && isOutOfBoundary(global_pt, dim_)) {
                     //continue; // if larger than block_ptr_map_, it is out of map
                     //block ptr shouldn't out of map
                     assert(0);
                 }
-                if(block_ptr != nullptr && isOutOfBoundary(global_pt, dim_)) {
+                if (block_ptr != nullptr && isOutOfBoundary(global_pt, dim_)) {
                     continue;
                 }
                 //global_id = PointiToId(global_pt, dim_);
@@ -279,16 +282,16 @@ namespace freeNav::JOB {
             }
         }
 
-        TreeNodeNewPtrs<N> getAllPassableLeafNodes() const {
+        TreeNodeNewPtrs <N> getAllPassableLeafNodes() const {
             //std::cout << "-- " << __FUNCTION__ << std::endl;
-            TreeNodeNewPtrs<N> nodes = { root_ }, next_nodes, retv;
+            TreeNodeNewPtrs<N> nodes = {root_}, next_nodes, retv;
             int dp = 0;
             while (!nodes.empty()) {
                 //std::cout << " depth = " << dp << ": " << std::endl;
-                for(int i=0; i<nodes.size(); i++) {
+                for (int i = 0; i < nodes.size(); i++) {
                     assert(nodes[i]->depth_ == dp);
-                    if(nodes[i]->mixed_state_) {
-                        if(nodes[i]->children_.size() != pow_2_[N]) {
+                    if (nodes[i]->mixed_state_) {
+                        if (nodes[i]->children_.size() != pow_2_[N]) {
                             std::cout << "new node: " << nodes[i]
                                       << "，depth = " << nodes[i]->depth_
                                       << ", mixed = " << nodes[i]->mixed_state_
@@ -298,10 +301,10 @@ namespace freeNav::JOB {
                         }
                         assert(nodes[i]->children_.size() == pow_2_[N]);
                     }
-                    if(!nodes[i]->mixed_state_ && !nodes[i]->occ_) {
+                    if (!nodes[i]->mixed_state_ && !nodes[i]->occ_) {
                         retv.push_back(nodes[i]);
                     }
-                    if(nodes[i]->mixed_state_) {
+                    if (nodes[i]->mixed_state_) {
                         for (int j = 0; j < pow_2_[N]; j++) {
                             if (nodes[i]->children_[j] != nullptr) {
                                 next_nodes.push_back(nodes[i]->children_[j]);
@@ -312,14 +315,14 @@ namespace freeNav::JOB {
                 }
                 nodes.clear();
                 std::swap(nodes, next_nodes);
-                dp ++;
+                dp++;
             }
             //std::cout << "finish " << __FUNCTION__ << std::endl;
             return retv;
         }
 
         // find the leaf node that contain current pt, and return its occ
-        bool isOccupied(const Pointi<N>& pt) const {
+        bool isOccupied(const Pointi <N> &pt) const {
             Id id = PointiToId(pt, max_dims_[max_depth_]);
 //            //std::cout << "*pt = " << pt << std::endl;
 //            for(int dp=max_depth_; dp>=0; dp--) {
@@ -338,24 +341,24 @@ namespace freeNav::JOB {
             return tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_;
         }
 
-        void setOccupiedState(const Pointi<N>& pt, bool is_occupied) {
-            if(getInternalOccState(pt) == is_occupied) {
+        void setOccupiedState(const Pointi <N> &pt, bool is_occupied) {
+            if (getInternalOccState(pt) == is_occupied) {
                 //std::cout << "pt " << pt << " have the state in internal map, do not update" << std::endl;
                 return;
             }
             setInternalOccState(pt, is_occupied);
 
             Id id = PointiToId(pt, max_dims_[max_depth_]);
-            if(tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_ == is_occupied) {
+            if (tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_ == is_occupied) {
 //                std::cout << "pt " << pt << " have the state " << tree_ptr_vec_[id + level_offset_[max_depth_]]->occ_
 //                <<  " in SBT tree, do not update" << std::endl;
-                return ;
+                return;
             }
-            if(updated_ids_.find(id) == updated_ids_.end()) {
+            if (updated_ids_.find(id) == updated_ids_.end()) {
                 updated_pts_.push_back(pt);
                 updated_ids_.insert(id);
             } else {
-               //std::cout << "pt " << pt << " already in update_pts, do not update" << std::endl;
+                //std::cout << "pt " << pt << " already in update_pts, do not update" << std::endl;
             }
 
 //            if(!is_occupied) {
@@ -373,11 +376,11 @@ namespace freeNav::JOB {
             std::set<Id> cur_ids, next_ids;
             Pointi<N> new_pt, parent_pt;
             //std::cout << "updated_pts_ = ";
-            for(const auto& pt : updated_pts_) {
+            for (const auto &pt : updated_pts_) {
                 //std::cout << pt << " ";
-                new_pt = pt/2;
-                Id id = PointiToId<N>(new_pt, max_dims_[max_depth_-1]);
-                if(cur_ids.find(id) == cur_ids.end()) {
+                new_pt = pt / 2;
+                Id id = PointiToId<N>(new_pt, max_dims_[max_depth_ - 1]);
+                if (cur_ids.find(id) == cur_ids.end()) {
                     cur_pts.push_back(new_pt);
                     cur_ids.insert(id);
                 }
@@ -387,12 +390,12 @@ namespace freeNav::JOB {
 
             int child_id_global;
             Id cur_id, next_id, global_cur_id;
-            for(int lv=max_depth_-1; lv >= 0; lv--) {
+            for (int lv = max_depth_ - 1; lv >= 0; lv--) {
                 int cur_level_vec_offset = level_offset_[lv];
-                int next_level_vec_offset = level_offset_[lv+1];
+                int next_level_vec_offset = level_offset_[lv + 1];
                 next_ids.clear();
                 next_pts.clear();
-                for(const auto& cur_pt : cur_pts) {
+                for (const auto &cur_pt : cur_pts) {
                     bool all_the_same = true;
                     int is_occ = -1;
                     cur_id = PointiToId<N>(cur_pt, max_dims_[lv]);
@@ -400,24 +403,24 @@ namespace freeNav::JOB {
                     assert(tree_ptr_vec_[global_cur_id] != nullptr);
 
                     std::vector<Id> child_global_ids;
-                    for(const auto& child_offset : flag_pts_) {
+                    for (const auto &child_offset : flag_pts_) {
                         //std::cout << "child_id = " << child_id << std::endl;
-                        Pointi<N> child_pt = cur_pt*2 + child_offset;
+                        Pointi<N> child_pt = cur_pt * 2 + child_offset;
 //                        std::cout << "child_pt = " << child_pt << std::endl;
 //                        std::cout << "child pt local id = " << PointiToId<N>(child_pt, max_dims_[cur_level+1])  << std::endl;
-                        child_id_global = next_level_vec_offset + PointiToId<N>(child_pt, max_dims_[lv+1]);
+                        child_id_global = next_level_vec_offset + PointiToId<N>(child_pt, max_dims_[lv + 1]);
 //                        std::cout << "child_id_global = " << child_id_global << std::endl;
                         child_global_ids.push_back(child_id_global);
                         //std::cout << "child_id_global = " << child_id_global << std::endl;
                         assert(tree_ptr_vec_[child_id_global] != nullptr);
-                        if(tree_ptr_vec_[child_id_global]->mixed_state_) {
+                        if (tree_ptr_vec_[child_id_global]->mixed_state_) {
                             all_the_same = false;
                             //break;
                         }
-                        if(is_occ == -1) {
+                        if (is_occ == -1) {
                             is_occ = tree_ptr_vec_[child_id_global]->occ_;
                         } else {
-                            if(is_occ != tree_ptr_vec_[child_id_global]->occ_) {
+                            if (is_occ != tree_ptr_vec_[child_id_global]->occ_) {
                                 all_the_same = false;
                                 //break;
                             }
@@ -426,28 +429,30 @@ namespace freeNav::JOB {
 
                     bool parent_need_update = false; // if current node is updated, parent will need update
                     // if the node's mixed state is changed, its parent may need update
-                    if(all_the_same == tree_ptr_vec_[global_cur_id]->mixed_state_) {
+                    if (all_the_same == tree_ptr_vec_[global_cur_id]->mixed_state_) {
                         parent_need_update = true;
                     } else if (all_the_same == true && tree_ptr_vec_[global_cur_id]->mixed_state_ == false) {
                         // if the node is not mixed in previous and now, but its occ state changed, its parent may need update
-                        if(is_occ != tree_ptr_vec_[global_cur_id]->occ_) {
+                        if (is_occ != tree_ptr_vec_[global_cur_id]->occ_) {
                             parent_need_update = true;
                         }
                     }
 
                     // if previous is unpassable or mixed, now is passable, add to new leaf nodes
-                    if(all_the_same && is_occ == false) {
-                        if(tree_ptr_vec_[global_cur_id]->mixed_state_ == true || tree_ptr_vec_[global_cur_id]->occ_ == true) {
+                    if (all_the_same && is_occ == false) {
+                        if (tree_ptr_vec_[global_cur_id]->mixed_state_ == true ||
+                            tree_ptr_vec_[global_cur_id]->occ_ == true) {
                             // limit minimum size of blocks
-                            if(tree_ptr_vec_[global_cur_id]->depth_ <= max_depth_ - min_block_depth_width_) {
+                            if (tree_ptr_vec_[global_cur_id]->depth_ <= max_depth_ - min_block_depth_width_) {
                                 new_passable_nodes.push_back(tree_ptr_vec_[global_cur_id]);
                             }
                         }
                     }
 
                     // if previous is passable, now is unpassable or mixed, add to new leaf nodes
-                    if(tree_ptr_vec_[global_cur_id]->mixed_state_ == false || tree_ptr_vec_[global_cur_id]->occ_ == false) {
-                        if(all_the_same == false || is_occ == true) {
+                    if (tree_ptr_vec_[global_cur_id]->mixed_state_ == false ||
+                        tree_ptr_vec_[global_cur_id]->occ_ == false) {
+                        if (all_the_same == false || is_occ == true) {
                             old_passable_nodes.push_back(tree_ptr_vec_[global_cur_id]);
                         }
                     }
@@ -457,8 +462,8 @@ namespace freeNav::JOB {
 
                     // before reach root, parent may need update
                     //if(lv > 0) { // && parent_need_update) {
-                    if(lv > 0 && parent_need_update) {
-                            parent_pt = cur_pt / 2;
+                    if (lv > 0 && parent_need_update) {
+                        parent_pt = cur_pt / 2;
                         next_id = PointiToId(parent_pt, max_dims_[lv - 1]);
                         if (next_ids.find(next_id) == next_ids.end()) {
                             next_ids.insert(next_id);
@@ -473,29 +478,30 @@ namespace freeNav::JOB {
             updated_ids_.clear();
 
             // update block ptr
-            for(const auto& leaf_node : old_passable_nodes) {
-                if(leaf_node->occ_ != false || leaf_node->mixed_state_ != false) {
+            for (const auto &leaf_node : old_passable_nodes) {
+                if (leaf_node->occ_ != false || leaf_node->mixed_state_ != false) {
                     BlockPtrRaw<N> block_ptr = nullptr;
                     setBlockPtrForNode(leaf_node, block_ptr);
                 }
-                if(leaf_node->mixed_state_ == true) {
+                if (leaf_node->mixed_state_ == true) {
                     // set all passable leaf node's block ptr
-                    std::vector<TreeNodeNewPtr<N>> buffer = { leaf_node }, next_buffer;
-                    while(!buffer.empty()) {
+                    std::vector<TreeNodeNewPtr<N>> buffer = {leaf_node}, next_buffer;
+                    while (!buffer.empty()) {
                         next_buffer.clear();
-                        for(const auto& temp_node : buffer) {
+                        for (const auto &temp_node : buffer) {
                             // if child node too small, no need to update block ptr
-                            if(temp_node->depth_ + 1 > max_depth_ - min_block_depth_width_) {
+                            if (temp_node->depth_ + 1 > max_depth_ - min_block_depth_width_) {
                                 continue;
                             }
-                            for(const auto& temp_child : temp_node->children_) {
-                                if(temp_child->mixed_state_) {
+                            for (const auto &temp_child : temp_node->children_) {
+                                if (temp_child->mixed_state_) {
                                     next_buffer.push_back(temp_child);
-                                } else if(!temp_child->occ_) {
+                                } else if (!temp_child->occ_) {
                                     assert(temp_child->parent_->mixed_state_ || temp_child->parent_->occ_);
                                     BlockPtrRaw<N> block_ptr = std::make_shared<BlockRaw<N> >();
                                     block_ptr->min_ = temp_child->base_pt_;
-                                    Pointi<N> offset; offset.setAll(pow_2_[max_depth_-temp_child->depth_]-1);
+                                    Pointi<N> offset;
+                                    offset.setAll(pow_2_[max_depth_ - temp_child->depth_] - 1);
                                     block_ptr->max_ = temp_child->base_pt_ + offset;
                                     block_ptr->tree_node_ = temp_child;
                                     setBlockPtrForNode(temp_child, block_ptr);
@@ -506,16 +512,17 @@ namespace freeNav::JOB {
                     }
                 }
             }
-            for(const auto& leaf_node : new_passable_nodes) {
-                if(leaf_node->occ_ == false && leaf_node->mixed_state_ == false) {
+            for (const auto &leaf_node : new_passable_nodes) {
+                if (leaf_node->occ_ == false && leaf_node->mixed_state_ == false) {
                     BlockPtrRaw<N> block_ptr = nullptr;
-                    if(leaf_node->parent_ != nullptr && leaf_node->parent_->occ_ == false &&
-                       leaf_node->parent_->mixed_state_ == false) {
+                    if (leaf_node->parent_ != nullptr && leaf_node->parent_->occ_ == false &&
+                        leaf_node->parent_->mixed_state_ == false) {
                         continue;
                     }
                     block_ptr = std::make_shared<BlockRaw<N> >();
                     block_ptr->min_ = leaf_node->base_pt_;
-                    Pointi<N> offset; offset.setAll(pow_2_[max_depth_-leaf_node->depth_]-1);
+                    Pointi<N> offset;
+                    offset.setAll(pow_2_[max_depth_ - leaf_node->depth_] - 1);
                     block_ptr->max_ = leaf_node->base_pt_ + offset;
                     block_ptr->tree_node_ = leaf_node;
                     setBlockPtrForNode(leaf_node, block_ptr);
@@ -526,6 +533,16 @@ namespace freeNav::JOB {
 
         }
 
+        void setNewOccAndPassablePts(const Pointis<N>& new_passable_pts, const Pointis<N>& new_occ_pts) {
+            // only update changed node
+            for (const auto &new_free : new_passable_pts) {
+                setOccupiedState(new_free, false);
+            }
+            for (const auto &new_occ : new_occ_pts) {
+                setOccupiedState(new_occ, true);
+            }
+            globalRecursiveUpdate();
+        }
 
         void printTree() const {
             std::cout << "-- " << __FUNCTION__ << std::endl;
@@ -689,7 +706,7 @@ namespace freeNav::JOB {
 
         // merge block with neighbor block until local maximize
         void mergePassableBlocksViaDecisionTree() {
-//            MSTimer mst;
+            //USTimer mst;
             merged_block_ptrs_.clear();
             // big block start, small block end
             const auto& all_leaves = getAllPassableLeafNodes();
@@ -778,7 +795,7 @@ namespace freeNav::JOB {
             //    std::cout << merged_block_ptr->min_pt_ << "<->" << merged_block_ptr->max_pt_ << ", ";
             //}
             //std::cout << std::endl;
-//            std::cout << __FUNCTION__ << " take " << mst.elapsed() << " ms" << std::endl;
+            //std::cout << __FUNCTION__ << " take " << mst.elapsed()/1e3 << " ms" << std::endl;
         }
 
         bool lineCrossObstacleRaw(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied) {
