@@ -312,66 +312,68 @@ def drawSBTInitData(all_data, dim):
     print("save picture to "+save_path)        
 
 
-def drawSBTUpdateData(all_data, dim, max_obs_move_dist):
+def drawSBTUpdateData(all_data, dim):
     map_data = dict() # dimelength and data occ ratio, dimension_length
     for a_data in all_data:
         if type(a_data).__name__ != "SBTData":
             continue
         if a_data.dim != dim:
             continue
-        if a_data.max_obs_move_distance != max_obs_move_dist:
-            continue        
 
-        if a_data.name not in map_data:
-            map_data[a_data.name] = dict()
+        if a_data.max_obs_move_distance not in map_data:
+            map_data[a_data.max_obs_move_distance] = dict()        
+
+        if a_data.name not in map_data[a_data.max_obs_move_distance]:
+            map_data[a_data.max_obs_move_distance][a_data.name] = dict()
 
         if a_data.dimension_length not in map_data[a_data.name]:
-            map_data[a_data.name][a_data.dimension_length] = dict()
-            map_data[a_data.name][a_data.dimension_length]["occ_ratio"] = list()
-            map_data[a_data.name][a_data.dimension_length]["update_time_cost"] = list()
+            map_data[a_data.max_obs_move_distance][a_data.name][a_data.dimension_length] = dict()
+            map_data[a_data.max_obs_move_distance][a_data.name][a_data.dimension_length]["occ_ratio"] = list()
+            map_data[a_data.max_obs_move_distance][a_data.name][a_data.dimension_length]["update_time_cost"] = list()
 
-        map_data[a_data.name][a_data.dimension_length]["occ_ratio"].append(a_data.occ_ratio)
-        map_data[a_data.name][a_data.dimension_length]["update_time_cost"].append(a_data.update_time_cost)
+        map_data[a_data.max_obs_move_distance][a_data.name][a_data.dimension_length]["occ_ratio"].append(a_data.occ_ratio)
+        map_data[a_data.max_obs_move_distance][a_data.name][a_data.dimension_length]["update_time_cost"].append(a_data.update_time_cost)
 
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
     plt.ylabel("Update Time Cost(ms)", fontsize = 13)
     plt.xlabel("Occ Ratio", fontsize = 13)    
 
-    for type_key, type_value in map_data.items():
-        for map_key, map_value in map_data[type_key].items():
-            x = map_value["occ_ratio"]
-            y = map_value["update_time_cost"]
-            scatter = ax.scatter(x, y, marker='.')
+    for max_dist, temp_value in map_data.items():
+        for type_key, type_value in map_data[max_dist].items():
+            for map_key, map_value in map_data[max_dist][type_key].items():
+                x = map_value["occ_ratio"]
+                y = map_value["update_time_cost"]
+                scatter = ax.scatter(x, y, marker='.')
 
-            # 按x排序
-            sort_idx = np.argsort(x)
+                # 按x排序
+                sort_idx = np.argsort(x)
 
-            x_sorted = list()
-            y_sorted = list()
-            for idx in sort_idx:
-                x_sorted.append(x[idx])
-                y_sorted.append(y[idx])
-            # 计算移动平均
-            window_size = math.ceil(len(x)/5)  # 控制平滑程度
-            y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
-            plt.plot(x_sorted, y_smooth, label=label_map_of_type[type_key]+'_width='+str(map_key))
+                x_sorted = list()
+                y_sorted = list()
+                for idx in sort_idx:
+                    x_sorted.append(x[idx])
+                    y_sorted.append(y[idx])
+                # 计算移动平均
+                window_size = math.ceil(len(x)/5)  # 控制平滑程度
+                y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
+                plt.plot(x_sorted, y_smooth, label=label_map_of_type[type_key]+'_width='+str(map_key))
 
-            # print('x/y size = ', len(x), " / ", len(y))
-            # coefficients = np.polyfit(x, y, deg=1)
-            # trend_line = np.poly1d(coefficients)
-            # plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_width='+str(map_key))
-        
-    plt.legend(ncol=2)    
-    # plt.show()     
-    save_path = "../test/pic/"
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-        print("Folder: " + save_path + " created")
-    save_path = save_path + "dim_"+str(dim)+"_dist_"+ str(max_obs_move_dist) +"_update_summary"    
-    plt.savefig(save_path, dpi = 200, bbox_inches='tight')   
-    plt.close()
-    print("save picture to "+save_path)        
+                # print('x/y size = ', len(x), " / ", len(y))
+                # coefficients = np.polyfit(x, y, deg=1)
+                # trend_line = np.poly1d(coefficients)
+                # plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_width='+str(map_key))
+            
+        plt.legend(ncol=2)    
+        # plt.show()     
+        save_path = "../test/pic/"
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+            print("Folder: " + save_path + " created")
+        save_path = save_path + "dim_"+str(dim)+"_dist_"+ str(max_dist) +"_update_summary"    
+        plt.savefig(save_path, dpi = 200, bbox_inches='tight')   
+        plt.close()
+        print("save picture to "+save_path)        
 
 
 
@@ -391,8 +393,8 @@ file_path = "../test/SBT_LOS.txt"
 all_compare_data = loadDataFromfile(file_path)
 
 drawSBTInitData(all_compare_data, 2)
-for max_dist in [1, 4, 16, 0]:
-    drawSBTUpdateData(all_compare_data, 2, max_dist)
+
+drawSBTUpdateData(all_compare_data, 2)
 
 drawCompareTimeCost(all_compare_data, 2)
 printStatistic(all_compare_data, 2)
