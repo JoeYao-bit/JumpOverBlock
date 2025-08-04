@@ -270,7 +270,7 @@ namespace freeNav::JOB {
                     //block ptr shouldn't out of map
                     assert(0);
                 }
-                if(isOutOfBoundary(global_pt, dim_)) {
+                if(block_ptr != nullptr && isOutOfBoundary(global_pt, dim_)) {
                     continue;
                 }
                 //global_id = PointiToId(global_pt, dim_);

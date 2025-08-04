@@ -120,6 +120,8 @@ namespace freeNav::JOB {
 
         Pointi<N> base_pt_; // the minimum point of the cube of current node
 
+        BlockPtrRaw<N> block_ptr_ = nullptr;
+
 //        BlockPtrRaw<N> block_ptr_ = nullptr;
 
     };

@@ -488,6 +488,7 @@ namespace freeNav::JOB {
                         strs.push_back(ss1.str());
 
                         mst.reset();
+                        USTimer ust1;
                         // only update changed node
                         for (const auto &new_free : dynamic_obstacles.getNewPassablePoints()) {
                             sbt->setOccupiedState(new_free, false);
@@ -495,8 +496,10 @@ namespace freeNav::JOB {
                         for (const auto &new_occ : dynamic_obstacles.getNewOccupiedPoints()) {
                             sbt->setOccupiedState(new_occ, true);
                         }
+                        std::cout << "new set occ state time cost = " << ust1.elapsed()/1e3 << " ms" << std::endl;
                         sbt->globalRecursiveUpdate();
                         time_cost_update = mst.elapsed()/1e3;
+                        std::cout << "new after set occ state time cost = " << ust1.elapsed()/1e3 << " ms" << std::endl;
 
                         std::cout << "new dynamicUpdateTimeCost " << time_cost_update << " ms" << std::endl;
 //                    SpaceBinaryTreeVarify(dim, dynamic_obstacles.isoc_, sbt);

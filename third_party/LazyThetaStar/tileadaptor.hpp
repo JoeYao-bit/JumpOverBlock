@@ -10,9 +10,6 @@ namespace LazyThetaStar {
     class TileAdaptor : public PathfinderAdaptor {
     public:
 
-        using NodeId = NodeId;
-        using Cost = Cost;
-
         TileAdaptor(const Vectori &mapSize, const std::function<bool(const Vectori &)> &mIsTraversable) : mMapSize(
                 mapSize), mIsTraversable(mIsTraversable) {
 
