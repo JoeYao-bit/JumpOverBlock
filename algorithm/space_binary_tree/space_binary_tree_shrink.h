@@ -86,6 +86,9 @@ namespace freeNav::JOB {
             sbt_ptr_->initialize();
         }
 
+        void globalRecursiveUpdate() {
+            sbt_ptr_->globalRecursiveUpdate();
+        }
 
         ~ SpaceBinaryTreeShrink() {
             delete shrink_dim_;
@@ -108,6 +111,7 @@ namespace freeNav::JOB {
             }
             Id shrink_id = PointiToId<N>(base_pt, shrink_dim_);
             if(shrink_map_[shrink_id] != is_occupied_shrink) {
+                std::cout << " call sbt_ptr_->setOccupiedState " << std::endl; // error here !!
                 sbt_ptr_->setOccupiedState(base_pt, is_occupied_shrink, true);
             }
             if(!is_occupied) {

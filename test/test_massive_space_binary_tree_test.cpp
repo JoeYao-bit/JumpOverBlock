@@ -450,7 +450,7 @@ int main() {
 
                 block_ptr->max_ = block_ptr->min_ + offset;
 
-                assert((!is_occupied(block_ptr->min_)) && (!is_occupied(block_ptr->max_)));
+                //assert((!is_occupied(block_ptr->min_)) && (!is_occupied(block_ptr->max_)));
                 block_ptrs.push_back(block_ptr);
             }
             for(int i=0; i<block_ptrs.size(); i++) {
@@ -512,7 +512,7 @@ int main() {
                     std::cout << cur_pt << " ";
                 }
                 std::cout << std::endl;
-                //sbt->sbt_ptr_->mergePassableBlocksViaDecisionTree();
+                sbt->globalRecursiveUpdate();
                 std::cout << "finish update dynamic obstacle in " << mst.elapsed() << "ms" << std::endl;
                 break;
             case 'm':
