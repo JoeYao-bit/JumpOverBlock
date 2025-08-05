@@ -46,12 +46,11 @@ namespace freeNav::JOB {
                 raw_map_[i] = isoc_(IdToPointi<N>(i, dim_));
             }
 
-            DimensionLength local_dim[N];
+            local_dim_ = new DimensionLength[N];
             for(int d=0; d<N; d++) {
-                local_dim[d] = pow_2_[min_block_depth_width];
+                local_dim_[d] = pow_2_[min_block_depth_width];
             }
-            local_total_index_ = getTotalIndexOfSpace<N>(local_dim);
-
+            local_total_index_ = getTotalIndexOfSpace<N>(local_dim_);
 
             shrink_dim_ = new DimensionLength[N];
             for(int i=0 ;i<N; i++) {
@@ -66,7 +65,7 @@ namespace freeNav::JOB {
                 bool is_occupied = false;
                 //std::cout << "base pt = " << base_pt << ": ";
                 for(int j=0; j<local_total_index_; j++) {
-                    Pointi<N> pt = IdToPointi<N>(j, local_dim);
+                    Pointi<N> pt = IdToPointi<N>(j, local_dim_);
                     Pointi<N> global_pt = base_pt*pow_2_[min_block_depth_width_] + pt;
                     //std::cout << "global pt = " << global_pt << ", ";
                     if(isoc_(global_pt)) {
@@ -92,9 +91,11 @@ namespace freeNav::JOB {
 
         ~ SpaceBinaryTreeShrink() {
             delete shrink_dim_;
+            delete local_dim_;
         }
 
         void setOccupiedState(const Pointi<N>& pt, const bool& is_occupied) {
+//            std::cout << "set pt " << pt << " to " << is_occupied << std::endl;
             raw_map_[PointiToId<N>(pt, dim_)] = is_occupied;
             // check whether shrink map updated
             Pointi<N> base_pt, base_pt_global;
@@ -102,19 +103,33 @@ namespace freeNav::JOB {
                 base_pt[i]        = pt[i] / pow_2_[min_block_depth_width_];
                 base_pt_global[i] = base_pt[i] * pow_2_[min_block_depth_width_];
             }
+//            std::cout << "base_pt = " << base_pt << std::endl;
+//            std::cout << "base_pt_global = " << base_pt_global << std::endl;
+//            std::cout << "local_total_index_ = " << local_total_index_ << std::endl;
+//            std::cout << "local_dim_ = " << printDimInfo<N>(local_dim_) << std::endl;
             bool is_occupied_shrink = false;
             for(int j=0; j<local_total_index_; j++) {
-                Pointi<N> pt = IdToPointi<N>(j, shrink_dim_);
-                if(isoc_(base_pt_global + pt)) {
+                Pointi<N> pt = IdToPointi<N>(j, local_dim_);
+                Pointi<N> global_pt = base_pt_global + pt;
+                //std::cout << "pt = " << pt << ", base_pt_global + pt = " << base_pt_global + pt << std::endl;
+                if(isOutOfBoundary(global_pt, dim_)) {
                     is_occupied_shrink = true;
+                    break;
+                }
+                if(raw_map_[PointiToId<N>(global_pt, dim_)]) {
+                    is_occupied_shrink = true;
+                    break;
                 }
             }
             Id shrink_id = PointiToId<N>(base_pt, shrink_dim_);
+            //std::cout << "is_occupied_shrink = " << is_occupied_shrink << ", shrink_map_[shrink_id] = " << shrink_map_[shrink_id] << std::endl;
+
             if(shrink_map_[shrink_id] != is_occupied_shrink) {
-                std::cout << " call sbt_ptr_->setOccupiedState " << std::endl; // error here !!
+                shrink_map_[shrink_id] = is_occupied_shrink;
+                //std::cout << " call sbt_ptr_->setOccupiedState " << std::endl;
                 sbt_ptr_->setOccupiedState(base_pt, is_occupied_shrink, true);
             }
-            if(!is_occupied) {
+            if(!is_occupied_shrink) {
                 assert(sbt_ptr_->getInternalBlockPtr(base_pt) != nullptr);
             }
         }
@@ -131,6 +146,8 @@ namespace freeNav::JOB {
 
         DimensionLength* dim_;
         DimensionLength* shrink_dim_;
+
+        DimensionLength* local_dim_;
         int local_total_index_;
 
         std::vector<bool> raw_map_;

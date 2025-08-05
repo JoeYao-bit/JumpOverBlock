@@ -359,7 +359,7 @@ TEST(massiveSBTLOSCompareTest, test) {
 int main() {
 //TEST(SBTShrink, test) {
 
-#if 1
+#if 0
     DimensionLength *dim = new DimensionLength[2];
 
     dim[0] = 65, dim[1] = 31;
@@ -378,9 +378,9 @@ int main() {
 
     ObstaclePtrs<2> obs = {
             std::make_shared<CircleObstacle<2> >(1),
-//            std::make_shared<CircleObstacle<2> >(10),
-//            std::make_shared<CircleObstacle<2> >(10),
-//            std::make_shared<BlockObstacle<2> >(Pointi<2>{3, 5}),
+            std::make_shared<CircleObstacle<2> >(10),
+            std::make_shared<CircleObstacle<2> >(10),
+            std::make_shared<BlockObstacle<2> >(Pointi<2>{3, 5}),
     };
 
 //    CircleObstaclePtrs<2> co = generateRandomCircleObstacles<2>(2, 26, 50);
@@ -393,9 +393,9 @@ int main() {
 
     //dynamic_obstacles.random();
     MSTimer mst;
-
+    int min_block_width = 2;
     std::shared_ptr<SpaceBinaryTreeShrink<2>> sbt =
-            std::make_shared<SpaceBinaryTreeShrink<2>>(is_occupied, dim, 2);
+            std::make_shared<SpaceBinaryTreeShrink<2>>(is_occupied, dim, min_block_width);
 
 //    sbt->initialize();
 
@@ -463,16 +463,27 @@ int main() {
             }
         }
         if(draw_merged_free_leaf) {
-            for(int x=0; x<dim[0]; x++) {
-                for(int y=0; y<dim[1]; y++) {
-                    Pointi<2> pt{x, y};
-                    auto merged_block_ptr = sbt->getInternalMergedBlockPtr(pt);
-                    if(merged_block_ptr == nullptr) { continue; }
-                    Pointi<2> min = merged_block_ptr->min_pt_, max = merged_block_ptr->max_pt_;
-                    int indicator = sbt->sbt_ptr_->getInternalBlockPtr(min)->merged_block_id_;
-                    canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
-                }
+            auto merged_free_leaf_nodes = sbt->sbt_ptr_->merged_block_ptrs_;
+            for(int i=0; i<merged_free_leaf_nodes.size(); i++) {
+                const auto& block_ptr = merged_free_leaf_nodes[i];
+//                const Pointi<2> pt1 = block_ptr->min_pt_*sbt->sbt_ptr_->pow_2_[min_block_width],
+//                                pt2 = block_ptr->max_pt_*sbt->sbt_ptr_->pow_2_[min_block_width];// + Pointi<2>{1, 1};
+                const Pointi<2> pt1 = block_ptr->min_pt_, pt2 = block_ptr->max_pt_;// + Pointi<2>{1, 1};
+                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
             }
+//            for(int x=0; x<dim[0]; x++) {
+//                for(int y=0; y<dim[1]; y++) {
+//                    Pointi<2> pt{x, y};
+//                    auto merged_block_ptr = sbt->getInternalMergedBlockPtr(pt);
+//                    if(merged_block_ptr == nullptr) { continue; }
+//                    Pointi<2> min = merged_block_ptr->min_pt_, max = merged_block_ptr->max_pt_;
+//                    int indicator = sbt->sbt_ptr_->getInternalBlockPtr(min)->merged_block_id_;
+//                    canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
+//                }
+//            }
         }
         char key = canvas.show(30);
         switch (key) {

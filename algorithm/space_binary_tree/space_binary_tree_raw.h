@@ -46,6 +46,7 @@ namespace freeNav::JOB {
             for(int dp=0; dp<=std::max(max_depth_, (int)N); dp++) {
                 pow_2_.push_back(pow(2, dp));
             }
+            all_external_offset_.setAll(pow_2_[external_min_block_depth_width_] - 1);
             // precomputation of flag points
             flag_pts_ = GetFloorOrCeilFlag<N>();
             assert(flag_pts_.size() == pow_2_[N]);
@@ -510,9 +511,8 @@ namespace freeNav::JOB {
                 if(leave_merged_map[block_ptr]) { continue; }
                 // initial root block
                 MergedBlockPtr<N> root = std::make_shared<MergedBlock<N> >();
-                root->min_pt_ = block_ptr->min_;
-                root->max_pt_ = block_ptr->max_;
-                root->block_ptrs_ = {block_ptr};
+                root->min_pt_ = block_ptr->min_;//*pow_2_[external_min_block_depth_width_];
+                root->max_pt_ = block_ptr->max_;//*pow_2_[external_min_block_depth_width_] + all_external_offset_;
                 //std::cout << "root block: min_pt_ = " << root->min_pt_ << " / max_pt = " << root->max_pt_  << std::endl;
 
                 MergedBlockPtr<N> largest_merged_block_ptr = root;
@@ -544,8 +544,8 @@ namespace freeNav::JOB {
                                 } else {
                                     new_block_node->min_pt_[dim/2] = new_block_node->min_pt_[dim/2] - expand_dist;
                                 }
-                                new_block_node->min_pt_ = new_block_node->min_pt_;
-                                new_block_node->max_pt_ = new_block_node->max_pt_;
+                                new_block_node->min_pt_ = new_block_node->min_pt_;//*pow_2_[external_min_block_depth_width_];
+                                new_block_node->max_pt_ = new_block_node->max_pt_;//*pow_2_[external_min_block_depth_width_] + all_external_offset_;
 
                                 for(const auto& neighbor_block_ptr : neighbor_block_ptrs) {
                                     new_block_node->block_ptrs_.push_back(neighbor_block_ptr);
@@ -768,7 +768,7 @@ namespace freeNav::JOB {
         }
 
         Pointi<N> all_1_pt_; // a point that all coordinate is 1
-
+        Pointi<N> all_external_offset_;
         IS_OCCUPIED_FUNC<N> isoc_dynamic_; // notice, set state will change it
 
 
