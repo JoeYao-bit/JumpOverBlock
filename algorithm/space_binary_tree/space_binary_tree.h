@@ -101,7 +101,7 @@ namespace freeNav::JOB {
                 new_tree_node->mixed_state_ = false;
                 new_tree_node->depth_ = max_depth_;
                 tree_ptr_vec_[level_offset_[max_depth_] + id] = new_tree_node;
-
+                new_tree_node->id_ = level_offset_[max_depth_] + id;
                 setInternalOccState(pt, new_tree_node->occ_);
             }
             // from deep to top, construct parent node
@@ -201,7 +201,7 @@ namespace freeNav::JOB {
                     }
 
                     tree_ptr_vec_[cur_level_vec_offset + id] = new_tree_node;
-
+                    new_tree_node->id_ = cur_level_vec_offset + id;
                     //std::cout << "non_null_ptr node id = " << cur_level_vec_offset + id << std::endl;
 
                     if (cur_level == 0) {
@@ -387,6 +387,7 @@ namespace freeNav::JOB {
             }
             //std::cout << std::endl;
             std::vector<TreeNodeNewPtr<N> > new_passable_nodes, old_passable_nodes;
+            std::set<int> new_passable_node_ids, old_passable_node_ids;
 
             int child_id_global;
             Id cur_id, next_id, global_cur_id;
@@ -445,6 +446,7 @@ namespace freeNav::JOB {
                             // limit minimum size of blocks
                             if (tree_ptr_vec_[global_cur_id]->depth_ <= max_depth_ - min_block_depth_width_) {
                                 new_passable_nodes.push_back(tree_ptr_vec_[global_cur_id]);
+                                new_passable_node_ids.insert(global_cur_id);
                             }
                         }
                     }
@@ -454,6 +456,7 @@ namespace freeNav::JOB {
                         tree_ptr_vec_[global_cur_id]->occ_ == false) {
                         if (all_the_same == false || is_occ == true) {
                             old_passable_nodes.push_back(tree_ptr_vec_[global_cur_id]);
+                            old_passable_node_ids.insert(global_cur_id);
                         }
                     }
 
@@ -477,8 +480,14 @@ namespace freeNav::JOB {
             updated_pts_.clear();
             updated_ids_.clear();
 
+            USTimer ust;
+
             // update block ptr
             for (const auto &leaf_node : old_passable_nodes) {
+                if(leaf_node->parent_ != nullptr &&
+                   old_passable_node_ids.find(leaf_node->parent_->id_) != old_passable_node_ids.end()) {
+                    continue;
+                }
                 if (leaf_node->occ_ != false || leaf_node->mixed_state_ != false) {
                     BlockPtrRaw<N> block_ptr = nullptr;
                     setBlockPtrForNode(leaf_node, block_ptr);
@@ -513,6 +522,10 @@ namespace freeNav::JOB {
                 }
             }
             for (const auto &leaf_node : new_passable_nodes) {
+                if(leaf_node->parent_ != nullptr &&
+                   new_passable_node_ids.find(leaf_node->parent_->id_) != new_passable_node_ids.end()) {
+                    continue;
+                }
                 if (leaf_node->occ_ == false && leaf_node->mixed_state_ == false) {
                     BlockPtrRaw<N> block_ptr = nullptr;
                     if (leaf_node->parent_ != nullptr && leaf_node->parent_->occ_ == false &&
@@ -528,8 +541,10 @@ namespace freeNav::JOB {
                     setBlockPtrForNode(leaf_node, block_ptr);
                 }
             }
-
+            std::cout << "-- new_SBT_update_block ptr finished in " << ust.elapsed()/1e3 << " ms" << std::endl;
+            ust.reset();
             mergePassableBlocksViaDecisionTree();
+            std::cout << "-- mergePassableBlocksViaDecisionTree finished in " << ust.elapsed()/1e3 << " ms" << std::endl;
 
         }
 
