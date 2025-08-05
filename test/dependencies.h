@@ -440,7 +440,7 @@ namespace freeNav::JOB {
 
                     SpaceBinaryTreeRawPtr<N> sbt_raw =
                             std::make_shared<SpaceBinaryTreeAnyDimensionRaw<N> >(dynamic_obstacles.isoc_, dim,
-                                                                          0);
+                                                                          1);
                     sbt_raw->initialize();
 
                     SpaceBinaryTreePtr<N> sbt =
@@ -453,19 +453,21 @@ namespace freeNav::JOB {
                         dynamic_obstacles.random(max_obs_move_distance);
 
                         mst.reset();
-                        // only update changed node
-                        for (const auto &new_free : dynamic_obstacles.getNewPassablePoints()) {
-                            sbt_raw->setOccupiedState(new_free, false, update_block_ptr_realtime);
-                        }
-                        for (const auto &new_occ : dynamic_obstacles.getNewOccupiedPoints()) {
-                            sbt_raw->setOccupiedState(new_occ, true, update_block_ptr_realtime);
-                        }
-                        if (!update_block_ptr_realtime) {
-                            sbt_raw->initBlockPtrMap();
-                        }
-                        double time_cost_update = mst.elapsed()/1e3;
+//                        // only update changed node
+//                        for (const auto &new_free : dynamic_obstacles.getNewPassablePoints()) {
+//                            sbt_raw->setOccupiedState(new_free, false, update_block_ptr_realtime);
+//                        }
+//                        for (const auto &new_occ : dynamic_obstacles.getNewOccupiedPoints()) {
+//                            sbt_raw->setOccupiedState(new_occ, true, update_block_ptr_realtime);
+//                        }
+//                        if (!update_block_ptr_realtime) {
+//                            sbt_raw->initBlockPtrMap();
+//                        }
+                        sbt_raw->setNewOccAndPassablePts(dynamic_obstacles.getNewPassablePoints(),
+                                                         dynamic_obstacles.getNewOccupiedPoints());
+                        double time_cost_update_raw = mst.elapsed()/1e3;
 
-                        std::cout << "raw dynamicUpdateTimeCost " << time_cost_update << " ms" << std::endl;
+                        //std::cout << "raw dynamicUpdateTimeCost " << time_cost_update_raw << " ms" << std::endl;
 //                    SpaceBinaryTreeVarify(dim, dynamic_obstacles.isoc_, sbt);
                         mst.reset();
                         SpaceBinaryTreeRawPtr<N> temp_sbt_raw =
@@ -473,12 +475,12 @@ namespace freeNav::JOB {
                                                                                    1);
                         temp_sbt_raw->initialize();
 
-                        double time_cost_init = mst.elapsed()/1e3;
-                        std::cout << "raw SBT_init_time_cost " << time_cost_init << " ms" << std::endl;
+                        double time_cost_init_raw = mst.elapsed()/1e3;
+                        //std::cout << "raw SBT_init_time_cost " << time_cost_init_raw << " ms" << std::endl;
                         std::stringstream ss1;
                         ss1 << "SBT_RAW " << N << " "  // Dimension
-                            << time_cost_init << " " // init time cost
-                            << time_cost_update << " " // update time cost
+                            << time_cost_init_raw << " " // init time cost
+                            << time_cost_update_raw << " " // update time cost
                             << total_index << " " // total index of space
                             << (float) dynamic_obstacles.occ_pt_count_ / total_index << " " // ratio of occ grid
                             << max_obs_move_distance << " "
@@ -488,35 +490,39 @@ namespace freeNav::JOB {
                         strs.push_back(ss1.str());
 
                         mst.reset();
-                        // only update changed node
-                        for (const auto &new_free : dynamic_obstacles.getNewPassablePoints()) {
-                            sbt->setOccupiedState(new_free, false);
-                        }
-                        for (const auto &new_occ : dynamic_obstacles.getNewOccupiedPoints()) {
-                            sbt->setOccupiedState(new_occ, true);
-                        }
-                        sbt->globalRecursiveUpdate();
-                        time_cost_update = mst.elapsed()/1e3;
+                        sbt->setNewOccAndPassablePts(dynamic_obstacles.getNewPassablePoints(),
+                                                     dynamic_obstacles.getNewOccupiedPoints());
+                        double time_cost_update_new = mst.elapsed()/1e3;
 
-                        std::cout << "new dynamicUpdateTimeCost " << time_cost_update << " ms" << std::endl;
+
 //                    SpaceBinaryTreeVarify(dim, dynamic_obstacles.isoc_, sbt);
                         mst.reset();
                         SpaceBinaryTreePtr<N> temp_sbt =
                                 std::make_shared<SpaceBinaryTreeAnyDimension<N> >(dynamic_obstacles.isoc_, dim,
                                                                               min_block_depth_width);
                         temp_sbt->initialize();
-                        time_cost_init = mst.elapsed()/1e3;
-                        std::cout << "new SBT_init_time_cost " << time_cost_init << " ms" << std::endl;
+                        double time_cost_init_new = mst.elapsed()/1e3;
+                        //std::cout << "new SBT_init_time_cost " << time_cost_init_new << " ms" << std::endl;
                         std::stringstream ss2;
                         ss2 << "SBT " << N << " "  // Dimension
-                            << time_cost_init << " " // init time cost
-                            << time_cost_update << " " // update time cost
+                            << time_cost_init_new << " " // init time cost
+                            << time_cost_update_new << " " // update time cost
                             << total_index << " " // total index of space
                             << (float) dynamic_obstacles.occ_pt_count_ / total_index << " " // ratio of occ grid
                             << max_obs_move_distance << " "
                             << printDimInfo<N>(dim) << " " // dimension length
                                 ;
                         strs.push_back(ss2.str());
+
+                        std::cout << "raw SBT / new SBT  init  time cost compare = "
+                                  << time_cost_init_raw << " / "
+                                  << time_cost_init_new
+                                  << std::endl;
+
+                        std::cout << "raw SBT / new SBT update time cost compare = "
+                                  << time_cost_update_raw << " / "
+                                  << time_cost_update_new
+                                  << std::endl;
 
 //                        if (!file_path.empty()) {
 //                            writeToFile<N>(strs, file_path);

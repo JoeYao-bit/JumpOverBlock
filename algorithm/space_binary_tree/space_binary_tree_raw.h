@@ -294,6 +294,19 @@ namespace freeNav::JOB {
             }
         }
 
+        void setNewOccAndPassablePts(const Pointis<N>& new_passable_pts, const Pointis<N>& new_occ_pts) {
+            // only update changed node
+            for (const auto &new_free : new_passable_pts) {
+                setOccupiedState(new_free, false, true);
+            }
+            for (const auto &new_occ : new_occ_pts) {
+                setOccupiedState(new_occ, true, true);
+            }
+//            if (!update_block_ptr_realtime) {
+//                initBlockPtrMap();
+//            }
+        }
+
         // have no real use, just keep pace with SBT new
         void globalRecursiveUpdate() {}
 

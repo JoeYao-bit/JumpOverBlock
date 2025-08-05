@@ -56,7 +56,7 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 // MapTestConfig_fhw_rec_001 // ok
 
 
-auto map_test_config = MapTestConfig_fhw_rec_001;
+auto map_test_config = MapTestConfig_Shanghai_0_512;
 
 auto is_grid_occupied1 = [](const cv::Vec3b& color) -> bool {
     if (color != cv::Vec3b::all(255)) return true;
@@ -68,7 +68,7 @@ auto is_grid_occupied2 = [](const cv::Vec3b& color) -> bool {
     return false;
 };
 
-#if 1
+#if 0
 PictureLoader loader(map_test_config.at("map_path"), is_grid_occupied2);
 #else
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
@@ -332,12 +332,12 @@ int main() {
 
         massiveSBTLOSCompareTest<2>(1,
                                     1,
-                                    {200, 300}, // 200,300,400,500,700,800,900, 1000
+                                    {300}, // 200,300,400,500,700,800,900, 1000
                                     {10, 20},
                                     file_path,
                                     1e5,
                                     1e3,
-                                    {1,4,8,16,0},
+                                    {16,0},
                                     true,
                                     4);
 //

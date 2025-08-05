@@ -106,6 +106,8 @@ namespace freeNav::JOB {
         // when a node is mixed state, it's occ_ = true or false is meaningless
         bool mixed_state_ = false;
 
+        int id_; // id in tree node vec
+
         TreeNodeNewPtr<N> parent_ = nullptr;
 
         TreeNodeNewPtrs<N> children_; // have 2^N child node, fixed size, if all null, they all are the same state as this block
