@@ -194,6 +194,10 @@ namespace freeNav::JOB {
     struct MergedBlock {
         Pointi<N> min_pt_;
         Pointi<N> max_pt_;
+
+        Pointi<N> min_pt_ex_;
+        Pointi<N> max_pt_ex_;
+
         BlockWithTreePtrs<N> block_ptrs_; // leaf node of SBT in current block
 
         MergedBlockPtr<N> parent_;

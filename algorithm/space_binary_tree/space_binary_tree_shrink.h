@@ -81,8 +81,33 @@ namespace freeNav::JOB {
                 return shrink_map_[PointiToId(pt, shrink_dim_)];
             };
 
+            // NOTICE: in override class's constructor, set all internal occ map state to occupied
+            auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {
+                if(isOutOfBoundary(pt, dim_)) { return true; }
+                return raw_map_[PointiToId<N>(pt, dim_)];
+            };
+            isoc_dynamic_ = is_occupied_temp;
+
             sbt_ptr_ = std::make_shared<SpaceBinaryTreeAnyDimensionRaw<N> >(shrink_isoc_, shrink_dim_, 0, min_block_depth_width_);
             sbt_ptr_->initialize();
+        }
+
+        virtual const BlockWithTreePtr<N>& getInternalBlockPtr(const Pointi<N>& pt) const {
+            if(isOutOfBoundary(pt, this->dim_)) { return nullptr; }
+            return sbt_ptr_->getInternalBlockPtr(pt/pow_2_[min_block_depth_width_]);
+        }
+
+        float getObstacleDensity() const {
+            // count passable children grid
+            float count = 0;
+            Id total_index = getTotalIndexOfSpace<N>(dim_);
+            for(int i=0; i<total_index; i++) {
+                Pointi<N> pt = IdToPointi<N>(i, dim_);
+                if(!isoc_dynamic_(pt)) {
+                    count ++;
+                }
+            }
+            return count / getTotalIndexOfSpace<N>(dim_);
         }
 
         void globalRecursiveUpdate() {
@@ -92,6 +117,10 @@ namespace freeNav::JOB {
         ~ SpaceBinaryTreeShrink() {
             delete shrink_dim_;
             delete local_dim_;
+        }
+
+        bool getInternalOccState(const Pointi <N> &pt) const {
+            return isoc_dynamic_(pt);
         }
 
         void setOccupiedState(const Pointi<N>& pt, const bool& is_occupied) {
@@ -134,10 +163,116 @@ namespace freeNav::JOB {
             }
         }
 
+        bool lineCrossObstacleRaw(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied) {
+            if(pt1 == pt2) return true;
+            Line<N> line(pt1, pt2);
+            int check_step = line.step;
+            Pointi<N> pt;
+            //std::cout << __FUNCTION__ << std::endl;
+            for(int i=1; i<check_step; i++) {
+                pt = line.GetPoint(i);
+                raw_visited_pt_count_ ++;
+                //std::cout << "raw_visited_pt_count_ = " << raw_visited_pt_count_ << std::endl;
+                if(is_occupied(pt)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+//        bool lineCrossObstacleSBT(const Pointi<N>& pt1, const Pointi<N>& pt2, const IS_OCCUPIED_FUNC<N>& is_occupied,
+//                                  Pointis<N>& visited_pt,
+//                                  int& count_of_block
+//        ) {
+//            //if(isOutOfBoundary(pt1, dim_) || isOutOfBoundary(pt2, dim_)) { return true; }
+//            if(pt1 == pt2) return true;
+//            //visited_pt.clear();
+//            //count_of_block = 0;
+//            Line<N> line(pt1, pt2);
+//            int check_step = line.step;
+//            Pointi<N> pt;
+//            Id id;
+//            int jump_step = 0;
+//            for(int i=1; i<check_step; i++) {
+//                pt = line.GetPoint(i);
+//                SBT_visited_pt_count_ ++;
+//                if(is_occupied(pt)) { return true; }
+//                const auto& block_ptr = getInternalBlockPtr(pt);
+//                // if in block, jump over current block
+//                if(block_ptr != nullptr) {
+//                    jump_step = findExitPointOfBlock(line, pt, i, static_cast<BlockPtr<N>>(block_ptr));
+//                    //std::cout << " jump step " << jump_step << std::endl;
+//                    i = i + jump_step;
+//                    count_of_block ++;
+//                }
+//            }
+//            return false;
+//        }
+
+        bool lineCrossObstacleSBT(const Pointi<N>& pt1, const Pointi<N>& pt2, const IS_OCCUPIED_FUNC<N>& is_occupied
+                //,Pointis<N>& visited_pt
+                , int& count_of_block
+        ) {
+            //if(isOutOfBoundary(pt1, dim_) || isOutOfBoundary(pt2, dim_)) { return true; }
+            if(pt1 == pt2) { return is_occupied(pt1); }
+            //visited_pt.clear();
+            //count_of_block = 0;
+            Line<N> line(pt1, pt2);
+            int check_step = line.step;
+            Pointi<N> pt;
+            Id id;
+            int jump_step = 0;
+            //std::cout << __FUNCTION__ << std::endl;
+            for(int i=1; i<check_step; i++) {
+                pt = line.GetPoint(i);
+                SBT_visited_pt_count_ ++;
+                //std::cout << "SBT_visited_pt_count_ = " << SBT_visited_pt_count_ << std::endl;
+                if(is_occupied(pt)) { return true; }
+                //Pointi<N> pt_shrink = pt/pow_2_[min_block_depth_width_];
+//                std::cout << "pt = " << pt << std::endl;
+                const auto& block_ptr = getInternalBlockPtr(pt);
+
+
+                // if in block, jump over current block
+                if(block_ptr != nullptr) {
+//                    std::cout << "block ptr = " << block_ptr->tree_node_->base_pt_ << std::endl;
+//                    std::cout << "block_ptr->merged_block_id_ = " << block_ptr->merged_block_id_ << std::endl;
+//                    std::cout << "block_ptr->depth_ = " << block_ptr->tree_node_->depth_ << std::endl;
+//
+//                    std::cout << "block_ptr->merged_block_id_ = " << block_ptr->merged_block_id_ << std::endl;
+                    assert(block_ptr->merged_block_id_ != -1);
+#if 0
+                    jump_step = findExitPointOfBlock(line, pt, i, static_cast<BlockPtr<N>>(block_ptr));
+#else
+                    const auto& merged_block_ptr = sbt_ptr_->merged_block_ptrs_[block_ptr->merged_block_id_];
+                    jump_step = findExitPointOfBlock(line, pt, i, merged_block_ptr->min_pt_ex_, merged_block_ptr->max_pt_ex_);
+#endif
+                    //std::cout << " jump step " << jump_step << std::endl;
+//                    i = i + std::max(1, jump_step-1);
+                    i = i + jump_step;
+                    count_of_block ++;
+                }
+            }
+            return false;
+        }
+
+
         MergedBlockPtr<N> getInternalMergedBlockPtr(const Pointi<N>& pt) {
 //            std::cout << "min_block_depth_width = " << min_block_depth_width_ << std::endl;
 //            std::cout << "sbt pt = " << pt/pow_2_[min_block_depth_width_] << std::endl;
             return sbt_ptr_->getMergedBlockPtr(pt/pow_2_[min_block_depth_width_]);
+        }
+
+        void setNewOccAndPassablePts(const Pointis<N>& new_passable_pts, const Pointis<N>& new_occ_pts) {
+            // only update changed node
+            for (const auto &new_free : new_passable_pts) {
+                setOccupiedState(new_free, false);
+            }
+            for (const auto &new_occ : new_occ_pts) {
+                setOccupiedState(new_occ, true);
+            }
+            globalRecursiveUpdate();
         }
 
         IS_OCCUPIED_FUNC<N> isoc_;
@@ -162,7 +297,14 @@ namespace freeNav::JOB {
 
         std::shared_ptr<SpaceBinaryTreeAnyDimensionRaw<N> > sbt_ptr_;
 
+        int raw_visited_pt_count_ = 0, SBT_visited_pt_count_ = 0;// for debug
+
+        IS_OCCUPIED_FUNC<N> isoc_dynamic_; // notice, set state will change it
+
     };
+
+    template<Dimension N>
+    using SpaceBinaryTreeShrinkPtr = std::shared_ptr<SpaceBinaryTreeShrink<N> >;
 
 }
 

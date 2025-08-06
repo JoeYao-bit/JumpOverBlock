@@ -511,16 +511,23 @@ namespace freeNav::JOB {
                 if(leave_merged_map[block_ptr]) { continue; }
                 // initial root block
                 MergedBlockPtr<N> root = std::make_shared<MergedBlock<N> >();
-                root->min_pt_ = block_ptr->min_;//*pow_2_[external_min_block_depth_width_];
-                root->max_pt_ = block_ptr->max_;//*pow_2_[external_min_block_depth_width_] + all_external_offset_;
+                root->min_pt_ = block_ptr->min_;
+                root->max_pt_ = block_ptr->max_;
+
+                root->min_pt_ex_ = block_ptr->min_*pow_2_[external_min_block_depth_width_];
+                root->max_pt_ex_ = block_ptr->max_*pow_2_[external_min_block_depth_width_] + all_external_offset_;
+
                 //std::cout << "root block: min_pt_ = " << root->min_pt_ << " / max_pt = " << root->max_pt_  << std::endl;
 
                 MergedBlockPtr<N> largest_merged_block_ptr = root;
+                root->block_ptrs_ = {block_ptr};
+
                 int largest_size = getTotalIndexOfSpace(largest_merged_block_ptr->max_pt_ - largest_merged_block_ptr->min_pt_);
 
                 MergedBlockPtrs<N> buffer = {root}, next_buffer;
 
-                leave_merged_map[block_ptr] = true;
+//                leave_merged_map[block_ptr] = true;
+//                block_ptr->merged_block_id_ = merged_block_ptrs_.size();
 
                 while(!buffer.empty()) {
                     next_buffer.clear();
@@ -544,8 +551,11 @@ namespace freeNav::JOB {
                                 } else {
                                     new_block_node->min_pt_[dim/2] = new_block_node->min_pt_[dim/2] - expand_dist;
                                 }
-                                new_block_node->min_pt_ = new_block_node->min_pt_;//*pow_2_[external_min_block_depth_width_];
-                                new_block_node->max_pt_ = new_block_node->max_pt_;//*pow_2_[external_min_block_depth_width_] + all_external_offset_;
+                                new_block_node->min_pt_ = new_block_node->min_pt_;
+                                new_block_node->max_pt_ = new_block_node->max_pt_;
+
+                                new_block_node->min_pt_ex_ = new_block_node->min_pt_*pow_2_[external_min_block_depth_width_];
+                                new_block_node->max_pt_ex_ = new_block_node->max_pt_*pow_2_[external_min_block_depth_width_] + all_external_offset_;
 
                                 for(const auto& neighbor_block_ptr : neighbor_block_ptrs) {
                                     new_block_node->block_ptrs_.push_back(neighbor_block_ptr);
@@ -582,6 +592,24 @@ namespace freeNav::JOB {
             //}
             //std::cout << std::endl;
             //std::cout << __FUNCTION__ << " take " << mst.elapsed()/1e3 << " ms" << std::endl;
+
+            // debug
+            for(const auto& leaf_node : all_leaves) {
+                if(leaf_node->depth_ > max_depth_ - min_block_depth_width_) { continue; }
+                //std::cout << "leaf node " << leaf_node << " dp = " << leaf_node->depth_ << ", base pt = " << leaf_node->base_pt_ << std::endl;
+                const auto& block_ptr = getInternalBlockPtr(leaf_node->base_pt_);
+                assert(leave_merged_map[block_ptr]);
+                assert(block_ptr->merged_block_id_ >= 0);
+            }
+            int total_index = getTotalIndexOfSpace<N>(dim_);
+            for(int id=0; id<total_index; id++) {
+                Pointi<N> pt = IdToPointi<N>(id, dim_);
+                const auto& block_ptr = getInternalBlockPtr(pt);
+                if(block_ptr != nullptr) {
+                    assert(leave_merged_map[block_ptr]);
+                    assert(block_ptr->merged_block_id_ >= 0);
+                }
+            }
         }
 
 

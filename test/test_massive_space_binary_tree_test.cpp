@@ -296,8 +296,8 @@ void dynamic_obstacles_2D() {
 
 std::string file_path = "../test/SBT_LOS.txt";
 
-//int main() {
-TEST(massiveSBTLOSCompareTest, test) {
+int main() {
+//TEST(massiveSBTLOSCompareTest, test) {
     for(int i=0; i<10; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
@@ -331,33 +331,33 @@ TEST(massiveSBTLOSCompareTest, test) {
 //                                                       true,
 //                                                       4);
 
-        massiveSBTLOSCompareTest<2>(1,
-                                    1,
-                                    {300}, // 200,300,400,500,700,800,900, 1000
-                                    {10, 20},
-                                    file_path,
-                                    1e5,
-                                    1e3,
-                                    {16,0},
-                                    true,
-                                    4);
-//
-//        massiveSBTLOSCompareTest<3>(1,
-//                                                       1,
-//                                                       {50, 100},
-//                                                       {10, 20},
-//                                                       file_path,
-//                                                       1e5,
-//                                                       1e3,
-//                                                       {1,4,16,0},
-//                                                       true,
-//                                                       4);
+//        massiveSBTLOSCompareTest<2>(1,
+//                                    1,
+//                                    {300, 400, 500}, // 200,300,400,500,700,800,900, 1000
+//                                    {10, 20},
+//                                    file_path,
+//                                    1e5,
+//                                    1e3,
+//                                    {16,0},
+//                                    true,
+//                                    4);
+
+        massiveSBTLOSCompareTest<3>(1,
+                                                       1,
+                                                       {50, 100},
+                                                       {10, 20},
+                                                       file_path,
+                                                       1e5,
+                                                       1e3,
+                                                       {1,4,16,0},
+                                                       true,
+                                                       4);
 
     }
 }
 
-int main() {
-//TEST(SBTShrink, test) {
+//int main() {
+TEST(SBTShrink, test) {
 
 #if 0
     DimensionLength *dim = new DimensionLength[2];
@@ -467,8 +467,8 @@ int main() {
             for(int i=0; i<merged_free_leaf_nodes.size(); i++) {
                 const auto& block_ptr = merged_free_leaf_nodes[i];
 //                const Pointi<2> pt1 = block_ptr->min_pt_*sbt->sbt_ptr_->pow_2_[min_block_width],
-//                                pt2 = block_ptr->max_pt_*sbt->sbt_ptr_->pow_2_[min_block_width];// + Pointi<2>{1, 1};
-                const Pointi<2> pt1 = block_ptr->min_pt_, pt2 = block_ptr->max_pt_;// + Pointi<2>{1, 1};
+//                                pt2 = block_ptr->max_pt_*sbt->sbt_ptr_->pow_2_[min_block_width] + sbt->sbt_ptr_->all_external_offset_;
+                const Pointi<2> pt1 = block_ptr->min_pt_ex_, pt2 = block_ptr->max_pt_ex_;// + Pointi<2>{1, 1};
                 canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
                 canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
                 canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
@@ -484,6 +484,28 @@ int main() {
 //                    canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
 //                }
 //            }
+        }
+        if(triger_varify) {
+            triger_varify = false;
+//            Id total_index = getTotalIndexOfSpace<2>(dim);
+//            std::cout << "total_index = " << total_index << std::endl;
+//            std::vector<bool> temp_map(total_index, false);
+//            std::cout << "temp_map.size() = " << temp_map.size() << std::endl;
+//            Pointis<2> occ_pts = dynamic_obstacles.getCurrentOccupationPoints();
+//            for(const auto& occ_pt : occ_pts) {
+//                temp_map[PointiToId(occ_pt, dim)] = true;
+//            }
+//            auto is_occupied_temp = [=](const Pointi<2> & pt) -> bool {
+//                if(isOutOfBoundary<2>(pt, dim)) {
+//                    return true;
+//                }
+//                Id temp_id = PointiToId(pt, dim);
+//                //std::cout << "temp_map.size() = " << temp_map.size() << ", temp_id = " << temp_id << std::endl;
+//                return temp_map[temp_id];
+//            };
+
+            std::thread t(varify_thread<2, SpaceBinaryTreeShrink<2>>, dim, sbt, dynamic_obstacles, is_occupied); // start varify thread
+            t.detach();
         }
         char key = canvas.show(30);
         switch (key) {

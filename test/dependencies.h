@@ -443,10 +443,10 @@ namespace freeNav::JOB {
                                                                           1);
                     sbt_raw->initialize();
 
-                    SpaceBinaryTreePtr<N> sbt =
-                            std::make_shared<SpaceBinaryTreeAnyDimension<N> >(dynamic_obstacles.isoc_, dim,
+                    SpaceBinaryTreeShrinkPtr<N> sbt =
+                            std::make_shared<SpaceBinaryTreeShrink<N> >(dynamic_obstacles.isoc_, dim,
                                                                               min_block_depth_width);
-                    sbt->initialize();
+//                    sbt->initialize();
 
                     for (int i = 0; i < random_times; i++) {
 
@@ -497,10 +497,10 @@ namespace freeNav::JOB {
 
 //                    SpaceBinaryTreeVarify(dim, dynamic_obstacles.isoc_, sbt);
                         mst.reset();
-                        SpaceBinaryTreePtr<N> temp_sbt =
-                                std::make_shared<SpaceBinaryTreeAnyDimension<N> >(dynamic_obstacles.isoc_, dim,
+                        SpaceBinaryTreeShrinkPtr<N> temp_sbt =
+                                std::make_shared<SpaceBinaryTreeShrink<N> >(dynamic_obstacles.isoc_, dim,
                                                                               min_block_depth_width);
-                        temp_sbt->initialize();
+//                        temp_sbt->initialize();
                         double time_cost_init_new = mst.elapsed()/1e3;
                         //std::cout << "new SBT_init_time_cost " << time_cost_init_new << " ms" << std::endl;
                         std::stringstream ss2;
