@@ -81,7 +81,7 @@ void dynamic_obstacles_2D() {
 #if 0
     DimensionLength *dim = new DimensionLength[2];
 
-    dim[0] = 10, dim[1] = 17;
+    dim[0] = 200, dim[1] = 200;
 
     auto is_occupied = [&](const Pointi<2> &pt) -> bool {
         if (isOutOfBoundary<2>(pt, dim)) {
@@ -129,6 +129,8 @@ void dynamic_obstacles_2D() {
          draw_block = false,
          triger_varify = false,
          draw_merged_free_leaf = true;
+    Pointis<2> new_free_pts;
+
     while(1) {
         canvas.resetCanvas();
         canvas.drawEmptyGrid();
@@ -246,24 +248,29 @@ void dynamic_obstacles_2D() {
             case 32: // 32 means space
                 dynamic_obstacles.random();
                 mst.reset();
+                new_free_pts.clear();
                 for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
                     if(is_occupied(pre_pt)) { continue; }
-                    sbt->setOccupiedState(pre_pt, false);
+                    //sbt->setOccupiedState(pre_pt, false);
+                    new_free_pts.push_back(pre_pt);
                 }
-                //std::cout << " new pass pt = ";
-                //for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
-                    //if(is_occupied(pre_pt)) { continue; }
-                    //std::cout << pre_pt << " ";
-                //}
-                //std::cout << std::endl;
+//                //std::cout << " new pass pt = ";
+//                //for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
+//                    //if(is_occupied(pre_pt)) { continue; }
+//                    //std::cout << pre_pt << " ";
+//                //}
+//                //std::cout << std::endl;
                 for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
                     sbt->setOccupiedState(cur_pt, true);
                 }
-                //std::cout << " new occ pt = ";
-                //for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
-                //    std::cout << cur_pt << " ";
-                //}
-                sbt->globalRecursiveUpdate();
+//                //std::cout << " new occ pt = ";
+//                //for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
+//                //    std::cout << cur_pt << " ";
+//                //}
+//                sbt->globalRecursiveUpdate();
+
+                sbt->setNewOccAndPassablePts(new_free_pts, dynamic_obstacles.getNewOccupiedPoints());
+
                 //std::cout << std::endl;
                 std::cout << "finish update dynamic obstacle in " << mst.elapsed() << "ms" << std::endl;
                 break;
@@ -288,10 +295,10 @@ void dynamic_obstacles_2D() {
 
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
-int main() {
+//int main() {
+TEST(dynamic_map_test, test) {
     //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
     dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
-    return 0;
 }
 
 std::string file_path = "../test/SBT_LOS.txt";
@@ -356,8 +363,8 @@ TEST(massiveSBTLOSCompareTest, test) {
     }
 }
 
-//int main() {
-TEST(SBTShrink, test) {
+int main() {
+//TEST(SBTShrink, test) {
 
 #if 0
     DimensionLength *dim = new DimensionLength[2];
@@ -412,6 +419,7 @@ TEST(SBTShrink, test) {
             draw_block = false,
             triger_varify = false,
             draw_merged_free_leaf = true;
+    Pointis<2> new_free_pts;
 
     while(1) {
         canvas.resetCanvas();
@@ -527,25 +535,49 @@ TEST(SBTShrink, test) {
             case 32: // 32 means space
                 dynamic_obstacles.random();
                 mst.reset();
+//                for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
+//                    if(is_occupied(pre_pt)) { continue; }
+//                    sbt->setOccupiedState(pre_pt, false);
+//                }
+//                std::cout << " new pass pt = ";
+//                for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
+//                if(is_occupied(pre_pt)) { continue; }
+//                std::cout << pre_pt << " ";
+//                }
+//                std::cout << std::endl;
+//                for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
+//                    sbt->setOccupiedState(cur_pt, true);
+//                }
+//                std::cout << " new occ pt = ";
+//                for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
+//                    std::cout << cur_pt << " ";
+//                }
+//                std::cout << std::endl;
+//                sbt->globalRecursiveUpdate();
+
+                new_free_pts.clear();
                 for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
                     if(is_occupied(pre_pt)) { continue; }
-                    sbt->setOccupiedState(pre_pt, false);
+                    //sbt->setOccupiedState(pre_pt, false);
+                    new_free_pts.push_back(pre_pt);
                 }
-                std::cout << " new pass pt = ";
-                for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
-                if(is_occupied(pre_pt)) { continue; }
-                std::cout << pre_pt << " ";
-                }
-                std::cout << std::endl;
+//                //std::cout << " new pass pt = ";
+//                //for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
+//                    //if(is_occupied(pre_pt)) { continue; }
+//                    //std::cout << pre_pt << " ";
+//                //}
+//                //std::cout << std::endl;
                 for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
                     sbt->setOccupiedState(cur_pt, true);
                 }
-                std::cout << " new occ pt = ";
-                for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
-                    std::cout << cur_pt << " ";
-                }
-                std::cout << std::endl;
-                sbt->globalRecursiveUpdate();
+//                //std::cout << " new occ pt = ";
+//                //for(const auto& cur_pt : dynamic_obstacles.getNewOccupiedPoints()) {
+//                //    std::cout << cur_pt << " ";
+//                //}
+//                sbt->globalRecursiveUpdate();
+
+                sbt->setNewOccAndPassablePts(new_free_pts, dynamic_obstacles.getNewOccupiedPoints());
+
                 std::cout << "finish update dynamic obstacle in " << mst.elapsed() << "ms" << std::endl;
                 break;
             case 'm':

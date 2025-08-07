@@ -167,7 +167,16 @@ namespace freeNav::JOB {
             previous_center_pts_.resize(obstacles.size(), Pointi<N>());
             current_center_pts_.resize(obstacles.size(), Pointi<N>());
 
-            random();
+            cur_occ_ids_ = {};
+            pre_occ_ids_ = {};
+
+            for(int i=0; i<obstacles_.size(); i++) {
+                Pointi<N> center_pt = previous_center_pts_[i];
+                for(int d=0; d<N; d++) {
+                    center_pt[d] = rand() % dim_[d];
+                }
+                current_center_pts_.push_back(center_pt);
+            }
 
 //            // construct local update isoc
 //            auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {
@@ -183,9 +192,7 @@ namespace freeNav::JOB {
         void random(int max_random_move_distance = 0) {
             previous_center_pts_ = current_center_pts_;
             //pre_map_ = current_map_;
-
             pre_occ_ids_ = cur_occ_ids_;
-
             new_occ_pts_.clear();
             new_free_pts_.clear();
 

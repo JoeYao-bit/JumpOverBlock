@@ -336,6 +336,7 @@ namespace freeNav::JOB {
 //            if (!update_block_ptr_realtime) {
 //                initBlockPtrMap();
 //            }
+            globalRecursiveUpdate();
         }
 
         // have no real use, just keep pace with SBT new
