@@ -14,8 +14,11 @@ namespace freeNav::JOB {
     template<Dimension N>
     struct TreeNode;
 
+//    template<Dimension N>
+//    using TreeNodePtr = std::shared_ptr<TreeNode<N> >;
+
     template<Dimension N>
-    using TreeNodePtr = std::shared_ptr<TreeNode<N> >;
+    using TreeNodePtr = TreeNode<N>*;
 
     template<Dimension N>
     using TreeNodePtrs = std::vector<TreeNodePtr<N> >;
@@ -61,13 +64,33 @@ namespace freeNav::JOB {
     template<Dimension N>
     struct TreeNode {
 
-        explicit TreeNode(TreeNodePtr<N> parent = nullptr) : parent_(parent) {
+        explicit TreeNode(TreeNodePtr<N> parent) : parent_(parent) {
             children_.resize(pow(2, N), nullptr);
             for(int i=0; i<pow(2, N); i++) {
                 children_[i] = nullptr;
             }
             if(parent_ != nullptr) {
                 depth_ = parent_->depth_ + 1;
+            }
+        }
+
+        explicit TreeNode() : parent_(nullptr) {
+            children_.resize(pow(2, N), nullptr);
+            for(int i=0; i<pow(2, N); i++) {
+                children_[i] = nullptr;
+            }
+        }
+
+        ~ TreeNode() {
+//            std::cout << "N = " << N << std::endl;
+//            std::cout << "children_.size() = " << children_.size() << std::endl;
+            if(children_.size() == pow(2, N)) {
+                for(int i=0; i<pow(2, N); i++) {
+                    if(children_[i] != nullptr) {
+                        delete children_[i];
+                        children_[i] = nullptr;
+                    }
+                }
             }
         }
 
@@ -200,8 +223,8 @@ namespace freeNav::JOB {
 
         BlockWithTreePtrs<N> block_ptrs_; // leaf node of SBT in current block
 
-        MergedBlockPtr<N> parent_;
-        MergedBlockPtrs<N> children_;
+//        MergedBlockPtr<N> parent_;
+//        MergedBlockPtrs<N> children_;
     };
 
     template<Dimension N>
