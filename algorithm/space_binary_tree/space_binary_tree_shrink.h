@@ -264,13 +264,56 @@ namespace freeNav::JOB {
             return sbt_ptr_->getMergedBlockPtr(pt/pow_2_[min_block_depth_width_]);
         }
 
+        // update massive pt together is more efficient
         void setNewOccAndPassablePts(const Pointis<N>& new_passable_pts, const Pointis<N>& new_occ_pts) {
             // only update changed node
-            for (const auto &new_free : new_passable_pts) {
-                setOccupiedState(new_free, false);
+            std::set<Id> updated_shrink_pt_id;
+
+            for(const auto& pt : new_passable_pts) {
+                raw_map_[PointiToId<N>(pt, dim_)] = false;
+                // check whether shrink map updated
+                Pointi<N> base_pt;
+                for (int i = 0; i < N; i++) {
+                    base_pt[i] = pt[i] / pow_2_[min_block_depth_width_];
+                }
+                updated_shrink_pt_id.insert(PointiToId<N>(base_pt, sbt_ptr_->dim_));
             }
-            for (const auto &new_occ : new_occ_pts) {
-                setOccupiedState(new_occ, true);
+            for(const auto& pt : new_occ_pts) {
+                raw_map_[PointiToId<N>(pt, dim_)] = true;
+                // check whether shrink map updated
+                Pointi<N> base_pt;
+                for (int i = 0; i < N; i++) {
+                    base_pt[i] = pt[i] / pow_2_[min_block_depth_width_];
+                }
+                updated_shrink_pt_id.insert(PointiToId<N>(base_pt, sbt_ptr_->dim_));
+            }
+            Pointi<N> base_pt_shrink, base_pt_global;
+            for(const auto& shrink_pt_id : updated_shrink_pt_id) {
+                base_pt_shrink = IdToPointi<N>(shrink_pt_id, sbt_ptr_->dim_);
+                base_pt_global = base_pt_shrink * pow_2_[min_block_depth_width_];
+
+                bool is_occupied_shrink = false;
+                for(int j=0; j<local_total_index_; j++) {
+                    Pointi<N> pt = IdToPointi<N>(j, local_dim_);
+                    Pointi<N> global_pt = base_pt_global + pt;
+                    //std::cout << "pt = " << pt << ", base_pt_global + pt = " << base_pt_global + pt << std::endl;
+                    if(isOutOfBoundary(global_pt, dim_)) {
+                        is_occupied_shrink = true;
+                        break;
+                    }
+                    if(raw_map_[PointiToId<N>(global_pt, dim_)]) {
+                        is_occupied_shrink = true;
+                        break;
+                    }
+                }
+                if(shrink_map_[shrink_pt_id] != is_occupied_shrink) {
+                    shrink_map_[shrink_pt_id] = is_occupied_shrink;
+                    //std::cout << " call sbt_ptr_->setOccupiedState " << std::endl;
+                    sbt_ptr_->setOccupiedState(base_pt_shrink, is_occupied_shrink, true);
+                }
+                if(!is_occupied_shrink) {
+                    assert(sbt_ptr_->getInternalBlockPtr(base_pt_shrink) != nullptr);
+                }
             }
             globalRecursiveUpdate();
         }
