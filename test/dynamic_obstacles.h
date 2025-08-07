@@ -178,21 +178,23 @@ namespace freeNav::JOB {
                 current_center_pts_.push_back(center_pt);
             }
 
-//            // construct local update isoc
-//            auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {
-//                if(isOutOfBoundary(pt, dim_)) {
-//                    return true;
-//                }
-//                return false;
-//            };
-//            isoc_ = is_occupied_temp;
+            // construct local update isoc
+            auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {
+                if(isOutOfBoundary(pt, dim_)) {
+                    return true;
+                }
+                return false;
+            };
+            isoc_ = is_occupied_temp;
         }
 
         // update each obstacle's center to random point in the space
         void random(int max_random_move_distance = 0) {
+            std::cout << "-- max_random_move_distance = " << max_random_move_distance << std::endl;
             previous_center_pts_ = current_center_pts_;
             //pre_map_ = current_map_;
             pre_occ_ids_ = cur_occ_ids_;
+
             new_occ_pts_.clear();
             new_free_pts_.clear();
 
@@ -201,9 +203,23 @@ namespace freeNav::JOB {
             current_map_ = std::vector<bool>(total_index, false);
 
             current_center_pts_.clear();
-            srand(time(0)); // use time as seed of generate random number
+//            srand(time(0)); // use time as seed of generate random number
+            // 获取当前时间（高精度）
+            auto now = std::chrono::high_resolution_clock::now();
+            // 将当前时间转换为微秒
+            auto us = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+            auto value = us.time_since_epoch();
+            long long micros = value.count();
+            // 将微秒数转换为unsigned int（取模以适配，或者直接截断，因为unsigned int可能只有32位）
+            unsigned int seed = static_cast<unsigned int>(micros);
+            // 设置种子
+            std::srand(seed);
+            //std::cout << " seed = " << seed << std::endl;
+
+            //std::cout << " time(0) = " << time(0) << std::endl;
             for(int i=0; i<obstacles_.size(); i++) {
                 Pointi<N> center_pt = previous_center_pts_[i];
+                //std::cout << "before / after sample: " << center_pt << " / ";
                 for(int d=0; d<N; d++) {
                     if(max_random_move_distance == 0) {
                         center_pt[d] = rand() % dim_[d];
@@ -217,8 +233,11 @@ namespace freeNav::JOB {
                         center_pt[d] = center_pt[d] % dim_[d];
                     }
                 }
+                std::cout << center_pt << std::endl;
                 current_center_pts_.push_back(center_pt);
             }
+
+            //std::cout << std::endl;
 
             occ_pt_count_ = 0;
             cur_occ_ids_.clear();
@@ -247,6 +266,8 @@ namespace freeNav::JOB {
                     new_free_pts_.push_back(IdToPointi<N>(pre_id, dim_));
                 }
             }
+
+            //std::cout << "-- new_occ/free_pts_ size = " << new_occ_pts_.size() << "/" << new_free_pts_.size() << std::endl;
 
             // construct local update isoc
             auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {

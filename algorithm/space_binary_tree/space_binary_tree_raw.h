@@ -250,7 +250,7 @@ namespace freeNav::JOB {
                     }
                     buffer->occ_ = is_occupied;
                     buffer->mixed_state_ = false; // last node is leaf node, it is not mixed state
-                    if(!is_occupied) {
+                    if(!is_occupied && min_block_depth_width_ == 0) {
                         BlockWithTreePtr<N> block_ptr = std::make_shared<BlockWithTree<N> >();
                         block_ptr->min_ = buffer->base_pt_;
                         block_ptr->max_ = buffer->base_pt_;
@@ -336,6 +336,25 @@ namespace freeNav::JOB {
 //            if (!update_block_ptr_realtime) {
 //                initBlockPtrMap();
 //            }
+            const auto& all_leaves = getAllPassableLeafNodes();
+            std::set<BlockWithTreePtr<N>, BlockCompare<N>> leave_merged_map;
+            for(const auto& leaf_node : all_leaves) {
+                if(leaf_node->depth_ > max_depth_ - min_block_depth_width_) { continue; }
+                //std::cout << "leaf node " << leaf_node << " dp = " << leaf_node->depth_ << ", base pt = " << leaf_node->base_pt_ << std::endl;
+                const auto& block_ptr = getInternalBlockPtr(leaf_node->base_pt_);
+                leave_merged_map.insert(block_ptr);
+            }
+            int total_index = getTotalIndexOfSpace<N>(dim_);
+            for(int id=0; id<total_index; id++) {
+                Pointi<N> pt = IdToPointi<N>(id, dim_);
+                auto block_ptr = getInternalBlockPtr(pt);
+                if(block_ptr != nullptr) {
+                    if(leave_merged_map.find(block_ptr) == leave_merged_map.end()) {
+                        std::cout << "haha 0" << std::endl;
+                    }
+                    assert(leave_merged_map.find(block_ptr) != leave_merged_map.end());
+                }
+            }
             globalRecursiveUpdate();
         }
 
@@ -610,8 +629,12 @@ namespace freeNav::JOB {
             int total_index = getTotalIndexOfSpace<N>(dim_);
             for(int id=0; id<total_index; id++) {
                 Pointi<N> pt = IdToPointi<N>(id, dim_);
-                const auto& block_ptr = getInternalBlockPtr(pt);
+                auto block_ptr = getInternalBlockPtr(pt);
                 if(block_ptr != nullptr) {
+                    if(leave_merged_map.find(block_ptr) == leave_merged_map.end()) {
+                        std::cout << "haha" << std::endl;
+                    }
+                    assert(leave_merged_map.find(block_ptr) != leave_merged_map.end());
                     assert(leave_merged_map[block_ptr]);
                     assert(block_ptr->merged_block_id_ >= 0);
                 }

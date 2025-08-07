@@ -78,7 +78,7 @@ TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
 template<typename SBT, typename TreeNode>
 void dynamic_obstacles_2D() {
 
-#if 0
+#if 1
     DimensionLength *dim = new DimensionLength[2];
 
     dim[0] = 200, dim[1] = 200;
@@ -246,7 +246,7 @@ void dynamic_obstacles_2D() {
                 draw_current_occupy = !draw_current_occupy;
                 break;
             case 32: // 32 means space
-                dynamic_obstacles.random();
+                dynamic_obstacles.random(16);
                 mst.reset();
                 new_free_pts.clear();
                 for(const auto& pre_pt : dynamic_obstacles.getNewPassablePoints()) {
@@ -303,9 +303,9 @@ TEST(dynamic_map_test, test) {
 
 std::string file_path = "../test/SBT_LOS.txt";
 
-//int main() {
-TEST(massiveSBTLOSCompareTest, test) {
-    for(int i=0; i<10; i++) {
+int main() {
+//TEST(massiveSBTLOSCompareTest, test) {
+    for(int i=0; i<1; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
 //        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(10, 100,
@@ -338,14 +338,14 @@ TEST(massiveSBTLOSCompareTest, test) {
 //                                                       true,
 //                                                       4);
 
-        massiveSBTLOSCompareTest<2>(1,
-                                    1,
-                                    {300, 400, 500}, // 200,300,400,500,700,800,900, 1000
-                                    {10, 20},
+        massiveSBTLOSCompareTest<2>(5,
+                                    1e4,
+                                    {200, 400, 600, 800, 1000}, // 200,300,400,500,700,800,900, 1000
+                                    {1, 8, 16, 0},
                                     file_path,
                                     1e5,
                                     1e3,
-                                    {16,0},
+                                    {4, 8, 16, 0},
                                     true,
                                     4);
 
@@ -363,8 +363,8 @@ TEST(massiveSBTLOSCompareTest, test) {
     }
 }
 
-int main() {
-//TEST(SBTShrink, test) {
+//int main() {
+TEST(SBTShrink, test) {
 
 #if 0
     DimensionLength *dim = new DimensionLength[2];
