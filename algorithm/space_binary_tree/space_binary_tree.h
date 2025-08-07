@@ -95,7 +95,7 @@ namespace freeNav::JOB {
             int max_id = getTotalIndexOfSpace<N>(max_dims_[max_depth_]);
             for (int id = 0; id < max_id; id++) {
                 pt = IdToPointi<N>(id, max_dims_[max_depth_]);
-                auto new_tree_node = std::make_shared<TreeNode<N> >(nullptr);
+                auto new_tree_node = new TreeNode<N>(nullptr);
                 new_tree_node->base_pt_ = pt;
                 new_tree_node->occ_ = isoc_(pt);
                 new_tree_node->mixed_state_ = false;
@@ -144,7 +144,7 @@ namespace freeNav::JOB {
                         }
                     }
 
-                    auto new_tree_node = std::make_shared<TreeNode<N> >(nullptr);
+                    auto new_tree_node = new TreeNode<N>(nullptr);
 
                     Pointi<N> pt = IdToPointi<N>(id, max_dims_[cur_level]);
 
@@ -736,7 +736,7 @@ namespace freeNav::JOB {
                                 MergedBlockPtr<N> new_block_node = std::make_shared<MergedBlock<N> >();
                                 new_block_node->min_pt_ = block_node->min_pt_;
                                 new_block_node->max_pt_ = block_node->max_pt_;
-                                new_block_node->parent_ = block_node;
+                                //new_block_node->parent_ = block_node;
                                 new_block_node->block_ptrs_ = block_node->block_ptrs_;
                                 int expand_dist = pow_2_[max_depth_ - (*neighbor_block_ptrs.begin())->tree_node_->depth_];
                                 // update block size
@@ -748,7 +748,7 @@ namespace freeNav::JOB {
                                 for(const auto& neighbor_block_ptr : neighbor_block_ptrs) {
                                     new_block_node->block_ptrs_.push_back(neighbor_block_ptr);
                                 }
-                                block_node->children_.push_back(new_block_node);
+                                //block_node->children_.push_back(new_block_node);
                                 next_buffer.push_back(new_block_node);
                                 // update largest merged block
                                 int new_size = getTotalIndexOfSpace(new_block_node->max_pt_ - new_block_node->min_pt_);

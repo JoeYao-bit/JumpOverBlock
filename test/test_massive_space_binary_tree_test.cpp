@@ -172,7 +172,7 @@ void dynamic_obstacles_2D() {
             }
         }
         if(draw_free_leaf) {
-            std::vector<std::shared_ptr<TreeNode> > free_leaf_nodes = sbt->getAllPassableLeafNodes();
+            std::vector<TreeNodePtr<2> > free_leaf_nodes = sbt->getAllPassableLeafNodes();
             BlockPtrs<2> block_ptrs;
             for(const auto& leaf_node : free_leaf_nodes) {
                 BlockPtr<2> block_ptr = std::make_shared<Block<2> >();
@@ -288,16 +288,16 @@ void dynamic_obstacles_2D() {
 
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
-//int main() {
-//    //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
-//    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
-//    return 0;
-//}
+int main() {
+    //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
+    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
+    return 0;
+}
 
 std::string file_path = "../test/SBT_LOS.txt";
 
-int main() {
-//TEST(massiveSBTLOSCompareTest, test) {
+//int main() {
+TEST(massiveSBTLOSCompareTest, test) {
     for(int i=0; i<10; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
