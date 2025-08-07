@@ -331,27 +331,27 @@ int main() {
 //                                                       true,
 //                                                       4);
 
-//        massiveSBTLOSCompareTest<2>(1,
-//                                    1,
-//                                    {300, 400, 500}, // 200,300,400,500,700,800,900, 1000
-//                                    {10, 20},
-//                                    file_path,
-//                                    1e5,
-//                                    1e3,
-//                                    {16,0},
-//                                    true,
-//                                    4);
+        massiveSBTLOSCompareTest<2>(1,
+                                    1,
+                                    {300, 400, 500}, // 200,300,400,500,700,800,900, 1000
+                                    {10, 20},
+                                    file_path,
+                                    1e5,
+                                    1e3,
+                                    {16,0},
+                                    true,
+                                    4);
 
-        massiveSBTLOSCompareTest<3>(1,
-                                                       1,
-                                                       {50, 100},
-                                                       {10, 20},
-                                                       file_path,
-                                                       1e5,
-                                                       1e3,
-                                                       {1,4,16,0},
-                                                       true,
-                                                       4);
+//        massiveSBTLOSCompareTest<3>(1,
+//                                                       1,
+//                                                       {50, 100},
+//                                                       {10, 20},
+//                                                       file_path,
+//                                                       1e5,
+//                                                       1e3,
+//                                                       {1,4,16,0},
+//                                                       true,
+//                                                       4);
 
     }
 }
