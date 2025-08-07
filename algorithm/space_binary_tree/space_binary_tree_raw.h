@@ -24,7 +24,7 @@ namespace freeNav::JOB {
         : isoc_(isoc), dim_(dim), min_block_depth_width_(min_block_depth_width),
           external_min_block_depth_width_(external_min_block_depth_width) {
             // initialize
-            root_ = std::make_shared<TreeNode<N> >();
+            root_ = new TreeNode<N>();
             root_->base_pt_ = Pointi<N>();
             // get max dimension length
             DimensionLength max_dim = 0;
@@ -88,6 +88,8 @@ namespace freeNav::JOB {
 //                std::swap(nodes, next_nodes);
 //                dp ++;
 //            }
+            delete root_;
+            root_ = nullptr;
         }
 
         ~SpaceBinaryTreeRaw () {
@@ -217,7 +219,7 @@ namespace freeNav::JOB {
                     for(; dp<max_depth_; dp++) {
                         size_t index = getIndex(pt, dp);
                         for (int i = 0; i < pow_2_[N]; i++) {
-                            buffer->children_[i] = std::make_shared<TreeNode<N> >(buffer);
+                            buffer->children_[i] = new TreeNode<N>(buffer);//std::make_shared<TreeNode<N> >(buffer);
                             int zoom_ratio = pow_2_[max_depth_ - dp - 1];
                             buffer->children_[i]->base_pt_ = buffer->base_pt_ + flag_pts_[i].multi(zoom_ratio);
                             buffer->children_[i]->occ_ = !is_occupied;
@@ -295,7 +297,10 @@ namespace freeNav::JOB {
 //                            delete parent->children_[i]->block_ptr_;
 //                            parent->children_[i]->block_ptr_ = nullptr;
 //                        }
-                        parent->children_[i] = nullptr;
+                        if(parent->children_[i] != nullptr) {
+                            delete parent->children_[i];
+                            parent->children_[i] = nullptr;
+                        }
                     }
                     if(initialized_) {
                         // if set to passable, check whether create big block
@@ -542,7 +547,7 @@ namespace freeNav::JOB {
                                 MergedBlockPtr<N> new_block_node = std::make_shared<MergedBlock<N> >();
                                 new_block_node->min_pt_ = block_node->min_pt_;
                                 new_block_node->max_pt_ = block_node->max_pt_;
-                                new_block_node->parent_ = block_node;
+                                //new_block_node->parent_ = block_node;
                                 new_block_node->block_ptrs_ = block_node->block_ptrs_;
                                 int expand_dist = pow_2_[max_depth_ - (*neighbor_block_ptrs.begin())->tree_node_->depth_];
                                 // update block size
@@ -560,7 +565,7 @@ namespace freeNav::JOB {
                                 for(const auto& neighbor_block_ptr : neighbor_block_ptrs) {
                                     new_block_node->block_ptrs_.push_back(neighbor_block_ptr);
                                 }
-                                block_node->children_.push_back(new_block_node);
+                                //block_node->children_.push_back(new_block_node);
                                 next_buffer.push_back(new_block_node);
                                 // update largest merged block
                                 int new_size = getTotalIndexOfSpace(new_block_node->max_pt_ - new_block_node->min_pt_);
