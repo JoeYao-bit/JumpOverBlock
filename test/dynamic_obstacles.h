@@ -167,14 +167,19 @@ namespace freeNav::JOB {
             previous_center_pts_.resize(obstacles.size(), Pointi<N>());
             current_center_pts_.resize(obstacles.size(), Pointi<N>());
 
-            // construct local update isoc
-            auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {
-                if(isOutOfBoundary(pt, dim_)) {
-                    return true;
-                }
-                return false;
-            };
-            isoc_ = is_occupied_temp;
+
+
+//            // construct local update isoc
+//            auto is_occupied_temp = [&](const Pointi<N> & pt) -> bool {
+//                if(isOutOfBoundary(pt, dim_)) {
+//                    return true;
+//                }
+//                return false;
+//            };
+//            isoc_ = is_occupied_temp;
+
+            random();
+
         }
 
         // update each obstacle's center to random point in the space
