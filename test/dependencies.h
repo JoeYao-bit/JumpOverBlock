@@ -436,9 +436,9 @@ namespace freeNav::JOB {
 
                     DynamicObstacles<N> dynamic_obstacles(dim, obs);
                     Id total_index = getTotalIndexOfSpace<N>(dim);
-                    std::cout << N << " dimension space, width = " << width << ", number of obstacles = " << count
-                              << std::endl;
-                    std::cout << "max_obs_move_distance = " << max_obs_move_distance << std::endl;
+//                    std::cout << N << " dimension space, width = " << width << ", number of obstacles = " << count
+//                              << std::endl;
+//                    std::cout << "max_obs_move_distance = " << max_obs_move_distance << std::endl;
 
                     SpaceBinaryTreeRawPtr<N> sbt_raw =
                             std::make_shared<SpaceBinaryTreeAnyDimensionRaw<N> >(dynamic_obstacles.isoc_, dim,
@@ -449,6 +449,7 @@ namespace freeNav::JOB {
                             std::make_shared<SpaceBinaryTreeShrink<N> >(dynamic_obstacles.isoc_, dim,
                                                                               min_block_depth_width);
 //                    sbt->initialize();
+                    dynamic_obstacles.random();
 
                     for (int i = 0; i < random_times; i++) {
 
@@ -511,8 +512,8 @@ namespace freeNav::JOB {
 //                            writeToFile<N>(strs, file_path);
 //                            std::cout << "write test data to " << file_path << std::endl;
 //                        }
-                        int success_count = 0, occ_count = 0;
-                        auto test_cases = getLOSTestCases<N>(dim, sbt->isoc_dynamic_, 1e5);
+                        float success_count = 0, occ_count = 0;
+                        auto test_cases = getLOSTestCases<N>(dim, sbt->isoc_dynamic_, repeat_times);
                         std::cout << "times_of_LOS_compare_test  = " << test_cases.size() << std::endl;
                         if(test_cases.empty()) { continue; }
                         double sum_1 = 0, sum_2 = 0, sum_3 = 0;
@@ -572,10 +573,15 @@ namespace freeNav::JOB {
                         float obstacleDensity_1 = sbt->getObstacleDensity();
 //                        float obstacleDensity_2 = temp_sbt_raw->getObstacleDensity();
                         std::cout << "dim info " << printDimInfo<N>(dim) << std::endl;
+                        std::cout << "max_obs_move_distance = " << max_obs_move_distance << std::endl;
+                        std::cout << "random times = " << i << std::endl;
+                        std::cout << "number_of_obstacle = " << count << std::endl;
+
                         std::cout << "obstacleDensity 1 " << obstacleDensity_1 << std::endl;
                         //std::cout << "obstacleDensity 2 " << obstacleDensity_2 << std::endl;
                         std::cout << "occ_ratio(LOS_pass/LOS_total) = " << (float)occ_count / success_count << std::endl;
-
+                        std::cout << "new free pt size = " << dynamic_obstacles.getNewPassablePoints().size() << std::endl;
+                        std::cout << "new occ pt size = " << dynamic_obstacles.getNewOccupiedPoints().size() << std::endl;
                         std::cout << success_count <<  " LOS test, mean raw / SBT / new SBT LOS time cost (us) = "
                                   << sum_1/(double)success_count << " / "
                                   << sum_2/(double)success_count << " / "
@@ -612,7 +618,6 @@ namespace freeNav::JOB {
                             << printDimInfo<N>(dim) << " " // dimension length
                                 ;
                         strs.push_back(ss3.str());
-
                         if (!file_path.empty()) {
                             writeToFile<N>(strs, file_path);
                             std::cout << "write test data to " << file_path << std::endl;

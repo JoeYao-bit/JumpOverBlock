@@ -103,7 +103,7 @@ namespace freeNav::JOB {
             Id total_index = getTotalIndexOfSpace<N>(dim_);
             for(int i=0; i<total_index; i++) {
                 Pointi<N> pt = IdToPointi<N>(i, dim_);
-                if(!isoc_dynamic_(pt)) {
+                if(isoc_dynamic_(pt)) {
                     count ++;
                 }
             }
