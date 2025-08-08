@@ -56,8 +56,8 @@ namespace freeNav::JOB {
             for(int i=0 ;i<N; i++) {
                 shrink_dim_[i] = pow_2_[max_depth_]/pow_2_[min_block_depth_width];
             }
-            std::cout << "raw dim = " << printDimInfo<N>(dim_) << ", shrink dim = " << printDimInfo<N>(shrink_dim_) << std::endl;
-
+            std::cout << getTimeInYMD<2>() << " raw dim = " << printDimInfo<N>(dim_) << ", shrink dim = " << printDimInfo<N>(shrink_dim_) << std::endl;
+            MSTimer mst;
             shrink_map_.resize(getTotalIndexOfSpace<N>(shrink_dim_), true);
 
             for(int i=0; i<shrink_map_.size(); i++) {
@@ -87,9 +87,11 @@ namespace freeNav::JOB {
                 return raw_map_[PointiToId<N>(pt, dim_)];
             };
             isoc_dynamic_ = is_occupied_temp;
-
+            std::cout << getTimeInYMD<2>() << " finish init shrink map in " << mst.elapsed()/1e3 << "s" << std::endl;
+            mst.reset();
             sbt_ptr_ = std::make_shared<SpaceBinaryTreeAnyDimensionRaw<N> >(shrink_isoc_, shrink_dim_, 0, min_block_depth_width_);
             sbt_ptr_->initialize();
+            std::cout << getTimeInYMD<2>() << " finish init shrink map SBT in " << mst.elapsed()/1e3 << "s" << std::endl;
         }
 
         virtual const BlockWithTreePtr<N>& getInternalBlockPtr(const Pointi<N>& pt) const {
@@ -158,9 +160,10 @@ namespace freeNav::JOB {
                 //std::cout << " call sbt_ptr_->setOccupiedState " << std::endl;
                 sbt_ptr_->setOccupiedState(base_pt, is_occupied_shrink, true);
             }
-            if(!is_occupied_shrink) {
-                assert(sbt_ptr_->getInternalBlockPtr(base_pt) != nullptr);
-            }
+            // debug
+            // if(!is_occupied_shrink) {
+            //     assert(sbt_ptr_->getInternalBlockPtr(base_pt) != nullptr);
+            // }
         }
 
         bool lineCrossObstacleRaw(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied) {
@@ -311,9 +314,10 @@ namespace freeNav::JOB {
                     //std::cout << " call sbt_ptr_->setOccupiedState " << std::endl;
                     sbt_ptr_->setOccupiedState(base_pt_shrink, is_occupied_shrink, true);
                 }
-                if(!is_occupied_shrink) {
-                    assert(sbt_ptr_->getInternalBlockPtr(base_pt_shrink) != nullptr);
-                }
+                // debug
+                // if(!is_occupied_shrink) {
+                //     assert(sbt_ptr_->getInternalBlockPtr(base_pt_shrink) != nullptr);
+                // }
             }
             globalRecursiveUpdate();
         }

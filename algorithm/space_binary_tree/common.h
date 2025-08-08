@@ -8,6 +8,7 @@
 #include <auto_ptr.h>
 #include <vector>
 #include "../../freeNav-base/basic_elements/point.h"
+#include <chrono>
 
 namespace freeNav::JOB {
 
@@ -247,6 +248,27 @@ namespace freeNav::JOB {
             }
         }
     };
+
+
+    template<Dimension N>
+    std::string getTimeInYMD() {
+        auto now = std::chrono::system_clock::now();
+        auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+        
+        // 获取毫秒部分
+        auto ms = now_ms.time_since_epoch().count() % 1000;
+        
+        // 获取时分秒
+        std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+        std::tm local_time = *std::localtime(&now_time);
+        std::stringstream ss;
+        ss << "时/分/秒/毫秒: "
+           << std::setfill('0') << std::setw(2) << local_time.tm_hour << ":"
+           << std::setfill('0') << std::setw(2) << local_time.tm_min << ":"
+           << std::setfill('0') << std::setw(2) << local_time.tm_sec << "."
+           << std::setfill('0') << std::setw(3) << ms;
+        return ss.str();        
+    }
 
 }
 
