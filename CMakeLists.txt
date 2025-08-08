@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 2.8)
 
 project(JumpOverBlock)
 enable_testing()
+
+# 在Ubuntu下使用Valgrind的Massif工具分析CMake编译的C++程序内存占用，需按以下步骤操作：
+# 在CMakeLists.txt中添加调试符号，确保生成可调试的二进制文件：
+set(CMAKE_BUILD_TYPE Debug)
+
 # Check C++11 or C++0x support
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
