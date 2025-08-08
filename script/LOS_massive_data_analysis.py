@@ -202,7 +202,40 @@ def drawCompareTimeCost(all_data, dim):
     print("save picture to "+save_path)        
 
 
-def printStatistic(all_data, dim):
+def printInitAndUpdateStatistic(all_data, dim):
+    map_data = dict() # dimelength and data occ ratio, dimension_length
+    for a_data in all_data:
+        if type(a_data).__name__ != "SBTData":
+            continue
+        if a_data.dim != dim:
+            continue
+
+        if "SBT_RAW" not in map_data:
+            map_data["SBT_RAW"] = dict()
+            map_data["SBT_RAW"]["init_time_cost"] = list()
+            map_data["SBT_RAW"]["update_time_cost"] = list()
+
+        if "SBT" not in map_data:
+            map_data["SBT"] = dict()    
+            map_data["SBT"]["init_time_cost"] = list()
+            map_data["SBT"]["update_time_cost"] = list()
+
+
+        if a_data.name == "SBT":
+            map_data["SBT"]["init_time_cost"].append(a_data.init_time_cost)
+            map_data["SBT"]["update_time_cost"].append(a_data.update_time_cost) 
+
+        if a_data.name == "SBT_RAW":
+            map_data["SBT_RAW"]["init_time_cost"].append(a_data.init_time_cost)
+            map_data["SBT_RAW"]["update_time_cost"].append(a_data.update_time_cost)
+
+
+    print(dim,"D raw_SBT/SBT init time cost(ms) = ", np.mean(map_data["SBT_RAW"]["init_time_cost"]), "/", np.mean(map_data["SBT"]["init_time_cost"]))
+
+    print(dim,"D raw_SBT/SBT update time cost(ms) = ", np.mean(map_data["SBT_RAW"]["update_time_cost"]), "/", np.mean(map_data["SBT"]["update_time_cost"]))
+      
+
+def printCompareStatistic(all_data, dim):
     map_data = dict() # dimelength and data occ ratio, dimension_length
     for a_data in all_data:
         if type(a_data).__name__ != "CompareData":
@@ -413,7 +446,9 @@ drawSBTUpdateData(all_compare_data, 2)
 
 drawCompareTimeCost(all_compare_data, 2)
 
-printStatistic(all_compare_data, 2)
+printInitAndUpdateStatistic(all_compare_data, 2)
+
+printCompareStatistic(all_compare_data, 2)
 
 drawSBTInitData(all_compare_data, 3)
 
@@ -421,7 +456,9 @@ drawSBTUpdateData(all_compare_data, 3)
 
 drawCompareTimeCost(all_compare_data, 3)
 
-printStatistic(all_compare_data, 3)
+printInitAndUpdateStatistic(all_compare_data, 3)
+
+printCompareStatistic(all_compare_data, 3)
 
 # # 生成示例数据
 # np.random.seed(42)
