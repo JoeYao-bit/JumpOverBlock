@@ -184,7 +184,7 @@ def drawCompareTimeCost(all_data, dim):
             # 计算移动平均
             window_size = math.ceil(len(x)/5)  # 控制平滑程度
             y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
-            plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_map_of_type[type_key]+'_width='+str(map_key))
+            plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_map_of_type[type_key]+'_width='+str(map_key), color=map_size_color_map[map_key])
             
             # coefficients = np.polyfit(x, y, deg=1)
             # trend_line = np.poly1d(coefficients)
@@ -294,7 +294,7 @@ def drawSBTInitData(all_data, dim):
             # 计算移动平均
             window_size = math.ceil(len(x)/5)  # 控制平滑程度
             y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
-            plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_map_of_type[type_key]+'_width='+str(map_key))
+            plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_map_of_type[type_key]+'_width='+str(map_key), color=map_size_color_map[map_key])
 
             # coefficients = np.polyfit(x, y, deg=1)
             # trend_line = np.poly1d(coefficients)
@@ -356,7 +356,7 @@ def drawSBTUpdateData(all_data, dim):
                 # 计算移动平均
                 window_size = math.ceil(len(x)/5)  # 控制平滑程度
                 y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
-                plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_map_of_type[type_key]+'_width='+str(dim_length_key))
+                plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_map_of_type[type_key]+'_width='+str(dim_length_key), color=map_size_color_map[dim_length_key])
 
                 # print('x/y size = ', len(x), " / ", len(y))
                 # coefficients = np.polyfit(x, y, deg=1)
@@ -381,6 +381,16 @@ dim_color_map = {
     3:"blue",
 }
 
+map_size_color_map = {
+    200:"green",
+    300:"blue",
+    400:"red",
+    500:"yellow",
+    600:"purple",
+    800:"cyan",
+    1000:"darkorange"
+}
+
 label_map_of_type = {
     "RAW":"RAW",
     "SBT":"SBT",
@@ -390,7 +400,7 @@ label_map_of_type = {
 line_map_of_type = {
     "RAW":"-",
     "SBT_RAW":"--",
-    "SBT":":"
+    "SBT":"-."#":"
 }
 
 file_path = "../test/SBT_LOS.txt"
