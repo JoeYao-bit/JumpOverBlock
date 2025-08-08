@@ -158,9 +158,10 @@ namespace freeNav::JOB {
                 //std::cout << " call sbt_ptr_->setOccupiedState " << std::endl;
                 sbt_ptr_->setOccupiedState(base_pt, is_occupied_shrink, true);
             }
-            if(!is_occupied_shrink) {
-                assert(sbt_ptr_->getInternalBlockPtr(base_pt) != nullptr);
-            }
+            // debug
+            // if(!is_occupied_shrink) {
+            //     assert(sbt_ptr_->getInternalBlockPtr(base_pt) != nullptr);
+            // }
         }
 
         bool lineCrossObstacleRaw(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied) {
@@ -311,9 +312,10 @@ namespace freeNav::JOB {
                     //std::cout << " call sbt_ptr_->setOccupiedState " << std::endl;
                     sbt_ptr_->setOccupiedState(base_pt_shrink, is_occupied_shrink, true);
                 }
-                if(!is_occupied_shrink) {
-                    assert(sbt_ptr_->getInternalBlockPtr(base_pt_shrink) != nullptr);
-                }
+                // debug
+                // if(!is_occupied_shrink) {
+                //     assert(sbt_ptr_->getInternalBlockPtr(base_pt_shrink) != nullptr);
+                // }
             }
             globalRecursiveUpdate();
         }

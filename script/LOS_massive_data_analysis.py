@@ -171,7 +171,7 @@ def drawCompareTimeCost(all_data, dim):
         for map_key, map_value in map_data[type_key].items():
             x = map_value["colli_ratio"]
             y = map_value["time_cost"]
-            scatter = ax.scatter(x, y, marker='.')
+            #scatter = ax.scatter(x, y, marker='.')
 
             # 按x排序
             sort_idx = np.argsort(x)
@@ -281,7 +281,7 @@ def drawSBTInitData(all_data, dim):
         for map_key, map_value in map_data[type_key].items():
             x = map_value["occ_ratio"]
             y = map_value["init_time_cost"]
-            scatter = ax.scatter(x, y, marker='.')
+            #scatter = ax.scatter(x, y, marker='.')
 
             # 按x排序
             sort_idx = np.argsort(x)
@@ -343,7 +343,7 @@ def drawSBTUpdateData(all_data, dim):
             for dim_length_key, map_value in map_data[max_dist][type_key].items():
                 x = map_value["occ_ratio"]
                 y = map_value["update_time_cost"]
-                scatter = ax.scatter(x, y, marker='.')
+                #scatter = ax.scatter(x, y, marker='.')
 
                 # 按x排序
                 sort_idx = np.argsort(x)

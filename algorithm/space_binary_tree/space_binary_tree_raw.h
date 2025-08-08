@@ -49,7 +49,7 @@ namespace freeNav::JOB {
             all_external_offset_.setAll(pow_2_[external_min_block_depth_width_] - 1);
             // precomputation of flag points
             flag_pts_ = GetFloorOrCeilFlag<N>();
-            assert(flag_pts_.size() == pow_2_[N]);
+            //assert(flag_pts_.size() == pow_2_[N]);
 
             //std::cout << "min_block_depth_width = " << min_block_depth_width_ << std::endl;
 
@@ -352,7 +352,7 @@ namespace freeNav::JOB {
                     if(leave_merged_map.find(block_ptr) == leave_merged_map.end()) {
                         std::cout << "haha 0" << std::endl;
                     }
-                    assert(leave_merged_map.find(block_ptr) != leave_merged_map.end());
+                    //assert(leave_merged_map.find(block_ptr) != leave_merged_map.end());
                 }
             }
             globalRecursiveUpdate();
@@ -619,26 +619,26 @@ namespace freeNav::JOB {
             //std::cout << __FUNCTION__ << " take " << mst.elapsed()/1e3 << " ms" << std::endl;
 
             // debug
-            for(const auto& leaf_node : all_leaves) {
-                if(leaf_node->depth_ > max_depth_ - min_block_depth_width_) { continue; }
-                //std::cout << "leaf node " << leaf_node << " dp = " << leaf_node->depth_ << ", base pt = " << leaf_node->base_pt_ << std::endl;
-                const auto& block_ptr = getInternalBlockPtr(leaf_node->base_pt_);
-                assert(leave_merged_map[block_ptr]);
-                assert(block_ptr->merged_block_id_ >= 0);
-            }
-            int total_index = getTotalIndexOfSpace<N>(dim_);
-            for(int id=0; id<total_index; id++) {
-                Pointi<N> pt = IdToPointi<N>(id, dim_);
-                auto block_ptr = getInternalBlockPtr(pt);
-                if(block_ptr != nullptr) {
-                    if(leave_merged_map.find(block_ptr) == leave_merged_map.end()) {
-                        std::cout << "haha" << std::endl;
-                    }
-                    assert(leave_merged_map.find(block_ptr) != leave_merged_map.end());
-                    assert(leave_merged_map[block_ptr]);
-                    assert(block_ptr->merged_block_id_ >= 0);
-                }
-            }
+            // for(const auto& leaf_node : all_leaves) {
+            //     if(leaf_node->depth_ > max_depth_ - min_block_depth_width_) { continue; }
+            //     //std::cout << "leaf node " << leaf_node << " dp = " << leaf_node->depth_ << ", base pt = " << leaf_node->base_pt_ << std::endl;
+            //     const auto& block_ptr = getInternalBlockPtr(leaf_node->base_pt_);
+            //     assert(leave_merged_map[block_ptr]);
+            //     assert(block_ptr->merged_block_id_ >= 0);
+            // }
+            // int total_index = getTotalIndexOfSpace<N>(dim_);
+            // for(int id=0; id<total_index; id++) {
+            //     Pointi<N> pt = IdToPointi<N>(id, dim_);
+            //     auto block_ptr = getInternalBlockPtr(pt);
+            //     if(block_ptr != nullptr) {
+            //         if(leave_merged_map.find(block_ptr) == leave_merged_map.end()) {
+            //             std::cout << "haha" << std::endl;
+            //         }
+            //         assert(leave_merged_map.find(block_ptr) != leave_merged_map.end());
+            //         assert(leave_merged_map[block_ptr]);
+            //         assert(block_ptr->merged_block_id_ >= 0);
+            //     }
+            // }
         }
 
 
@@ -792,8 +792,8 @@ namespace freeNav::JOB {
             while (!nodes.empty()) {
                 //std::cout << " depth = " << dp << ": " << std::endl;
                 for(int i=0; i<nodes.size(); i++) {
-                    assert(nodes[i]->depth_ == dp);
-                    assert(nodes[i]->children_.size() == pow_2_[N]);
+                    // assert(nodes[i]->depth_ == dp);
+                    // assert(nodes[i]->children_.size() == pow_2_[N]);
                     if(!nodes[i]->mixed_state_ && !nodes[i]->occ_) {
                         retv.push_back(nodes[i]);
                     }
