@@ -76,6 +76,18 @@ TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
 
 std::string file_path = "../test/SBT_LOS.txt";
 
+// 1. 在Ubuntu下使用Valgrind的Massif工具分析CMake编译的C++程序内存占用，需按以下步骤操作：
+// set(CMAKE_BUILD_TYPE Debug)  # 在CMakeLists.txt中设置
+//# 或通过命令行指定
+//cmake -DCMAKE_BUILD_TYPE=Debug ..
+
+
+// 2. 使用Valgrind Massif运行程序
+// valgrind --tool=massif --massif-out-file=massif.out ./your_program [参数]
+
+
+// 3. 图形界面可直观展示内存分配趋势和热点函数。
+// massif-visualizer massif.out
 int main() {
 //TEST(massiveSBTLOSCompareTest, test) {
     for(int i=0; i<1; i++) {
