@@ -7,7 +7,7 @@
 
 #include "../line_of_sight_jump_between_block.h"
 #include "common.h"
-
+#include "freeNav-base/basic_elements/misc.h"
 namespace freeNav::JOB {
 
     // store all passable block
@@ -118,7 +118,8 @@ namespace freeNav::JOB {
 
         // need call this after construction
         virtual void initialize() {
-            //std::cout << "start " << __FUNCTION__ << std::endl;
+            MSTimer mst; 
+            std::cout << getTimeInYMD<2>() << " start initialize of SBT of space dim " << printDimInfo<N>(dim_) << std::endl;
             // initialize of space
             Id total_index = getTotalIndexOfSpace<N>(dim_);
 
@@ -136,9 +137,13 @@ namespace freeNav::JOB {
             // initialize of block_ptr_map_
             initBlockPtrMap();
             initialized_ = true;
-            //std::cout << "finish " << __FUNCTION__ << std::endl;
-
-            mergePassableBlocksViaDecisionTree();
+            std::cout << getTimeInYMD<2>() << " finish initialize of SBT of space dim " << printDimInfo<N>(dim_) << " in " << mst.elapsed()/1e3 << "s" << std::endl;
+            mst.reset();
+            if(external_min_block_depth_width_ != 0) {
+                // merge blocks is time consuming in large map, so do not use it in raw map, only use it in shrink map
+                mergePassableBlocksViaDecisionTree();
+            //std::cout << getTimeInYMD<2>() << " finish merge blocks of SBT of space dim " << printDimInfo<N>(dim_) << " in " << mst.elapsed()/1e3 << "s" << std::endl;
+            }
 
         }
 
@@ -336,31 +341,34 @@ namespace freeNav::JOB {
 //            if (!update_block_ptr_realtime) {
 //                initBlockPtrMap();
 //            }
-            const auto& all_leaves = getAllPassableLeafNodes();
-            std::set<BlockWithTreePtr<N>, BlockCompare<N>> leave_merged_map;
-            for(const auto& leaf_node : all_leaves) {
-                if(leaf_node->depth_ > max_depth_ - min_block_depth_width_) { continue; }
-                //std::cout << "leaf node " << leaf_node << " dp = " << leaf_node->depth_ << ", base pt = " << leaf_node->base_pt_ << std::endl;
-                const auto& block_ptr = getInternalBlockPtr(leaf_node->base_pt_);
-                leave_merged_map.insert(block_ptr);
-            }
-            int total_index = getTotalIndexOfSpace<N>(dim_);
-            for(int id=0; id<total_index; id++) {
-                Pointi<N> pt = IdToPointi<N>(id, dim_);
-                auto block_ptr = getInternalBlockPtr(pt);
-                if(block_ptr != nullptr) {
-                    if(leave_merged_map.find(block_ptr) == leave_merged_map.end()) {
-                        std::cout << "haha 0" << std::endl;
-                    }
-                    //assert(leave_merged_map.find(block_ptr) != leave_merged_map.end());
-                }
-            }
+            // const auto& all_leaves = getAllPassableLeafNodes();
+            // std::set<BlockWithTreePtr<N>, BlockCompare<N>> leave_merged_map;
+            // for(const auto& leaf_node : all_leaves) {
+            //     if(leaf_node->depth_ > max_depth_ - min_block_depth_width_) { continue; }
+            //     //std::cout << "leaf node " << leaf_node << " dp = " << leaf_node->depth_ << ", base pt = " << leaf_node->base_pt_ << std::endl;
+            //     const auto& block_ptr = getInternalBlockPtr(leaf_node->base_pt_);
+            //     leave_merged_map.insert(block_ptr);
+            // }
+            // int total_index = getTotalIndexOfSpace<N>(dim_);
+            // for(int id=0; id<total_index; id++) {
+            //     Pointi<N> pt = IdToPointi<N>(id, dim_);
+            //     auto block_ptr = getInternalBlockPtr(pt);
+            //     if(block_ptr != nullptr) {
+            //         if(leave_merged_map.find(block_ptr) == leave_merged_map.end()) {
+            //             std::cout << "haha 0" << std::endl;
+            //         }
+            //         //assert(leave_merged_map.find(block_ptr) != leave_merged_map.end());
+            //     }
+            // }
             globalRecursiveUpdate();
         }
 
         // have no real use, just keep pace with SBT new
         void globalRecursiveUpdate() {
-            mergePassableBlocksViaDecisionTree();
+            if(external_min_block_depth_width_ != 0) {
+                // merge blocks is time consuming in large map, so do not use it in raw map, only use it in shrink map
+                mergePassableBlocksViaDecisionTree(); 
+            }
         }
 
         TreeNodePtr<N> getLeafNode(const Pointi<N>& pt) const {
@@ -515,7 +523,7 @@ namespace freeNav::JOB {
 
         // merge block with neighbor block until local maximize
         void mergePassableBlocksViaDecisionTree() {
-            //USTimer mst;
+            USTimer mst;
             merged_block_ptrs_.clear();
             // big block start, small block end
             const auto& all_leaves = getAllPassableLeafNodes();
@@ -616,7 +624,7 @@ namespace freeNav::JOB {
             //    std::cout << merged_block_ptr->min_pt_ << "<->" << merged_block_ptr->max_pt_ << ", ";
             //}
             //std::cout << std::endl;
-            //std::cout << __FUNCTION__ << " take " << mst.elapsed()/1e3 << " ms" << std::endl;
+            std::cout << __FUNCTION__ << " take " << mst.elapsed()/1e3 << " ms" << std::endl;
 
             // debug
             // for(const auto& leaf_node : all_leaves) {
