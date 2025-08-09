@@ -566,7 +566,7 @@ namespace freeNav::JOB {
                     next_buffer.clear();
                     //std::cout << "depth_of_iter = " << depth_of_iter << std::endl;
                     // too deep may need lots of memory, so limit the max depth
-                    if(N > 2 && depth_of_iter > 15) { break; }
+                    if(N > 2 && depth_of_iter > 12) { break; }
                     for(const auto& block_node : buffer) {
                         // expand current block until cannot expand
                         for (int dim = 0; dim < 2 * N; dim++) {
