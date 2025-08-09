@@ -54,9 +54,17 @@ def loadDataFromfile(file_path):
                     new_data.occ_ratio             = float(splited_line[5])
                     new_data.max_obs_move_distance = int(splited_line  [6])
                     new_data.dimension_length      = int(splited_line  [7])
+
+                    if splited_line[0] == "SBT" and new_data.init_time_cost > 30000:
+                        #print(line)
+                        continue
+
+                    if splited_line[0] == "SBT" and new_data.update_time_cost > 3000:
+                        #print(line)
+                        continue
+
                     data_list.append(new_data)
 
-                    # print(new_data)
 
     except Exception as e:            
         print(e)             
@@ -121,7 +129,7 @@ class SBTData:
 #                 c=dim_color_map[dim], marker='.', label='dim='+str(dim))
 #     plt.show()     
 
-def drawCompareTimeCost(all_data, dim):
+def drawCompareTimeCost(all_data, dim, draw_scatter = False):
     map_data = dict() # dimelength and data occ ratio, dimension_length
     for a_data in all_data:
         if type(a_data).__name__ != "CompareData":
@@ -171,7 +179,8 @@ def drawCompareTimeCost(all_data, dim):
         for map_key, map_value in map_data[type_key].items():
             x = map_value["colli_ratio"]
             y = map_value["time_cost"]
-            #scatter = ax.scatter(x, y, marker='.')
+            if draw_scatter:
+                scatter = ax.scatter(x, y, marker='.')
 
             # 按x排序
             sort_idx = np.argsort(x)
@@ -288,7 +297,7 @@ def printCompareStatistic(all_data, dim):
     print(dim, "D raw_SBT/new_SBT visited bc = ", np.mean(map_data["SBT_RAW"]["visited_bc"]), "/", np.mean(map_data["SBT"]["visited_bc"]))
       
 
-def drawSBTInitData(all_data, dim):
+def drawSBTInitData(all_data, dim, draw_scatter = False):
     map_data = dict() # dimelength and data occ ratio, dimension_length
     for a_data in all_data:
         if type(a_data).__name__ != "SBTData":
@@ -314,7 +323,8 @@ def drawSBTInitData(all_data, dim):
         for map_key, map_value in map_data[type_key].items():
             x = map_value["occ_ratio"]
             y = map_value["init_time_cost"]
-            #scatter = ax.scatter(x, y, marker='.')
+            if draw_scatter:
+                scatter = ax.scatter(x, y, marker='.')
 
             # 按x排序
             sort_idx = np.argsort(x)
@@ -345,7 +355,7 @@ def drawSBTInitData(all_data, dim):
     print("save picture to "+save_path)        
 
 
-def drawSBTUpdateData(all_data, dim):
+def drawSBTUpdateData(all_data, dim, draw_scatter = False):
     map_data = dict() # dimelength and data occ ratio, dimension_length
     for a_data in all_data:
         if type(a_data).__name__ != "SBTData":
@@ -376,7 +386,8 @@ def drawSBTUpdateData(all_data, dim):
             for dim_length_key, map_value in map_data[max_dist][type_key].items():
                 x = map_value["occ_ratio"]
                 y = map_value["update_time_cost"]
-                #scatter = ax.scatter(x, y, marker='.')
+                if draw_scatter:
+                    scatter = ax.scatter(x, y, marker='.')
 
                 # 按x排序
                 sort_idx = np.argsort(x)
