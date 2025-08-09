@@ -480,3 +480,37 @@ printCompareStatistic(all_compare_data, 3)
 # plt.legend()
 # plt.grid(True)
 # plt.show()
+
+
+    
+def removeMethodDataFromFile(temp_file_path, head_name, dim, width_of_space):
+    filtered_lines = list()
+    try:
+        with open(temp_file_path, "r") as f:
+            lines = f.readlines()
+            for line in lines:
+                splited_line = line.split()
+                if splited_line[0] == head_name and int(splited_line[1]) == dim:                
+                    if splited_line[0] == "SBT_RAW" or splited_line[0] == "SBT":
+                        if head_name == splited_line[0] and int(splited_line[7]) == width_of_space:
+                            continue
+
+                    if splited_line[0] == "COMPARE":
+                        if head_name == splited_line[0] and int(splited_line[13]) == width_of_space:
+                            continue
+
+                filtered_lines.append(line)
+        f.close()
+            #print(new_data.method, ' ', new_data.path_count, ' ', new_data.real_path_count, ' ', new_data.time_cost)
+    except Exception as e:            
+        print(e)  
+        
+    try:
+        with open(file_path, 'w') as f:
+            f.writelines(filtered_lines)    
+        f.close()    
+    except Exception as e:            
+        print(e)    
+
+# removeMethodDataFromFile(file_path, "SBT_RAW", 3, 600)        
+# removeMethodDataFromFile(file_path, "SBT_RAW", 3, 500)        
