@@ -134,9 +134,9 @@ int main() {
         //                               true,
         //                               4);
 
-        massiveSBTLOSCompareTest<3>(5,
+        massiveSBTLOSCompareTest<3>(1,
                                                      1,
-                                                     {200, 300, 400, 500, 600}, // {200, 300, 400, 500, 600}
+                                                     {400, 500, 600}, // {200, 300, 400, 500, 600}
                                                      {1, 5, 10, 20, 40, 80},
                                                      file_path,
                                                      1e5,
