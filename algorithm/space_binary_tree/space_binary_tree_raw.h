@@ -564,7 +564,7 @@ namespace freeNav::JOB {
                 int depth_of_iter = 0;
                 while(!buffer.empty()) {
                     next_buffer.clear();
-                    std::cout << "depth_of_iter = " << depth_of_iter << std::endl;
+                    //std::cout << "depth_of_iter = " << depth_of_iter << std::endl;
                     // too deep may need lots of memory, so limit the max depth
                     if(N > 2 && depth_of_iter > 15) { break; }
                     for(const auto& block_node : buffer) {
