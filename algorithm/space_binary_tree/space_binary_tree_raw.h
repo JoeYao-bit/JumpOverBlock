@@ -561,9 +561,12 @@ namespace freeNav::JOB {
 
 //                leave_merged_map[block_ptr] = true;
 //                block_ptr->merged_block_id_ = merged_block_ptrs_.size();
-
+                int depth_of_iter = 0;
                 while(!buffer.empty()) {
                     next_buffer.clear();
+                    std::cout << "depth_of_iter = " << depth_of_iter << std::endl;
+                    // too deep may need lots of memory, so limit the max depth
+                    if(N > 2 && depth_of_iter > 15) { break; }
                     for(const auto& block_node : buffer) {
                         // expand current block until cannot expand
                         for (int dim = 0; dim < 2 * N; dim++) {
@@ -609,6 +612,7 @@ namespace freeNav::JOB {
                             //std::cout << std::endl;
                         }
                     }
+                    depth_of_iter ++;
                     std::swap(buffer, next_buffer);
                 }
                 merged_block_ptrs_.push_back(largest_merged_block_ptr);
