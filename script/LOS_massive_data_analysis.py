@@ -512,5 +512,6 @@ def removeMethodDataFromFile(temp_file_path, head_name, dim, width_of_space):
     except Exception as e:            
         print(e)    
 
-# removeMethodDataFromFile(file_path, "SBT_RAW", 3, 600)        
-# removeMethodDataFromFile(file_path, "SBT_RAW", 3, 500)        
+# removeMethodDataFromFile(file_path, "SBT", 3, 600)        
+# removeMethodDataFromFile(file_path, "SBT", 3, 500)        
+# removeMethodDataFromFile(file_path, "SBT", 3, 400)        
