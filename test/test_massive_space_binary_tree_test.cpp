@@ -146,16 +146,16 @@ int main() {
         //                                              4);
 
         int width_of_space = 200;
-        // massiveSBTLOSCompareTest<2>(1,
-        //                                              1,
-        //                                              {width_of_space},
-        //                                              {10,20,30,40,50,60,70,80},
-        //                                              file_path,
-        //                                              1e5,
-        //                                              1e3,
-        //                                              {1, 2, 4, 16},
-        //                                              true,
-        //                                              4);
+        massiveSBTLOSCompareTest<2>(1,
+                                                     1,
+                                                     {width_of_space},
+                                                     {10,20,30,40,50,60,70,80},
+                                                     file_path,
+                                                     1e5,
+                                                     1e3,
+                                                     {1, 2, 4, 16},
+                                                     true,
+                                                     4);
 
         massiveSBTLOSCompareTest<3>(1,
                                                      1,
