@@ -101,16 +101,16 @@ int main() {
 
         //massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
  
-      massiveSBTLOSCompareTest<2>(1,
-                                                     1,
-                                                     {200, 400, 600, 800, 1000},
-                                                     {10,20,30,40,50,60,70,80},
-                                                     file_path,
-                                                     1e5,
-                                                     1e3,
-                                                     {1, 2, 4, 16},
-                                                     true,
-                                                     4);
+    //   massiveSBTLOSCompareTest<2>(1,
+    //                                                  1,
+    //                                                  {200, 400, 600, 800, 1000},
+    //                                                  {10,20,30,40,50,60,70,80},
+    //                                                  file_path,
+    //                                                  1e5,
+    //                                                  1e3,
+    //                                                  {1, 2, 4, 16},
+    //                                                  true,
+    //                                                  4);
 
 //       massiveSBTLOSCompareTest<3>(5,
 //                                                      1,
@@ -144,6 +144,29 @@ int main() {
         //                                              {1,4,16,64,0},
         //                                              true,
         //                                              4);
+
+        int width_of_space = 200;
+        // massiveSBTLOSCompareTest<2>(1,
+        //                                              1,
+        //                                              {width_of_space},
+        //                                              {10,20,30,40,50,60,70,80},
+        //                                              file_path,
+        //                                              1e5,
+        //                                              1e3,
+        //                                              {1, 2, 4, 16},
+        //                                              true,
+        //                                              4);
+
+        massiveSBTLOSCompareTest<3>(1,
+                                                     1,
+                                                     {width_of_space}, // {200, 400, 600, 800, 1000}
+                                                     {5, 40, 80, 160, 320},
+                                                     file_path,
+                                                     1e5,
+                                                     1e3,
+                                                     {1,4,16,64,0},
+                                                     true,
+                                                     4);
 
     }
 }
