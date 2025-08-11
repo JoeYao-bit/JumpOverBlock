@@ -618,8 +618,11 @@ namespace freeNav::JOB {
                                 ;
                         strs.push_back(ss3.str());
                         if (!file_path.empty()) {
-                            writeToFile<N>(strs, file_path);
-                            std::cout << "write test data to " << file_path << std::endl;
+                            std::stringstream ss;
+                            ss << width << ".txt";
+                            std::string full_path = file_path+ss.str();
+                            writeToFile<N>(strs, full_path);
+                            std::cout << "write test data to " << full_path << std::endl;
                         }
                     }
                 }

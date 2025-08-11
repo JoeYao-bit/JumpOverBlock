@@ -74,7 +74,7 @@ TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
 //    return 0;
 //}
 
-std::string file_path = "../test/SBT_LOS.txt";
+std::string file_path = "../test/SBT_LOS";
 
 // 1. 在Ubuntu下使用Valgrind的Massif工具分析CMake编译的C++程序内存占用，需按以下步骤操作：
 // set(CMAKE_BUILD_TYPE Debug)  # 在CMakeLists.txt中设置
@@ -101,16 +101,16 @@ int main() {
 
         //massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
  
-    //   massiveSBTLOSCompareTest<2>(1,
-    //                                                  1,
-    //                                                  {200, 400, 600, 800, 1000},
-    //                                                  {10,20,30,40,50,60,70,80},
-    //                                                  file_path,
-    //                                                  1e5,
-    //                                                  1e3,
-    //                                                  {1, 2, 4, 16},
-    //                                                  true,
-    //                                                  4);
+      massiveSBTLOSCompareTest<2>(1,
+                                                     1,
+                                                     {200, 400, 600, 800, 1000},
+                                                     {10,20,30,40,50,60,70,80},
+                                                     file_path,
+                                                     1e5,
+                                                     1e3,
+                                                     {1, 2, 4, 16},
+                                                     true,
+                                                     4);
 
 //       massiveSBTLOSCompareTest<3>(5,
 //                                                      1,
@@ -134,16 +134,16 @@ int main() {
         //                               true,
         //                               4);
 
-        massiveSBTLOSCompareTest<3>(1,
-                                                     1,
-                                                     {400, 500, 600}, // {200, 300, 400, 500, 600}
-                                                     {5, 10, 20, 40, 80},
-                                                     file_path,
-                                                     1e5,
-                                                     1e3,
-                                                     {1,4,16,64,0},
-                                                     true,
-                                                     4);
+        // massiveSBTLOSCompareTest<3>(1,
+        //                                              1,
+        //                                              {400, 600, 800, 1000}, // {200, 400, 600, 800, 1000}
+        //                                              {5, 40, 80, 160, 320},
+        //                                              file_path,
+        //                                              1e5,
+        //                                              1e3,
+        //                                              {1,4,16,64,0},
+        //                                              true,
+        //                                              4);
 
     }
 }
