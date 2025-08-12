@@ -126,6 +126,16 @@ namespace freeNav {
                     {"output_path", "../test/test_data/ost003d.txt"}
             };
 
+    // new_map2.1.map
+    SingleMapTestConfig<2> MapTestConfig_new_map2_1 =
+            {
+                    {"map_name",    "new_map2_1"},
+                    {"map_path",    "../test/test_data/new_map2.1.pgm"},
+                    {"vis_path",    "../test/test_data/new_map2_1._ENLSVG.vis"},
+                    {"config_path", "../test/test_data/new_map2_1.map.scen"},
+                    {"output_path", "../test/test_data/new_map2_1.txt"}
+            };
+
     SingleMapTestConfig<3> MapTestConfig_Simple =
 
             {

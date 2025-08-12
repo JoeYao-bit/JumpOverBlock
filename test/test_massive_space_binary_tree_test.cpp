@@ -56,8 +56,9 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 // MapTestConfig_mexico // ok
 // MapTestConfig_fhw_rec_001 // ok
 
+// MapTestConfig_new_map2_1
 
-auto map_test_config = MapTestConfig_Shanghai_0_512;
+auto map_test_config = MapTestConfig_new_map2_1;
 
 auto is_grid_occupied1 = [](const cv::Vec3b& color) -> bool {
     if (color != cv::Vec3b::all(255)) return true;
@@ -69,7 +70,7 @@ auto is_grid_occupied2 = [](const cv::Vec3b& color) -> bool {
     return false;
 };
 
-#if 0
+#if 1
 PictureLoader loader(map_test_config.at("map_path"), is_grid_occupied2);
 #else
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
@@ -78,7 +79,7 @@ TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
 template<typename SBT, typename TreeNode>
 void dynamic_obstacles_2D() {
 
-#if 1
+#if 0
     DimensionLength *dim = new DimensionLength[2];
 
     dim[0] = 200, dim[1] = 200;
@@ -295,16 +296,16 @@ void dynamic_obstacles_2D() {
 
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
-//int main() {
-TEST(dynamic_map_test, test) {
+int main() {
+//TEST(dynamic_map_test, test) {
     //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
-    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
+    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimension<2>, TreeNode<2>>();
 }
 
 std::string file_path = "../test/SBT_LOS.txt";
 
-int main() {
-//TEST(massiveSBTLOSCompareTest, test) {
+//int main() {
+TEST(massiveSBTLOSCompareTest, test) {
     for(int i=0; i<1; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
