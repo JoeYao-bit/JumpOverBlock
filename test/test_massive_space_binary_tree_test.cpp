@@ -145,7 +145,7 @@ int main() {
         //                                              true,
         //                                              4);
 
-        int width_of_space = 200;
+        int width_of_space = 800;
         // massiveSBTLOSCompareTest<2>(1,
         //                                              1,
         //                                              {width_of_space},
@@ -160,7 +160,7 @@ int main() {
         massiveSBTLOSCompareTest<3>(1,
                                                      1,
                                                      {width_of_space}, // {200, 400, 600, 800, 1000}
-                                                     {160, 320, 640, 1280},
+                                                     {160, 320, 640, 960, 1280},
                                                      file_path,
                                                      1e5,
                                                      1e3,
