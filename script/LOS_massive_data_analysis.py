@@ -8,6 +8,9 @@ import matplotlib.image as mpimg
 import math
 from scipy.ndimage import uniform_filter1d
 
+
+avaliable_map_size = [200, 400, 600, 800, 1000]
+
 def loadDataFromfile(file_path):
     print("file_path = ", file_path)
     data_list = list()
@@ -37,6 +40,12 @@ def loadDataFromfile(file_path):
                     new_data.occ_ratio            = float(splited_line[12])
                     new_data.dimension_length     = int(splited_line  [13])
 
+                    if new_data.dimension_length not in avaliable_map_size:
+                        continue
+
+                    if new_data.dim == 3 and new_data.dimension_length > 800:
+                        continue
+
                     data_list.append(new_data)
 
                     # print("raw/raw sbt/new sbt visited pt = ", new_data.RAW_VISIT_PT, " / ", new_data.SBT_RAW_VISIT_PT, " / ", new_data.SBT_NEW_VISIT_PT)
@@ -55,12 +64,18 @@ def loadDataFromfile(file_path):
                     new_data.max_obs_move_distance = int(splited_line  [6])
                     new_data.dimension_length      = int(splited_line  [7])
 
-                    if splited_line[0] == "SBT" and new_data.init_time_cost > 30000:
-                        #print(line)
+                    # if splited_line[0] == "SBT" and new_data.init_time_cost > 30000:
+                    #     #print(line)
+                    #     continue
+
+                    # if splited_line[0] == "SBT" and new_data.update_time_cost > 3000:
+                    #     #print(line)
+                    #     continue
+
+                    if new_data.dimension_length not in avaliable_map_size:
                         continue
 
-                    if splited_line[0] == "SBT" and new_data.update_time_cost > 3000:
-                        #print(line)
+                    if new_data.dim == 3 and new_data.dimension_length > 800:
                         continue
 
                     data_list.append(new_data)
@@ -173,14 +188,14 @@ def drawCompareTimeCost(all_data, dim, draw_scatter = False):
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
     plt.ylabel("Time cost(us)", fontsize = 13)
-    plt.xlabel("Collision Ratio", fontsize = 13)    
+    plt.xlabel("Obstacle density", fontsize = 13)    
 
     for type_key, type_value in map_data.items():
         for map_key, map_value in map_data[type_key].items():
             x = map_value["colli_ratio"]
             y = map_value["time_cost"]
             if draw_scatter:
-                scatter = ax.scatter(x, y, marker='.')
+                scatter = ax.scatter(x, y, marker='.', color=map_size_color_map[map_key])
 
             # 按x排序
             sort_idx = np.argsort(x)
@@ -317,6 +332,7 @@ def drawSBTInitData(all_data, dim, draw_scatter = False):
 
     fig=plt.figure(figsize=(5,4)) #添加绘图框
     ax = plt.axes()
+    #ax.set_yscale('log')  
     plt.ylabel("Init Time Cost (ms)", fontsize = 13)
     plt.xlabel("Occ Ratio", fontsize = 13)    
     for type_key, type_value in map_data.items():
@@ -324,7 +340,7 @@ def drawSBTInitData(all_data, dim, draw_scatter = False):
             x = map_value["occ_ratio"]
             y = map_value["init_time_cost"]
             if draw_scatter:
-                scatter = ax.scatter(x, y, marker='.')
+                scatter = ax.scatter(x, y, marker='.', color=map_size_color_map[map_key])
 
             # 按x排序
             sort_idx = np.argsort(x)
@@ -344,6 +360,8 @@ def drawSBTInitData(all_data, dim, draw_scatter = False):
             # plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_width='+str(map_key))
         
     plt.legend(ncol=2)    
+    plt.ylabel("Time cost(ms)", fontsize = 13)
+    plt.xlabel("Obstacle density", fontsize = 13)    
     # plt.show()     
     save_path = "../test/pic/"
     if not os.path.exists(save_path):
@@ -380,6 +398,7 @@ def drawSBTUpdateData(all_data, dim, draw_scatter = False):
     for max_dist, temp_value in map_data.items():
         fig=plt.figure(figsize=(5,4)) #添加绘图框
         ax = plt.axes()
+        #ax.set_yscale('log')  
         plt.ylabel("Update Time Cost(ms)", fontsize = 13)
         plt.xlabel("Occ Ratio", fontsize = 13)    
         for type_key, type_value in map_data[max_dist].items():
@@ -387,7 +406,7 @@ def drawSBTUpdateData(all_data, dim, draw_scatter = False):
                 x = map_value["occ_ratio"]
                 y = map_value["update_time_cost"]
                 if draw_scatter:
-                    scatter = ax.scatter(x, y, marker='.')
+                    scatter = ax.scatter(x, y, marker='.', color=map_size_color_map[dim_length_key])
 
                 # 按x排序
                 sort_idx = np.argsort(x)
@@ -408,6 +427,8 @@ def drawSBTUpdateData(all_data, dim, draw_scatter = False):
                 # plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_width='+str(map_key))
             
         plt.legend(ncol=2)    
+        plt.ylabel("Time cost(ms)", fontsize = 13)
+        plt.xlabel("Obstacle density", fontsize = 13)    
         # plt.show()     
         save_path = "../test/pic/"
         if not os.path.exists(save_path):
@@ -429,7 +450,7 @@ map_size_color_map = {
     200:"green",
     300:"blue",
     400:"red",
-    500:"yellow",
+    500:"pink",
     600:"purple",
     800:"cyan",
     1000:"darkorange"
@@ -447,9 +468,18 @@ line_map_of_type = {
     "SBT":"-."#":"
 }
 
-file_path = "../test/SBT_LOS.txt"
+file_paths = ["../test/SBT_LOS.txt",
+              "../test/SBT_LOS200.txt",
+              "../test/SBT_LOS400.txt",
+              "../test/SBT_LOS600.txt",
+              "../test/SBT_LOS800.txt",
+              "../test/SBT_LOS1000.txt"]
 
-all_compare_data = loadDataFromfile(file_path)
+all_compare_data = []
+
+for temp_path in file_paths:
+    temp_data = loadDataFromfile(temp_path)
+    all_compare_data.extend(temp_data)
 
 drawSBTInitData(all_compare_data, 2)
 
