@@ -58,7 +58,7 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 
 // MapTestConfig_new_map2_1
 
-auto map_test_config = MapTestConfig_new_map2_1;
+auto map_test_config = MapTestConfig_new_map1;
 
 auto is_grid_occupied1 = [](const cv::Vec3b& color) -> bool {
     if (color != cv::Vec3b::all(255)) return true;
@@ -119,13 +119,13 @@ void dynamic_obstacles_2D() {
     std::cout << "finish initialize of map in " << mst.elapsed() << "ms" << std::endl;
 
 
-    float zoom_ratio = std::min(1800./dim[0], 1000./dim[1]);
+    float zoom_ratio = 1;//std::min(1600./dim[0], 1000./dim[1]);
     std::cout << "std::min(1800./dimension[0], 1000./dimension[1]) = " << zoom_ratio << std::endl;
 
     Canvas canvas("dynamic_obstacles_2D", dim[0], dim[1], .05, zoom_ratio);
 
     bool draw_pre_occupy = false,
-         draw_current_occupy = true,
+         draw_current_occupy = false,
          draw_free_leaf = false,
          draw_block = false,
          triger_varify = false,
@@ -135,7 +135,7 @@ void dynamic_obstacles_2D() {
     while(1) {
         canvas.resetCanvas();
         canvas.drawEmptyGrid();
-        canvas.drawGridMap(dim, is_occupied);
+        canvas.drawGridMap(dim, is_occupied, cv::Vec3b::all(200));
         if(draw_pre_occupy) {
             //canvas.drawGrids(dynamic_obstacles.getPreviousOccupationPoints());
             Id total_index = getTotalIndexOfSpace<2>(dim);
@@ -195,26 +195,26 @@ void dynamic_obstacles_2D() {
             }
         }
         if(draw_merged_free_leaf) {
-            auto merged_free_leaf_nodes = sbt->merged_block_ptrs_;
-            for(int i=0; i<merged_free_leaf_nodes.size(); i++) {
-                const auto& block_ptr = merged_free_leaf_nodes[i];
-                const Pointi<2> pt1 = block_ptr->min_pt_, pt2 = block_ptr->max_pt_;// + Pointi<2>{1, 1};
-                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
-                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
-            }
-//            for(int x=0; x<dim[0]; x++) {
-//                for(int y=0; y<dim[1]; y++) {
-//                    Pointi<2> pt{x, y};
-//                    auto block_ptr = sbt->getInternalBlockPtr(pt);
-//                    if(block_ptr == nullptr) { continue; }
-//                    if(block_ptr->merged_block_id_ != -1) {
-//                        Id indicator = block_ptr->merged_block_id_;
-//                        canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
-//                    }
-//                }
+//            auto merged_free_leaf_nodes = sbt->merged_block_ptrs_;
+//            for(int i=0; i<merged_free_leaf_nodes.size(); i++) {
+//                const auto& block_ptr = merged_free_leaf_nodes[i];
+//                const Pointi<2> pt1 = block_ptr->min_pt_, pt2 = block_ptr->max_pt_;// + Pointi<2>{1, 1};
+//                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
+//                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
+//                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
+//                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
 //            }
+            for(int x=0; x<dim[0]; x++) {
+                for(int y=0; y<dim[1]; y++) {
+                    Pointi<2> pt{x, y};
+                    auto block_ptr = sbt->getInternalBlockPtr(pt);
+                    if(block_ptr == nullptr) { continue; }
+                    if(block_ptr->merged_block_id_ != -1) {
+                        Id indicator = block_ptr->merged_block_id_;
+                        canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
+                    }
+                }
+            }
         }
         if(triger_varify) {
             triger_varify = false;

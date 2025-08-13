@@ -126,14 +126,44 @@ namespace freeNav {
                     {"output_path", "../test/test_data/ost003d.txt"}
             };
 
-    // new_map2.1.map
-    SingleMapTestConfig<2> MapTestConfig_new_map2_1 =
+    // new_map1.png
+    SingleMapTestConfig<2> MapTestConfig_new_map1 =
             {
-                    {"map_name",    "new_map2_1"},
-                    {"map_path",    "../test/test_data/new_map2.1.pgm"},
-                    {"vis_path",    "../test/test_data/new_map2_1._ENLSVG.vis"},
-                    {"config_path", "../test/test_data/new_map2_1.map.scen"},
-                    {"output_path", "../test/test_data/new_map2_1.txt"}
+                    {"map_name",    "new_map1"},
+                    {"map_path",    "../test/test_data/new_map1.png"},
+                    {"vis_path",    "../test/test_data/new_map1._ENLSVG.vis"},
+                    {"config_path", "../test/test_data/new_map1.map.scen"},
+                    {"output_path", "../test/test_data/new_map1.txt"}
+            };
+
+    // new_map2.png
+    SingleMapTestConfig<2> MapTestConfig_new_map2 =
+            {
+                    {"map_name",    "new_map1"},
+                    {"map_path",    "../test/test_data/new_map2.png"},
+                    {"vis_path",    "../test/test_data/new_map2._ENLSVG.vis"},
+                    {"config_path", "../test/test_data/new_map2.map.scen"},
+                    {"output_path", "../test/test_data/new_map2.txt"}
+            };
+
+    // new_map1.png
+    SingleMapTestConfig<2> MapTestConfig_new_map3 =
+            {
+                    {"map_name",    "new_map1"},
+                    {"map_path",    "../test/test_data/new_map3.png"},
+                    {"vis_path",    "../test/test_data/new_map3_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/new_map3.map.scen"},
+                    {"output_path", "../test/test_data/new_map3.txt"}
+            };
+
+    // new_map1.png
+    SingleMapTestConfig<2> MapTestConfig_new_map4 =
+            {
+                    {"map_name",    "new_map1"},
+                    {"map_path",    "../test/test_data/new_map4.png"},
+                    {"vis_path",    "../test/test_data/new_map4._ENLSVG.vis"},
+                    {"config_path", "../test/test_data/new_map4.map.scen"},
+                    {"output_path", "../test/test_data/new_map4.txt"}
             };
 
     SingleMapTestConfig<3> MapTestConfig_Simple =
