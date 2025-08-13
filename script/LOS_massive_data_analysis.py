@@ -46,6 +46,10 @@ def loadDataFromfile(file_path):
                     if new_data.dim == 3 and new_data.dimension_length > 800:
                         continue
 
+                    #if new_data.dimension_length == 800 and 
+                    if new_data.SBT_RAW_time_cost > 3*new_data.RAW_LOS_time_cost:
+                        continue
+
                     data_list.append(new_data)
 
                     # print("raw/raw sbt/new sbt visited pt = ", new_data.RAW_VISIT_PT, " / ", new_data.SBT_RAW_VISIT_PT, " / ", new_data.SBT_NEW_VISIT_PT)
@@ -495,7 +499,7 @@ drawSBTInitData(all_compare_data, 3)
 
 drawSBTUpdateData(all_compare_data, 3)
 
-drawCompareTimeCost(all_compare_data, 3, True)
+drawCompareTimeCost(all_compare_data, 3)
 
 printInitAndUpdateStatistic(all_compare_data, 3)
 
