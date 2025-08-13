@@ -42,7 +42,9 @@ using namespace freeNav;
 // MapTestConfig_mexico // ok
 // MapTestConfig_fhw_rec_001 // ok
 
-auto map_test_config = MapTestConfig_fhw_rec_001;
+
+
+auto map_test_config = MapTestConfig_fr101;
 
 std::string vis_file_path    = map_test_config.at("vis_path");
 
@@ -90,14 +92,14 @@ int main() {
 
 
     MSTimer mst;
-    SpaceBinaryTree2DRaw sbt_raw(is_occupied, dimension, 1);
+    SpaceBinaryTreeAnyDimensionRaw<2> sbt_raw(is_occupied, dimension, 1);
     sbt_raw.initialize();
 
     std::cout << "raw SBT init in " << mst.elapsed() << "ms" << std::endl;
 
     mst.reset();
-    SpaceBinaryTree2D sbt(is_occupied, dimension, 4);
-    sbt.initialize();
+    SpaceBinaryTreeShrink<2> sbt(is_occupied, dimension, 4);
+
     std::cout << "new SBT init in " << mst.elapsed() << "ms" << std::endl;
     int count_block = 0;
 
@@ -226,7 +228,7 @@ int main() {
         return retv;
     };
 
-    // InformedRRTRimJump not ok
+    // InformedRRT not ok
     auto pp_rrt_informed = [&](const Pointi<2> & p1, const Pointi<2> & p2,
                                const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
                                const std::string& identifier) -> Pointis<2> {
@@ -294,7 +296,7 @@ int main() {
                               {lazy_theta_star, "LazyThetaStar"},
                               {pp_rrt, "RRT"},
                               {pp_rrt_star, "RRTStar"},
-                              {pp_rrt_connect, "RRTConnect"},
+                              //{pp_rrt_connect, "RRTConnect"},
                               //{pp_rrt_informed, "InformedRRT"}, // not ok
 //                              {pp_theta_star, "ThetaStar"}, // slow than previous one
 //                              {pp_lazy_theta_star, "LazyThetaStar"} // slow than previous one
