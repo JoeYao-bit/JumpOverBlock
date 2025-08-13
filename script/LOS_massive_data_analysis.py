@@ -495,7 +495,7 @@ drawSBTInitData(all_compare_data, 3)
 
 drawSBTUpdateData(all_compare_data, 3)
 
-drawCompareTimeCost(all_compare_data, 3)
+drawCompareTimeCost(all_compare_data, 3, True)
 
 printInitAndUpdateStatistic(all_compare_data, 3)
 
