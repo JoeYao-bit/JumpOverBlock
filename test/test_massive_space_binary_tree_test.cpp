@@ -58,7 +58,7 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 
 // MapTestConfig_new_map2_1
 
-auto map_test_config = MapTestConfig_new_map1;
+auto map_test_config = MapTestConfig_Shanghai_0_512;
 
 auto is_grid_occupied1 = [](const cv::Vec3b& color) -> bool {
     if (color != cv::Vec3b::all(255)) return true;
@@ -70,7 +70,7 @@ auto is_grid_occupied2 = [](const cv::Vec3b& color) -> bool {
     return false;
 };
 
-#if 1
+#if 0
 PictureLoader loader(map_test_config.at("map_path"), is_grid_occupied2);
 #else
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
@@ -113,13 +113,13 @@ void dynamic_obstacles_2D() {
     //dynamic_obstacles.random();
     MSTimer mst;
 
-    std::shared_ptr<SBT> sbt = std::make_shared<SBT>(is_occupied, dim, 0);
+    std::shared_ptr<SBT> sbt = std::make_shared<SBT>(is_occupied, dim, 5);
     sbt->initialize();
 
     std::cout << "finish initialize of map in " << mst.elapsed() << "ms" << std::endl;
 
 
-    float zoom_ratio = 1;//std::min(1600./dim[0], 1000./dim[1]);
+    float zoom_ratio = std::min(1600./dim[0], 1000./dim[1]);
     std::cout << "std::min(1800./dimension[0], 1000./dimension[1]) = " << zoom_ratio << std::endl;
 
     Canvas canvas("dynamic_obstacles_2D", dim[0], dim[1], .05, zoom_ratio);
@@ -135,7 +135,7 @@ void dynamic_obstacles_2D() {
     while(1) {
         canvas.resetCanvas();
         canvas.drawEmptyGrid();
-        canvas.drawGridMap(dim, is_occupied, cv::Vec3b::all(200));
+        canvas.drawGridMap(dim, is_occupied);//, cv::Vec3b::all(200));
         if(draw_pre_occupy) {
             //canvas.drawGrids(dynamic_obstacles.getPreviousOccupationPoints());
             Id total_index = getTotalIndexOfSpace<2>(dim);
@@ -181,6 +181,7 @@ void dynamic_obstacles_2D() {
                 BlockPtr<2> block_ptr = std::make_shared<Block<2> >();
                 block_ptr->min_ = leaf_node->base_pt_;
                 Pointi<2> offset; offset.setAll(sbt->pow_2_[sbt->max_depth_-leaf_node->depth_]-1);
+                if(leaf_node->depth_ > sbt->max_depth_ - sbt->min_block_depth_width_) { continue; }
                 block_ptr->max_ = leaf_node->base_pt_ + offset;
                 assert((!is_occupied(block_ptr->min_)) && (!is_occupied(block_ptr->max_)));
                 block_ptrs.push_back(block_ptr);
