@@ -149,7 +149,7 @@ int main() {
         massiveSBTLOSCompareTest<2>(1,
                                                      10,
                                                      {width_of_space},
-                                                     {1, 5, 10, 20, 40, 80, 160},
+                                                     {40, 80, 160, 240, 320},
                                                      file_path,
                                                      1e5,
                                                      1e3,
