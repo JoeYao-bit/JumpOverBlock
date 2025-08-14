@@ -145,11 +145,11 @@ int main() {
         //                                              true,
         //                                              4);
 
-        int width_of_space = 1000;
+        int width_of_space = 200;
         massiveSBTLOSCompareTest<2>(1,
                                                      10,
                                                      {width_of_space},
-                                                     {160, 240, 320, 640},
+                                                     {10, 20, 40, 80, 160, 240, 320, 640},
                                                      file_path,
                                                      1e5,
                                                      1e3,
