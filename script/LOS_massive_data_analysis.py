@@ -511,21 +511,21 @@ for temp_path in file_paths:
     temp_data = loadDataFromfile(temp_path)
     all_compare_data.extend(temp_data)
 
-#drawSBTInitData(all_compare_data, 2)
+drawSBTInitData(all_compare_data, 2) #, True)
 
-#drawSBTUpdateData(all_compare_data, 2)
+drawSBTUpdateData(all_compare_data, 2)
 
-#drawCompareTimeCost(all_compare_data, 2)
+drawCompareTimeCost(all_compare_data, 2)
 
 #printInitAndUpdateStatistic(all_compare_data, 2)
 
 #printCompareStatistic(all_compare_data, 2)
 
-#drawSBTInitData(all_compare_data, 3)
+drawSBTInitData(all_compare_data, 3)
 
-#drawSBTUpdateData(all_compare_data, 3)
+drawSBTUpdateData(all_compare_data, 3)
 
-#drawCompareTimeCost(all_compare_data, 3)
+drawCompareTimeCost(all_compare_data, 3)
 
 #printInitAndUpdateStatistic(all_compare_data, 3)
 
@@ -584,11 +584,11 @@ def removeDataFromFile(temp_file_path, head_name, dim, width_of_space):
         print(e)    
 
 
-for file_path in file_paths:
-    for size in avaliable_map_size:
-        removeDataFromFile(file_path, "SBT_RAW", 2, size)
-        removeDataFromFile(file_path, "SBT", 2, size)
-        removeDataFromFile(file_path, "COMPARE", 2, size)
+# for file_path in file_paths:
+#     for size in avaliable_map_size:
+#         removeDataFromFile(file_path, "SBT_RAW", 2, size)
+#         removeDataFromFile(file_path, "SBT", 2, size)
+#         removeDataFromFile(file_path, "COMPARE", 2, size)
 
 def removeMethodDataFromFile(temp_file_path, head_name, dim, move_distance):
     filtered_lines = list()
