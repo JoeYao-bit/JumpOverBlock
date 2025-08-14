@@ -44,7 +44,7 @@ using namespace freeNav;
 
 
 
-auto map_test_config = MapTestConfig_fr101;
+auto map_test_config = MapTestConfig_mexico;
 
 std::string vis_file_path    = map_test_config.at("vis_path");
 
