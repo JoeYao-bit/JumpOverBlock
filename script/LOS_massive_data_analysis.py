@@ -46,10 +46,6 @@ def loadDataFromfile(file_path):
                     if new_data.dim == 3 and new_data.dimension_length > 800:
                         continue
 
-                    #if new_data.dimension_length == 800 and 
-                    if new_data.SBT_RAW_time_cost > 3*new_data.RAW_LOS_time_cost:
-                        continue
-
                     data_list.append(new_data)
 
                     # print("raw/raw sbt/new sbt visited pt = ", new_data.RAW_VISIT_PT, " / ", new_data.SBT_RAW_VISIT_PT, " / ", new_data.SBT_NEW_VISIT_PT)
@@ -68,13 +64,6 @@ def loadDataFromfile(file_path):
                     new_data.max_obs_move_distance = int(splited_line  [6])
                     new_data.dimension_length      = int(splited_line  [7])
 
-                    # if splited_line[0] == "SBT" and new_data.init_time_cost > 30000:
-                    #     #print(line)
-                    #     continue
-
-                    # if splited_line[0] == "SBT" and new_data.update_time_cost > 3000:
-                    #     #print(line)
-                    #     continue
 
                     if new_data.dimension_length not in avaliable_map_size:
                         continue
