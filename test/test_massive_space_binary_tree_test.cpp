@@ -196,26 +196,26 @@ void dynamic_obstacles_2D() {
             }
         }
         if(draw_merged_free_leaf) {
-//            auto merged_free_leaf_nodes = sbt->merged_block_ptrs_;
-//            for(int i=0; i<merged_free_leaf_nodes.size(); i++) {
-//                const auto& block_ptr = merged_free_leaf_nodes[i];
-//                const Pointi<2> pt1 = block_ptr->min_pt_, pt2 = block_ptr->max_pt_;// + Pointi<2>{1, 1};
-//                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
-//                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 1, true,COLOR_TABLE[i%30]);
-//                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
-//                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 1, true,COLOR_TABLE[i%30]);
-//            }
-            for(int x=0; x<dim[0]; x++) {
-                for(int y=0; y<dim[1]; y++) {
-                    Pointi<2> pt{x, y};
-                    auto block_ptr = sbt->getInternalBlockPtr(pt);
-                    if(block_ptr == nullptr) { continue; }
-                    if(block_ptr->merged_block_id_ != -1) {
-                        Id indicator = block_ptr->merged_block_id_;
-                        canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
-                    }
-                }
+            auto merged_free_leaf_nodes = sbt->merged_block_ptrs_;
+            for(int i=0; i<merged_free_leaf_nodes.size(); i++) {
+                const auto& block_ptr = merged_free_leaf_nodes[i];
+                const Pointi<2> pt1 = block_ptr->min_pt_, pt2 = block_ptr->max_pt_;// + Pointi<2>{1, 1};
+                canvas.drawGridLine(pt1[0], pt1[1], pt1[0], pt2[1], 2, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt1[0], pt2[1], pt2[0], pt2[1], 2, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt2[1], pt2[0], pt1[1], 2, true,COLOR_TABLE[i%30]);
+                canvas.drawGridLine(pt2[0], pt1[1], pt1[0], pt1[1], 2, true,COLOR_TABLE[i%30]);
             }
+//            for(int x=0; x<dim[0]; x++) {
+//                for(int y=0; y<dim[1]; y++) {
+//                    Pointi<2> pt{x, y};
+//                    auto block_ptr = sbt->getInternalBlockPtr(pt);
+//                    if(block_ptr == nullptr) { continue; }
+//                    if(block_ptr->merged_block_id_ != -1) {
+//                        Id indicator = block_ptr->merged_block_id_;
+//                        canvas.drawGrid(pt[0], pt[1], COLOR_TABLE[indicator%30]);
+//                    }
+//                }
+//            }
         }
         if(triger_varify) {
             triger_varify = false;
