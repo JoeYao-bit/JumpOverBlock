@@ -205,7 +205,15 @@ def drawCompareTimeCost(all_data, dim, draw_scatter = False):
             # 计算移动平均
             window_size = math.ceil(len(x)/5)  # 控制平滑程度
             y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
-            plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_map_of_type[type_key]+'_width='+str(map_key), color=map_size_color_map[map_key])
+
+
+            label_temp = ""
+            if type_key != "SBT_RAW":
+                label_temp = label_map_of_type[type_key]+'_width='+str(map_key)
+            else:
+                label_temp = quadtree_octomap_dim_map[dim]+'_width='+str(map_key)
+
+            plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_temp, color=map_size_color_map[map_key])
             
             # coefficients = np.polyfit(x, y, deg=1)
             # trend_line = np.poly1d(coefficients)
@@ -364,7 +372,14 @@ def drawSBTInitData(all_data, dim, draw_scatter = False):
             # 计算移动平均
             window_size = math.ceil(len(x)/5)  # 控制平滑程度
             y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
-            plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_map_of_type[type_key]+'_width='+str(map_key), color=map_size_color_map[map_key])
+
+            label_temp = ""
+            if type_key != "SBT_RAW":
+                label_temp = label_map_of_type[type_key]+'_width='+str(map_key)
+            else:
+                label_temp = quadtree_octomap_dim_map[dim]+'_width='+str(map_key)
+
+            plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_temp, color=map_size_color_map[map_key])
 
             # coefficients = np.polyfit(x, y, deg=1)
             # trend_line = np.poly1d(coefficients)
@@ -435,7 +450,16 @@ def drawSBTUpdateData(all_data, dim, draw_scatter = False):
                 # 计算移动平均
                 window_size = math.ceil(len(x)/5)  # 控制平滑程度
                 y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
-                plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_map_of_type[type_key]+'_width='+str(dim_length_key), color=map_size_color_map[dim_length_key])
+
+
+                label_temp = ""
+                if type_key != "SBT_RAW":
+                    label_temp = label_map_of_type[type_key]+'_width='+str(dim_length_key)
+                else:
+                    label_temp = quadtree_octomap_dim_map[dim]+'_width='+str(dim_length_key)
+
+
+                plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_temp, color=map_size_color_map[dim_length_key])
 
                 # print('x/y size = ', len(x), " / ", len(y))
                 # coefficients = np.polyfit(x, y, deg=1)
@@ -478,7 +502,7 @@ map_size_color_map = {
 label_map_of_type = {
     "RAW":"RAW",
     "SBT":"SBT",
-    "SBT_RAW":"QUAD/OCT"
+    "SBT_RAW":"QUAD/OCTO"
 }
 
 line_map_of_type = {
@@ -493,6 +517,11 @@ file_paths = ["../test/SBT_LOS.txt",
               "../test/SBT_LOS600.txt",
               "../test/SBT_LOS800.txt",
               "../test/SBT_LOS1000.txt"]
+
+quadtree_octomap_dim_map = {
+    2:"QUAD",
+    3:"OCTO"
+}
 
 all_compare_data = []
 
