@@ -151,14 +151,12 @@ def drawCompareTimeCost(all_data, dim, draw_scatter = False):
 
         if "SBT_RAW" not in map_data:
             map_data["SBT_RAW"] = dict()
-
         if "SBT" not in map_data:
             map_data["SBT"] = dict()    
-        
         if "RAW" not in map_data:
             map_data["RAW"] = dict()    
 
-        if a_data.dimension_length not in map_data["SBT"]:
+        if a_data.dimension_length not in map_data["RAW"]:
             map_data["RAW"][a_data.dimension_length] = dict()
             map_data["RAW"][a_data.dimension_length]["colli_ratio"] = list()
             map_data["RAW"][a_data.dimension_length]["time_cost"] = list()
@@ -182,69 +180,76 @@ def drawCompareTimeCost(all_data, dim, draw_scatter = False):
         map_data["RAW"][a_data.dimension_length]["colli_ratio"].append(a_data.colli_ratio)
         map_data["RAW"][a_data.dimension_length]["time_cost"].append(a_data.RAW_LOS_time_cost)
 
-    fig=plt.figure(figsize=(5,4)) #添加绘图框
+    fig = plt.figure(figsize=(5,4))
     ax = plt.axes()
     plt.ylabel("Time cost(us)", fontsize = 13)
-    plt.xlabel("Obstacle density", fontsize = 13)    
+    plt.xlabel("Obstacle density", fontsize = 13)
 
     for type_key, type_value in map_data.items():
         for map_key, map_value in map_data[type_key].items():
             x = map_value["colli_ratio"]
             y = map_value["time_cost"]
+
             if draw_scatter:
-                scatter = ax.scatter(x, y, marker='.', color=map_size_color_map[map_key])
+                ax.scatter(x, y, marker='.', color=map_size_color_map[map_key])
 
-            # 按x排序
+            # 按 x 排序
             sort_idx = np.argsort(x)
+            x_sorted = [x[i] for i in sort_idx]
+            y_sorted = [y[i] for i in sort_idx]
 
-            x_sorted = list()
-            y_sorted = list()
-            for idx in sort_idx:
-                x_sorted.append(x[idx])
-                y_sorted.append(y[idx])
-            # 计算移动平均
-            window_size = math.ceil(len(x)/5)  # 控制平滑程度
-            y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
+            # ===== 原有：滑动均值 =====
+            window_size = math.ceil(len(x) / 5)
+            y_array = np.array(y_sorted)
+            y_smooth = uniform_filter1d(y_array, size=window_size)
 
+            # ===== 新增：滑动窗口方差 / 标准差 =====
+            y_sq_smooth = uniform_filter1d(y_array ** 2, size=window_size)
+            y_var = y_sq_smooth - y_smooth ** 2
+            y_var[y_var < 0] = 0.0
+            y_std = np.sqrt(y_var)
 
-            label_temp = ""
+            # label（原逻辑不变）
             if type_key != "SBT_RAW":
-                label_temp = label_map_of_type[type_key]+'_width='+str(map_key)
+                label_temp = label_map_of_type[type_key] + '_width=' + str(map_key)
             else:
-                label_temp = quadtree_octomap_dim_map[dim]+'_width='+str(map_key)
+                label_temp = quadtree_octomap_dim_map[dim] + '_width=' + str(map_key)
 
-            plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_temp, color=map_size_color_map[map_key])
-            
-            # coefficients = np.polyfit(x, y, deg=1)
-            # trend_line = np.poly1d(coefficients)
-            # plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_'+'width='+str(map_key))
-        
-    plt.legend(   loc='lower center',          # 锚点定位在底部中心
-                  bbox_to_anchor=(0.5, 1.0),   # 锚点位置：x=0.5（居中）, y=1.0（图形顶部）
-                  ncol=2,                      # 图例分2列显示（水平排列）
-                  frameon=False                # 可选：去掉图例边框
-               )    
-    # plt.show()     
+            # 均值曲线（原有）
+            plt.plot(
+                x_sorted,
+                y_smooth,
+                linestyle=line_map_of_type[type_key],
+                label=label_temp,
+                color=map_size_color_map[map_key]
+            )
+
+            # ===== 新增：方差阴影 =====
+            plt.fill_between(
+                x_sorted,
+                y_smooth - y_std,
+                y_smooth + y_std,
+                color=map_size_color_map[map_key],
+                alpha=0.2,
+                linewidth=0
+            )
+
+    plt.legend(
+        loc='lower center',
+        bbox_to_anchor=(1.3, 0),
+        ncol=1,
+        frameon=False
+    )
+
     save_path = "../test/pic/"
     if not os.path.exists(save_path):
         os.makedirs(save_path)
         print("Folder: " + save_path + " created")
-    save_path = save_path + "dim_"+str(dim)+"_timecost_compare_summary"    
-    plt.savefig(save_path, dpi = 200, bbox_inches='tight')   
+
+    save_path = save_path + "dim_" + str(dim) + "_timecost_compare_summary"
+    plt.savefig(save_path, dpi=200, bbox_inches='tight')
     plt.close()
-    print("save picture to "+save_path)        
-
-    # figsize = (1, 1)
-    # fig_leg = plt.figure(figsize=figsize)
-    # ax_leg = fig_leg.add_subplot(111)
-    # # add the legend from the previous axes
-    # ax_leg.legend(*ax.get_legend_handles_labels(), ncol = 2, loc='center')
-    # # hide the axes frame and the x/y labels
-    # ax_leg.axis('off')
-    # fig_leg.savefig(save_path+'_legend.png',dpi = 400, bbox_inches='tight')
-    # plt.close('all')
-    # print("save legend to " + save_path)
-
+    print("save picture to " + save_path)
 
 def printInitAndUpdateStatistic(all_data, dim):
     map_data = dict() # dimelength and data occ ratio, dimension_length
@@ -349,47 +354,65 @@ def drawSBTInitData(all_data, dim, draw_scatter = False):
         map_data[a_data.name][a_data.dimension_length]["occ_ratio"].append(a_data.occ_ratio)
         map_data[a_data.name][a_data.dimension_length]["init_time_cost"].append(a_data.init_time_cost)
 
-    fig=plt.figure(figsize=(5,4)) #添加绘图框
+    fig=plt.figure(figsize=(5,4))
     ax = plt.axes()
-    #ax.set_yscale('log')  
     plt.ylabel("Init Time Cost (ms)", fontsize = 13)
-    plt.xlabel("Occ Ratio", fontsize = 13)    
+    plt.xlabel("Occ Ratio", fontsize = 13)
+
     for type_key, type_value in map_data.items():
         for map_key, map_value in map_data[type_key].items():
             x = map_value["occ_ratio"]
             y = map_value["init_time_cost"]
+
             if draw_scatter:
-                scatter = ax.scatter(x, y, marker='.', color=map_size_color_map[map_key])
+                ax.scatter(x, y, marker='.', color=map_size_color_map[map_key])
 
-            # 按x排序
+            # 按 x 排序
             sort_idx = np.argsort(x)
+            x_sorted = [x[i] for i in sort_idx]
+            y_sorted = [y[i] for i in sort_idx]
 
-            x_sorted = list()
-            y_sorted = list()
-            for idx in sort_idx:
-                x_sorted.append(x[idx])
-                y_sorted.append(y[idx])
-            # 计算移动平均
-            window_size = math.ceil(len(x)/5)  # 控制平滑程度
-            y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
+            # ===== 原有平滑均值（不变）=====
+            window_size = math.ceil(len(x) / 5)
+            y_array = np.array(y_sorted)
+            y_smooth = uniform_filter1d(y_array, size=window_size)
 
-            label_temp = ""
+            # ===== 新增：滑动窗口方差 / 标准差 =====
+            y_sq_smooth = uniform_filter1d(y_array ** 2, size=window_size)
+            y_var = y_sq_smooth - y_smooth ** 2
+            y_var[y_var < 0] = 0.0   # 数值稳定性
+            y_std = np.sqrt(y_var)
+
+            # label（原逻辑不变）
             if type_key != "SBT_RAW":
-                label_temp = label_map_of_type[type_key]+'_width='+str(map_key)
+                label_temp = label_map_of_type[type_key] + '_width=' + str(map_key)
             else:
-                label_temp = quadtree_octomap_dim_map[dim]+'_width='+str(map_key)
+                label_temp = quadtree_octomap_dim_map[dim] + '_width=' + str(map_key)
 
-            plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_temp, color=map_size_color_map[map_key])
+            # 均值曲线（原有）
+            plt.plot(
+                x_sorted,
+                y_smooth,
+                linestyle=line_map_of_type[type_key],
+                label=label_temp,
+                color=map_size_color_map[map_key]
+            )
+            # ===== 新增：方差阴影 =====
+            plt.fill_between(
+                x_sorted,
+                y_smooth - y_std,
+                y_smooth + y_std,
+                color=map_size_color_map[map_key],
+                alpha=0.2,
+                linewidth=0
+            )
 
-            # coefficients = np.polyfit(x, y, deg=1)
-            # trend_line = np.poly1d(coefficients)
-            # plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_width='+str(map_key))
-        
     plt.legend(   loc='lower center',          # 锚点定位在底部中心
                 bbox_to_anchor=(0.5, 1.0),   # 锚点位置：x=0.5（居中）, y=1.0（图形顶部）
                 ncol=2,                      # 图例分2列显示（水平排列）
                 frameon=False                # 可选：去掉图例边框
             )    
+    
     plt.ylabel("Time cost(ms)", fontsize = 13)
     plt.xlabel("Obstacle density", fontsize = 13)    
     # plt.show()     
@@ -401,8 +424,7 @@ def drawSBTInitData(all_data, dim, draw_scatter = False):
     plt.savefig(save_path, dpi = 200, bbox_inches='tight')   
     plt.close()
     print("save picture to "+save_path)        
-
-
+ 
 
 def drawSBTUpdateData(all_data, dim, draw_scatter = False):
     map_data = dict() # dimelength and data occ ratio, dimension_length
@@ -427,61 +449,79 @@ def drawSBTUpdateData(all_data, dim, draw_scatter = False):
         map_data[a_data.max_obs_move_distance][a_data.name][a_data.dimension_length]["update_time_cost"].append(a_data.update_time_cost)
 
     for max_dist, temp_value in map_data.items():
-        fig=plt.figure(figsize=(5,4)) #添加绘图框
+        fig=plt.figure(figsize=(5,4))
         ax = plt.axes()
-        #ax.set_yscale('log')  
         plt.ylabel("Update Time Cost(ms)", fontsize = 13)
-        plt.xlabel("Occ Ratio", fontsize = 13)    
+        plt.xlabel("Occ Ratio", fontsize = 13)
+
         for type_key, type_value in map_data[max_dist].items():
             for dim_length_key, map_value in map_data[max_dist][type_key].items():
                 x = map_value["occ_ratio"]
                 y = map_value["update_time_cost"]
+
                 if draw_scatter:
-                    scatter = ax.scatter(x, y, marker='.', color=map_size_color_map[dim_length_key])
+                    ax.scatter(x, y, marker='.', color=map_size_color_map[dim_length_key])
 
-                # 按x排序
+                # 按 x 排序
                 sort_idx = np.argsort(x)
+                x_sorted = [x[i] for i in sort_idx]
+                y_sorted = [y[i] for i in sort_idx]
 
-                x_sorted = list()
-                y_sorted = list()
-                for idx in sort_idx:
-                    x_sorted.append(x[idx])
-                    y_sorted.append(y[idx])
-                # 计算移动平均
-                window_size = math.ceil(len(x)/5)  # 控制平滑程度
-                y_smooth = uniform_filter1d(y_sorted, size=window_size) # window_size must be integer
+                # ===== 原有：滑动均值 =====
+                window_size = math.ceil(len(x) / 5)
+                y_array = np.array(y_sorted)
+                y_smooth = uniform_filter1d(y_array, size=window_size)
 
+                # ===== 新增：滑动窗口方差 / 标准差 =====
+                y_sq_smooth = uniform_filter1d(y_array ** 2, size=window_size)
+                y_var = y_sq_smooth - y_smooth ** 2
+                y_var[y_var < 0] = 0.0
+                y_std = np.sqrt(y_var)
 
-                label_temp = ""
+                # label（原逻辑不变）
                 if type_key != "SBT_RAW":
-                    label_temp = label_map_of_type[type_key]+'_width='+str(dim_length_key)
+                    label_temp = label_map_of_type[type_key] + '_width=' + str(dim_length_key)
                 else:
-                    label_temp = quadtree_octomap_dim_map[dim]+'_width='+str(dim_length_key)
+                    label_temp = quadtree_octomap_dim_map[dim] + '_width=' + str(dim_length_key)
 
+                # 均值曲线（原有）
+                plt.plot(
+                    x_sorted,
+                    y_smooth,
+                    linestyle=line_map_of_type[type_key],
+                    label=label_temp,
+                    color=map_size_color_map[dim_length_key]
+                )
 
-                plt.plot(x_sorted, y_smooth, linestyle=line_map_of_type[type_key], label=label_temp, color=map_size_color_map[dim_length_key])
+                # ===== 新增：方差阴影 =====
+                plt.fill_between(
+                    x_sorted,
+                    y_smooth - y_std,
+                    y_smooth + y_std,
+                    color=map_size_color_map[dim_length_key],
+                    alpha=0.2,
+                    linewidth=0
+                )
 
-                # print('x/y size = ', len(x), " / ", len(y))
-                # coefficients = np.polyfit(x, y, deg=1)
-                # trend_line = np.poly1d(coefficients)
-                # plt.plot(x, trend_line(x), label=label_map_of_type[type_key]+'_width='+str(map_key))
-            
-        plt.legend(   loc='lower center',          # 锚点定位在底部中心
-                bbox_to_anchor=(0.5, 1.0),   # 锚点位置：x=0.5（居中）, y=1.0（图形顶部）
-                ncol=2,                      # 图例分2列显示（水平排列）
-                frameon=False                # 可选：去掉图例边框
-            )    
+        plt.legend(
+            loc='lower center',
+            bbox_to_anchor=(1.3, 0.2),
+            ncol=1,
+            frameon=False
+        )
+
         plt.ylabel("Time cost(ms)", fontsize = 13)
-        plt.xlabel("Obstacle density", fontsize = 13)    
-        # plt.show()     
+        plt.xlabel("Obstacle density", fontsize = 13)
+
         save_path = "../test/pic/"
         if not os.path.exists(save_path):
             os.makedirs(save_path)
             print("Folder: " + save_path + " created")
-        save_path = save_path + "dim_"+str(dim)+"_dist_"+ str(max_dist) +"_update_summary"    
-        plt.savefig(save_path, dpi = 200, bbox_inches='tight')   
+
+        save_path = save_path + "dim_" + str(dim) + "_dist_" + str(max_dist) + "_update_summary"
+        plt.savefig(save_path, dpi=200, bbox_inches='tight')
         plt.close()
-        print("save picture to "+save_path)        
+        print("save picture to " + save_path)
 
 
 dim_color_map = {
