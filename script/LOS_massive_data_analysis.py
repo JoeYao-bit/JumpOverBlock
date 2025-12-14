@@ -399,18 +399,21 @@ all_compare_data = loadDataFromfile(file_path)
 
 drawSBTInitData(all_compare_data, 2)
 
-drawSBTUpdateData(all_compare_data, 2)
+# drawSBTUpdateData(all_compare_data, 2)
+for max_dist in [1, 2, 4, 16]:
+    drawSBTUpdateData(all_compare_data, 2, max_dist)
 
 drawCompareTimeCost(all_compare_data, 2)
 
 printStatistic(all_compare_data, 2)
 
-# drawSBTInitData(all_compare_data, 3)
-# for max_dist in [1, 4, 16, 0]:
-#     drawSBTUpdateData(all_compare_data, 3, max_dist)
+drawSBTInitData(all_compare_data, 3)
 
-# drawCompareTimeCost(all_compare_data, 3)
-# printStatistic(all_compare_data, 3)
+for max_dist in [1, 2, 4, 16]:
+    drawSBTUpdateData(all_compare_data, 3, max_dist)
+
+drawCompareTimeCost(all_compare_data, 3)
+printStatistic(all_compare_data, 3)
 
 # # 生成示例数据
 # np.random.seed(42)
