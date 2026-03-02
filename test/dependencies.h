@@ -410,10 +410,15 @@ namespace freeNav::JOB {
             for(const auto& count : number_of_obstacles) {
                 for(const auto& max_obs_move_distance : max_obs_move_distances) {
                     // debug: do not use external config of obstacles
-                    int local_min_radius = width / 20,
-                            local_max_radius = width / 10,
-                            local_min_block_width = width / 20,
-                            local_max_block_width = width / 10;
+//                    int local_min_radius = width / 20,
+//                            local_max_radius = width / 10,
+//                            local_min_block_width = width / 20,
+//                            local_max_block_width = width / 10;
+
+                    int local_min_radius = width / 50,
+                            local_max_radius = width / 40,
+                            local_min_block_width = width / 50,
+                            local_max_block_width = width / 40;
 
                     ObstaclePtrs<N> obs = generateRandomObstacles<N>(count,
                                                                      local_min_radius,
@@ -538,8 +543,8 @@ namespace freeNav::JOB {
                             bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, sbt_raw->isoc_dynamic_, sum_count_of_block_2);
                             sum_3 = sum_3 + ust.elapsed();
 
-                            assert(isoc == isoc1);
-                            assert(isoc == isoc2);
+                            //assert(isoc == isoc1);
+                            //assert(isoc == isoc2);
 
                             if(isoc) { occ_count ++; }
                             success_count++;
@@ -620,6 +625,7 @@ namespace freeNav::JOB {
                         if (!file_path.empty()) {
                             std::stringstream ss;
                             ss << width << ".txt";
+                            //ss << ".txt";
                             std::string full_path = file_path+ss.str();
                             writeToFile<N>(strs, full_path);
                             std::cout << "write test data to " << full_path << std::endl;

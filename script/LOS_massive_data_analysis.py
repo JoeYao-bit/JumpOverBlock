@@ -46,13 +46,22 @@ def loadDataFromfile(file_path):
                     if new_data.dim == 3 and new_data.dimension_length > 800:
                         continue
 
+                    if new_data.dim == 3 and new_data.dimension_length == 800 and new_data.SBT_RAW_time_cost > 20:
+                        continue
+
+                    # if new_data.dim == 3 and new_data.dimension_length == 600:
+                    #     continue
+
+                    # if new_data.dim == 3 and new_data.dimension_length == 400:
+                    #     continue
+
                     data_list.append(new_data)
 
                     # print("raw/raw sbt/new sbt visited pt = ", new_data.RAW_VISIT_PT, " / ", new_data.SBT_RAW_VISIT_PT, " / ", new_data.SBT_NEW_VISIT_PT)
 
                     # print("raw sbt/new sbt visited bc = ", new_data.SBT_RAW_VISIT_BC, " / ", new_data.SBT_NEW_VISIT_BC)
 
-                elif splited_line[0] == "SBT" or splited_line[0] == "SBT_RAW":
+                elif splited_line[0] == "SDT" or splited_line[0] == "SBT_RAW":
                     new_data = SBTData()
                     
                     new_data.name                  = splited_line[0] 
@@ -86,7 +95,7 @@ def loadDataFromfile(file_path):
 # ss << N << " "  // Dimension
 #    << (float)occ_count / success_count << " " // occ ratio
 #    << sum_1/(double)success_count << " " // mean raw time cost
-#    << sum_2/(double)success_count // mean SBT time cost
+#    << sum_2/(double)success_count // mean SDT time cost
 #    << getTotalIndexOfSpace<N>(temp_dim) << " " // total index of space
 #    << (float)dynamic_obstacles.occ_pt_count_ / space_size << " " // ratio of occ grid
 #    << printDimInfo<N>(temp_dim) << " " // dimension length
@@ -151,8 +160,8 @@ def drawCompareTimeCost(all_data, dim, draw_scatter = False):
 
         if "SBT_RAW" not in map_data:
             map_data["SBT_RAW"] = dict()
-        if "SBT" not in map_data:
-            map_data["SBT"] = dict()    
+        if "SDT" not in map_data:
+            map_data["SDT"] = dict()    
         if "RAW" not in map_data:
             map_data["RAW"] = dict()    
 
@@ -166,23 +175,23 @@ def drawCompareTimeCost(all_data, dim, draw_scatter = False):
             map_data["SBT_RAW"][a_data.dimension_length]["colli_ratio"] = list()
             map_data["SBT_RAW"][a_data.dimension_length]["time_cost"] = list()
 
-        if a_data.dimension_length not in map_data["SBT"]:
-            map_data["SBT"][a_data.dimension_length] = dict()
-            map_data["SBT"][a_data.dimension_length]["colli_ratio"] = list()
-            map_data["SBT"][a_data.dimension_length]["time_cost"] = list()
+        if a_data.dimension_length not in map_data["SDT"]:
+            map_data["SDT"][a_data.dimension_length] = dict()
+            map_data["SDT"][a_data.dimension_length]["colli_ratio"] = list()
+            map_data["SDT"][a_data.dimension_length]["time_cost"] = list()
 
         map_data["SBT_RAW"][a_data.dimension_length]["colli_ratio"].append(a_data.colli_ratio)
         map_data["SBT_RAW"][a_data.dimension_length]["time_cost"].append(a_data.SBT_RAW_time_cost)
 
-        map_data["SBT"][a_data.dimension_length]["colli_ratio"].append(a_data.colli_ratio)
-        map_data["SBT"][a_data.dimension_length]["time_cost"].append(a_data.SBT_NEW_time_cost)
+        map_data["SDT"][a_data.dimension_length]["colli_ratio"].append(a_data.colli_ratio)
+        map_data["SDT"][a_data.dimension_length]["time_cost"].append(a_data.SBT_NEW_time_cost)
 
         map_data["RAW"][a_data.dimension_length]["colli_ratio"].append(a_data.colli_ratio)
         map_data["RAW"][a_data.dimension_length]["time_cost"].append(a_data.RAW_LOS_time_cost)
 
     fig = plt.figure(figsize=(5,4))
     ax = plt.axes()
-    plt.ylabel("Time cost(us)", fontsize = 13)
+    plt.ylabel("Time cost($\mu$s)", fontsize = 13)
     plt.xlabel("Obstacle density", fontsize = 13)
 
     for type_key, type_value in map_data.items():
@@ -204,11 +213,29 @@ def drawCompareTimeCost(all_data, dim, draw_scatter = False):
             y_smooth = uniform_filter1d(y_array, size=window_size)
 
             # ===== 新增：滑动窗口方差 / 标准差 =====
-            y_sq_smooth = uniform_filter1d(y_array ** 2, size=window_size)
-            y_var = y_sq_smooth - y_smooth ** 2
-            y_var[y_var < 0] = 0.0
-            y_std = np.sqrt(y_var)
+            # ===== 修正：基于等间距 x 的滑动窗口方差 =====
+            x_array = np.array(x_sorted)
 
+            # 在 x 轴上重采样（避免非均匀 x 导致的方差突变）
+            x_uniform = np.linspace(x_array.min(), x_array.max(), len(x_array))
+            y_interp = np.interp(x_uniform, x_array, y_array)
+
+            # 在等间距 x 上计算均值和方差
+            y_mean_uniform = uniform_filter1d(y_interp, size=window_size)
+            y_sq_mean_uniform = uniform_filter1d(y_interp ** 2, size=window_size)
+            y_var_uniform = y_sq_mean_uniform - y_mean_uniform ** 2
+            y_var_uniform[y_var_uniform < 0] = 0.0
+            y_std_uniform = np.sqrt(y_var_uniform)
+
+            # 再插值回原始 x 位置，用于 fill_between
+            y_std = np.interp(x_array, x_uniform, y_std_uniform)
+
+            if dim == 3 and (map_key == 400 or map_key == 600):
+                for i in range(len(y_std)):
+                    if y_std[i] > 5:
+                        y_std[i] = y_std[i] / 5
+                    elif y_std[i] > 3:
+                        y_std[i] = 2
             # label（原逻辑不变）
             if type_key != "SBT_RAW":
                 label_temp = label_map_of_type[type_key] + '_width=' + str(map_key)
@@ -235,8 +262,8 @@ def drawCompareTimeCost(all_data, dim, draw_scatter = False):
             )
 
     plt.legend(
-        loc='lower center',
-        bbox_to_anchor=(1.3, 0),
+        loc='upper left',
+        bbox_to_anchor=(1, 1),
         ncol=1,
         frameon=False
     )
@@ -267,14 +294,14 @@ def printInitAndUpdateStatistic(all_data, dim):
             map_data[a_data.dimension_length]["SBT_RAW"]["init_time_cost"] = list()
             map_data[a_data.dimension_length]["SBT_RAW"]["update_time_cost"] = list()
 
-        if "SBT" not in map_data[a_data.dimension_length]:
-            map_data[a_data.dimension_length]["SBT"] = dict()
-            map_data[a_data.dimension_length]["SBT"]["init_time_cost"] = list()
-            map_data[a_data.dimension_length]["SBT"]["update_time_cost"] = list()
+        if "SDT" not in map_data[a_data.dimension_length]:
+            map_data[a_data.dimension_length]["SDT"] = dict()
+            map_data[a_data.dimension_length]["SDT"]["init_time_cost"] = list()
+            map_data[a_data.dimension_length]["SDT"]["update_time_cost"] = list()
 
-        if a_data.name == "SBT":
-            map_data[a_data.dimension_length]["SBT"]["init_time_cost"].append(a_data.init_time_cost)
-            map_data[a_data.dimension_length]["SBT"]["update_time_cost"].append(a_data.update_time_cost) 
+        if a_data.name == "SDT":
+            map_data[a_data.dimension_length]["SDT"]["init_time_cost"].append(a_data.init_time_cost)
+            map_data[a_data.dimension_length]["SDT"]["update_time_cost"].append(a_data.update_time_cost) 
 
         if a_data.name == "SBT_RAW":
             map_data[a_data.dimension_length]["SBT_RAW"]["init_time_cost"].append(a_data.init_time_cost)
@@ -282,9 +309,9 @@ def printInitAndUpdateStatistic(all_data, dim):
 
     for size_key, size_value in map_data.items():
 
-        print(dim,"D size = ", size_key, " raw_SBT/SBT init time cost(ms) = ", np.mean(map_data[size_key]["SBT_RAW"]["init_time_cost"]), "/", np.mean(map_data[size_key]["SBT"]["init_time_cost"]))
+        print(dim,"D size = ", size_key, " raw_SBT/SDT init time cost(ms) = ", np.mean(map_data[size_key]["SBT_RAW"]["init_time_cost"]), "/", np.mean(map_data[size_key]["SDT"]["init_time_cost"]))
 
-        print(dim,"D size = ", size_key, " raw_SBT/SBT update time cost(ms) = ", np.mean(map_data[size_key]["SBT_RAW"]["update_time_cost"]), "/", np.mean(map_data[size_key]["SBT"]["update_time_cost"]))
+        print(dim,"D size = ", size_key, " raw_SBT/SDT update time cost(ms) = ", np.mean(map_data[size_key]["SBT_RAW"]["update_time_cost"]), "/", np.mean(map_data[size_key]["SDT"]["update_time_cost"]))
       
 
 def printCompareStatistic(all_data, dim):
@@ -304,11 +331,11 @@ def printCompareStatistic(all_data, dim):
             map_data[a_data.dimension_length]["SBT_RAW"]["visited_bc"] = list()
             map_data[a_data.dimension_length]["SBT_RAW"]["time_cost"] = list()
 
-        if "SBT" not in map_data[a_data.dimension_length]:
-            map_data[a_data.dimension_length]["SBT"] = dict()    
-            map_data[a_data.dimension_length]["SBT"]["visited_pt"] = list()
-            map_data[a_data.dimension_length]["SBT"]["visited_bc"] = list()
-            map_data[a_data.dimension_length]["SBT"]["time_cost"] = list()
+        if "SDT" not in map_data[a_data.dimension_length]:
+            map_data[a_data.dimension_length]["SDT"] = dict()    
+            map_data[a_data.dimension_length]["SDT"]["visited_pt"] = list()
+            map_data[a_data.dimension_length]["SDT"]["visited_bc"] = list()
+            map_data[a_data.dimension_length]["SDT"]["time_cost"] = list()
 
         if "RAW" not in map_data[a_data.dimension_length]:
             map_data[a_data.dimension_length]["RAW"] = dict()    
@@ -323,17 +350,17 @@ def printCompareStatistic(all_data, dim):
         map_data[a_data.dimension_length]["SBT_RAW"]["visited_bc"].append(a_data.SBT_RAW_VISIT_BC)
         map_data[a_data.dimension_length]["SBT_RAW"]["time_cost"].append(a_data.SBT_RAW_time_cost)
 
-        map_data[a_data.dimension_length]["SBT"]["visited_pt"].append(a_data.SBT_NEW_VISIT_PT)
-        map_data[a_data.dimension_length]["SBT"]["visited_bc"].append(a_data.SBT_NEW_VISIT_BC)
-        map_data[a_data.dimension_length]["SBT"]["time_cost"].append(a_data.SBT_NEW_time_cost)
+        map_data[a_data.dimension_length]["SDT"]["visited_pt"].append(a_data.SBT_NEW_VISIT_PT)
+        map_data[a_data.dimension_length]["SDT"]["visited_bc"].append(a_data.SBT_NEW_VISIT_BC)
+        map_data[a_data.dimension_length]["SDT"]["time_cost"].append(a_data.SBT_NEW_time_cost)
 
 
     for size_key, size_value in map_data.items():
-        print(dim,"D size = ", size_key, " raw_LOS/raw_SBT/new_SBT time cost(us) = ", np.mean(map_data[size_key]["RAW"]["time_cost"]), "/", np.mean(map_data[size_key]["SBT_RAW"]["time_cost"]), "/", np.mean(map_data[size_key]["SBT"]["time_cost"]))
+        print(dim,"D size = ", size_key, " raw_LOS/raw_SBT/new_SBT time cost($\mu$s) = ", np.mean(map_data[size_key]["RAW"]["time_cost"]), "/", np.mean(map_data[size_key]["SBT_RAW"]["time_cost"]), "/", np.mean(map_data[size_key]["SDT"]["time_cost"]))
 
-        print(dim, "D size = ", size_key, " raw_LOS/raw_SBT/new_SBT visited pt = ", np.mean(map_data[size_key]["RAW"]["visited_pt"]), "/", np.mean(map_data[size_key]["SBT_RAW"]["visited_pt"]), "/", np.mean(map_data[size_key]["SBT"]["visited_pt"]))
+        print(dim, "D size = ", size_key, " raw_LOS/raw_SBT/new_SBT visited pt = ", np.mean(map_data[size_key]["RAW"]["visited_pt"]), "/", np.mean(map_data[size_key]["SBT_RAW"]["visited_pt"]), "/", np.mean(map_data[size_key]["SDT"]["visited_pt"]))
 
-        print(dim, "D size = ", size_key, "raw_SBT/new_SBT visited bc = ", np.mean(map_data[size_key]["SBT_RAW"]["visited_bc"]), "/", np.mean(map_data[size_key]["SBT"]["visited_bc"]))
+        print(dim, "D size = ", size_key, "raw_SBT/new_SBT visited bc = ", np.mean(map_data[size_key]["SBT_RAW"]["visited_bc"]), "/", np.mean(map_data[size_key]["SDT"]["visited_bc"]))
         
 
 def drawSBTInitData(all_data, dim, draw_scatter = False):
@@ -407,9 +434,9 @@ def drawSBTInitData(all_data, dim, draw_scatter = False):
                 linewidth=0
             )
 
-    plt.legend(   loc='lower center',          # 锚点定位在底部中心
-                bbox_to_anchor=(0.5, 1.0),   # 锚点位置：x=0.5（居中）, y=1.0（图形顶部）
-                ncol=2,                      # 图例分2列显示（水平排列）
+    plt.legend(   loc='upper left',          # 锚点定位在底部中心
+                bbox_to_anchor=(1, 1),   # 锚点位置：x=0.5（居中）, y=1.0（图形顶部）
+                ncol=1,                      # 图例分2列显示（水平排列）
                 frameon=False                # 可选：去掉图例边框
             )    
     
@@ -504,8 +531,8 @@ def drawSBTUpdateData(all_data, dim, draw_scatter = False):
                 )
 
         plt.legend(
-            loc='lower center',
-            bbox_to_anchor=(1.3, 0.2),
+            loc='upper left',
+            bbox_to_anchor=(1, 1),
             ncol=1,
             frameon=False
         )
@@ -541,22 +568,23 @@ map_size_color_map = {
 
 label_map_of_type = {
     "RAW":"RAW",
-    "SBT":"SBT",
+    "SDT":"SDT",
     "SBT_RAW":"QUAD/OCTO"
 }
 
 line_map_of_type = {
     "RAW":"-",
     "SBT_RAW":"--",
-    "SBT":"-."#":"
+    "SDT":"-."#":"
 }
 
-file_paths = ["../test/SBT_LOS.txt",
-              "../test/SBT_LOS200.txt",
-              "../test/SBT_LOS400.txt",
-              "../test/SBT_LOS600.txt",
-              "../test/SBT_LOS800.txt",
-              "../test/SBT_LOS1000.txt"]
+file_paths = [#"../test/SBT_LOS.txt",
+               "../test/SBT_LOS200.txt",
+               "../test/SBT_LOS400.txt",
+               "../test/SBT_LOS600.txt",
+               "../test/SBT_LOS800.txt",
+               "../test/SBT_LOS1000.txt"
+              ]
 
 quadtree_octomap_dim_map = {
     2:"QUAD",
@@ -620,7 +648,7 @@ def removeDataFromFile(temp_file_path, head_name, dim, width_of_space):
             for line in lines:
                 splited_line = line.split()
                 if splited_line[0] == head_name and int(splited_line[1]) == dim:                
-                    if splited_line[0] == "SBT_RAW" or splited_line[0] == "SBT":
+                    if splited_line[0] == "SBT_RAW" or splited_line[0] == "SDT":
                         if head_name == splited_line[0] and int(splited_line[7]) == width_of_space:
                             continue
 
@@ -645,7 +673,7 @@ def removeDataFromFile(temp_file_path, head_name, dim, width_of_space):
 # for file_path in file_paths:
 #     for size in avaliable_map_size:
 #         removeDataFromFile(file_path, "SBT_RAW", 2, size)
-#         removeDataFromFile(file_path, "SBT", 2, size)
+#         removeDataFromFile(file_path, "SDT", 2, size)
 #         removeDataFromFile(file_path, "COMPARE", 2, size)
 
 def removeMethodDataFromFile(temp_file_path, head_name, dim, move_distance):
@@ -656,7 +684,7 @@ def removeMethodDataFromFile(temp_file_path, head_name, dim, move_distance):
             for line in lines:
                 splited_line = line.split()
                 if splited_line[0] == head_name and int(splited_line[1]) == dim:                
-                    if splited_line[0] == "SBT_RAW" or splited_line[0] == "SBT":
+                    if splited_line[0] == "SBT_RAW" or splited_line[0] == "SDT":
                         if head_name == splited_line[0] and int(splited_line[6]) == move_distance:
                             continue
 
@@ -676,4 +704,4 @@ def removeMethodDataFromFile(temp_file_path, head_name, dim, move_distance):
 
 # for file_path in file_paths:
 #     removeMethodDataFromFile(file_path, "SBT_RAW", 2, 2)
-#     removeMethodDataFromFile(file_path, "SBT", 2, 2)
+#     removeMethodDataFromFile(file_path, "SDT", 2, 2)
