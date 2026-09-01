@@ -23,6 +23,9 @@ else()
     message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
 endif()
 
+INSTALL(DIRECTORY algorithm DESTINATION include/JumpOverBlock)
+
+
 aux_source_directory(third_party/ros_motion_planner ros_src)
 add_library(ros_lib ${ros_src})
 
