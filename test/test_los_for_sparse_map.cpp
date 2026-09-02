@@ -101,10 +101,8 @@ bool set_pt1 = true;
 bool new_pair = false;
 bool plan_finish = false;
 
-GridPtr<2> sg1 = std::make_shared<freeNav::Grid<2>>(),
-                             sg2 = std::make_shared<freeNav::Grid<2>>();
 
-Pointi<2> pt1, pt2;
+Pointf<2> pt1, pt2;
 
 int total_sample_level = 4; // including the raw map
 int current_show_level = 0;
@@ -194,21 +192,19 @@ TEST(BlockDetector, BlockDetectorFull) {
     double build_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
     std::cout << "-- block detect end in " << build_cost << "ms" << std::endl;
 
+    bool is_collide = true;
+
     auto callback = [](int event, float x, float y, int flags, void *) {
         if(event == cv::EVENT_LBUTTONDOWN) {
             if(set_pt1) {
                 pt1[0] = x;
                 pt1[1] = y;
-                sg1->pt_ = pt1;
-                sg1->id_ = PointiToId<2>(pt1, dimension);
                 set_pt1 = false;
                 plan_finish = false;
                 std::cout << "get point " << x << ", " << y << std::endl;
             } else {
                 pt2[0] = x;
                 pt2[1] = y;
-                sg2->pt_ = pt2;
-                sg2->id_ = PointiToId<2>(pt2, dimension);
                 set_pt1 = true;
                 std::cout << "get point " << x << ", " << y << std::endl;
                 new_pair = true;
@@ -241,20 +237,25 @@ TEST(BlockDetector, BlockDetectorFull) {
                     double mean_time_cost_jump = 0, mean_time_cost_raw = 0;
                     int total_count = 1;
                     for(int i=0; i<total_count; i++) {
+                        int count_of_block = 0;
+                        BlockDetectorInterfacePtr<2> block_detect_base = block_detect;
                         gettimeofday(&tv_pre, &tz);
-//                        if (LineCrossObstacleWithBlockJump(pt1, pt2,
-//                                                           block_detect,
-//                                                           visited_pts)) {
-//                            std::cout << "jump block line collide " << std::endl;
-//                        } else {
-//                            std::cout << "jump block line not collide " << std::endl;
-//                        }
+                        if (LineCrossObstacleWithBlockJumpFloat(pt1, pt2,
+                                                                block_detect_base,
+                                                                visited_pts,
+                                                                count_of_block)) {
+                            std::cout << "jump block line collide " << std::endl;
+                            is_collide = true;
+                        } else {
+                            std::cout << "jump block line not collide " << std::endl;
+                            is_collide = false;
+                        }
                         gettimeofday(&tv_after, &tz);
                         build_cost =
                                 (tv_after.tv_sec - tv_pre.tv_sec) * 1e3 + (tv_after.tv_usec - tv_pre.tv_usec) / 1e3;
                         mean_time_cost_jump = mean_time_cost_jump + build_cost;
                         gettimeofday(&tv_pre, &tz);
-                        if (LineCrossObstacle(pt1, pt2, is_occupied_func, neighbor)) {
+                        if (LineCrossObstacle(pt1.toInt(), pt2.toInt(), is_occupied_func, neighbor)) {
                             std::cout << "raw check line collide " << std::endl;
                         } else {
                             std::cout << "raw check line not collide " << std::endl;
@@ -304,7 +305,12 @@ TEST(BlockDetector, BlockDetectorFull) {
             }
         }
         canvas.drawGrids(visited_pts);
-        canvas.drawLineInt(pt1[0], pt1[1], pt2[0], pt2[1], true, 2, cv::Vec3b(0,255,0));
+        // color: BGR
+        if(!is_collide) {
+            canvas.drawLineInt(pt1[0], pt1[1], pt2[0], pt2[1], true, 2, cv::Vec3b(0, 255, 0));
+        } else {
+            canvas.drawLineInt(pt1[0], pt1[1], pt2[0], pt2[1], true, 2, cv::Vec3b(0, 0, 255));
+        }
         //canvas.drawCircleInt(pt1[0], pt1[1], 5, true, -1, COLOR_TABLE[0]);
         //canvas.drawCircleInt(pt2[0], pt2[1], 5, true, -1, COLOR_TABLE[1]);
         char key = canvas.show(300);
@@ -421,16 +427,12 @@ TEST(DistanceMapUpdate, test) {
             if(set_pt1) {
                 pt1[0] = x;
                 pt1[1] = y;
-                sg1->pt_ = pt1;
-                sg1->id_ = PointiToId<2>(pt1, dimension);
                 set_pt1 = false;
                 plan_finish = false;
                 std::cout << "get point " << x << ", " << y << std::endl;
             } else {
                 pt2[0] = x;
                 pt2[1] = y;
-                sg2->pt_ = pt2;
-                sg2->id_ = PointiToId<2>(pt2, dimension);
                 set_pt1 = true;
                 std::cout << "get point " << x << ", " << y << std::endl;
                 new_pair = true;

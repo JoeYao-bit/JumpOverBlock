@@ -140,7 +140,7 @@ bool SingleMapLOSCheckAnyDimensionRandomMap(DimensionLength* dimension,
         for(int dim=0; dim<N; dim++) {
             ss << target[dim]  << " ";
         }
-        Line<N> line(start, target);
+        Line<int, N> line(start, target);
         ss << los_cost << " " << line.step << " " << count_of_block << " " << (is_collide ? 1 : 0) << " ";
         output_stream = ss.str();
     };

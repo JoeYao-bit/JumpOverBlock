@@ -787,7 +787,7 @@ namespace freeNav::JOB {
 
         bool lineCrossObstacleRaw(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied) {
             if(pt1 == pt2) return true;
-            Line<N> line(pt1, pt2);
+            Line<int, N> line(pt1, pt2);
             int check_step = line.step;
             Pointi<N> pt;
             //std::cout << __FUNCTION__ << std::endl;
@@ -839,7 +839,7 @@ namespace freeNav::JOB {
             if(pt1 == pt2) return is_occupied(pt1);
             //visited_pt.clear();
             //count_of_block = 0;
-            Line<N> line(pt1, pt2);
+            Line<int, N> line(pt1, pt2);
             int check_step = line.step;
             Pointi<N> pt;
             Id id;

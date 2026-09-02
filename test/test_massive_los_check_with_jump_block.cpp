@@ -154,7 +154,7 @@ bool SingleMapLOSCheck3D(DimensionLength* dimension,
         for(int dim=0; dim<3; dim++) {
             ss << target[dim]  << " ";
         }
-        Line<3> line(start, target);
+        Line<int, 3> line(start, target);
         ss << los_cost << " " << line.step << " " << count_of_block << " " << (is_collide ? 1 : 0) << " ";
         output_stream = ss.str();
     };

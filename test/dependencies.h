@@ -210,7 +210,7 @@ namespace freeNav::JOB {
                 Pointis<2> pts_raw;
 
                 std::cout << "Raw LOS visited_pt = ";
-                Line<N> line(pt1, pt2);
+                Line<int, N> line(pt1, pt2);
                 int check_step = line.step;
                 Pointi<N> pt, occ_pt;
                 for(int i=1; i<check_step; i++) {
@@ -345,7 +345,7 @@ namespace freeNav::JOB {
                 Pointis<2> pts_raw;
 
                 std::cout << "Raw LOS visited_pt = ";
-                Line<N> line(pt1, pt2);
+                Line<int, N> line(pt1, pt2);
                 int check_step = line.step;
                 Pointi<N> pt;
                 for(int i=1; i<check_step; i++) {
