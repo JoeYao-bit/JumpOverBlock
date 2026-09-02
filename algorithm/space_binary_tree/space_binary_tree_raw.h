@@ -19,7 +19,7 @@ namespace freeNav::JOB {
     public:
 
         SpaceBinaryTreeRaw(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim,
-                           int min_block_depth_width = 2,
+                           int min_block_depth_width = 2, // pow(2, min_block_depth_width)
                            int external_min_block_depth_width = 0)
         : isoc_(isoc), dim_(dim), min_block_depth_width_(min_block_depth_width),
           external_min_block_depth_width_(external_min_block_depth_width) {
@@ -879,7 +879,7 @@ namespace freeNav::JOB {
     public:
 
         SpaceBinaryTreeAnyDimensionRaw(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim,
-                                       int min_block_depth_width = 1,
+                                       int min_block_depth_width = 1, // pow(2, min_block_depth_width)
                                        int external_min_block_depth_width = 0)
                 : SpaceBinaryTreeRaw<N>(isoc, dim, min_block_depth_width, external_min_block_depth_width) {
             Id total_index = getTotalIndexOfSpace<N>(this->dim_);
@@ -922,7 +922,7 @@ namespace freeNav::JOB {
     public:
 
         SpaceBinaryTree2DRaw(const IS_OCCUPIED_FUNC<2>& isoc, DimensionLength* dim,
-                             int min_block_depth_width = 4,
+                             int min_block_depth_width = 4,// pow(2, min_block_depth_width)
                              int external_min_block_depth_width = 0)
                 : SpaceBinaryTreeRaw<2>(isoc, dim, min_block_depth_width, external_min_block_depth_width) {
             //std::vector<bool> base_occ_map(dim[1], true);
@@ -970,7 +970,7 @@ namespace freeNav::JOB {
     public:
 
         SpaceBinaryTree3DRAW(const IS_OCCUPIED_FUNC<3>& isoc, DimensionLength* dim,
-                             int min_block_depth_width = 3,
+                             int min_block_depth_width = 3,// pow(2, min_block_depth_width)
                              int external_min_block_depth_width = 0)
                 : SpaceBinaryTreeRaw<3>(isoc, dim, min_block_depth_width, external_min_block_depth_width) {
             //std::vector<bool> base_occ_map(dim[1], true);

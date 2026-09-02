@@ -15,7 +15,10 @@ namespace freeNav::JOB {
 
     public:
 
-        SpaceBinaryTreeShrink(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim, int min_block_depth_width = 2) :
+        SpaceBinaryTreeShrink(const IS_OCCUPIED_FUNC<N>& isoc,
+                              DimensionLength* dim,
+                              int min_block_depth_width = 2 // pow(2, min_block_depth_width)
+                                      ) :
                 dim_(dim), isoc_(isoc), min_block_depth_width_(min_block_depth_width) {
 
             // initialize

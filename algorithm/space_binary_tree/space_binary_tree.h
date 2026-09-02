@@ -14,7 +14,10 @@ namespace freeNav::JOB {
     class SpaceBinaryTree {
     public:
 
-        SpaceBinaryTree(const IS_OCCUPIED_FUNC <N> &isoc, DimensionLength *dim, int min_block_depth_width = 0)
+        SpaceBinaryTree(const IS_OCCUPIED_FUNC <N> &isoc,
+                        DimensionLength *dim,
+                        int min_block_depth_width = 0 // pow(2, min_block_depth_width)
+                                )
                 : isoc_(isoc), dim_(dim), min_block_depth_width_(min_block_depth_width) {
 
             //std::cout << "min_block_depth_width = " << min_block_depth_width_ << std::endl;
@@ -944,7 +947,10 @@ namespace freeNav::JOB {
     class SpaceBinaryTreeAnyDimension : public SpaceBinaryTree<N> {
     public:
 
-        SpaceBinaryTreeAnyDimension(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim, int min_block_depth_width = 1)
+        SpaceBinaryTreeAnyDimension(const IS_OCCUPIED_FUNC<N>& isoc,
+                                    DimensionLength* dim,
+                                    int min_block_depth_width = 1 // pow(2, min_block_depth_width)
+                                            )
                 : SpaceBinaryTree<N>(isoc, dim, min_block_depth_width) {
             Id total_index = getTotalIndexOfSpace<N>(this->dim_);
             occ_map_.resize(total_index, true);
@@ -986,7 +992,10 @@ namespace freeNav::JOB {
     class SpaceBinaryTree2D : public SpaceBinaryTree<2> {
     public:
 
-        SpaceBinaryTree2D(const IS_OCCUPIED_FUNC<2>& isoc, DimensionLength* dim, int min_block_depth_width = 4)
+        SpaceBinaryTree2D(const IS_OCCUPIED_FUNC<2>& isoc,
+                          DimensionLength* dim,
+                          int min_block_depth_width = 4 // pow(2, min_block_depth_width)
+                                  )
                 : SpaceBinaryTree<2>(isoc, dim, min_block_depth_width) {
             //std::vector<bool> base_occ_map(dim[1], true);
             occ_map_.resize(dim[0]*dim[1], true);
@@ -1032,7 +1041,10 @@ namespace freeNav::JOB {
     class SpaceBinaryTree3D : public SpaceBinaryTree<3> {
     public:
 
-        SpaceBinaryTree3D(const IS_OCCUPIED_FUNC<3>& isoc, DimensionLength* dim, int min_block_depth_width = 3)
+        SpaceBinaryTree3D(const IS_OCCUPIED_FUNC<3>& isoc,
+                          DimensionLength* dim,
+                          int min_block_depth_width = 3 // pow(2, min_block_depth_width)
+                                  )
                 : SpaceBinaryTree<3>(isoc, dim, min_block_depth_width) {
             //std::vector<bool> base_occ_map(dim[1], true);
             occ_map_.resize(dim[0]*dim[1]*dim[2], true);
