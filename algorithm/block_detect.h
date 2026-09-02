@@ -81,7 +81,7 @@ namespace freeNav::JOB {
         explicit BlockDetectorInterface(DimensionLength* dimension_info,
                                         const IS_OCCUPIED_FUNC<N>& is_occupied,
                                         const std::string& file_path = "",
-                                        PathLen minimum_block_width = 10,
+                                        PathLen minimum_block_width = 10, // pow(2, min_block_depth_width)
                                         bool force_update = false) {
             dimension_info_ = dimension_info;
             is_occupied_ = is_occupied;
@@ -178,7 +178,7 @@ namespace freeNav::JOB {
         explicit BlockDetector(DimensionLength* dimension_info,
                                const IS_OCCUPIED_FUNC<N>& is_occupied,
                                const GridPtrs<N>& corner_grids,
-                               PathLen minimum_block_width = 10,
+                               PathLen minimum_block_width = 10, // pow(2, min_block_depth_width)
                                const std::string& file_path = "",
                                bool force_update = false) :
                                BlockDetectorInterface<N>(dimension_info, is_occupied, file_path, minimum_block_width, force_update) {
@@ -596,7 +596,7 @@ namespace freeNav::JOB {
                              const IS_OCCUPIED_FUNC<3>& is_occupied,
                              const GridPtrs<3>& corner_grids,
                              const Pointis<3>& occ_pts,
-                             PathLen minimum_block_width = 10,
+                             PathLen minimum_block_width = 10, // pow(2, min_block_depth_width)
                              const std::string& file_path = "",
                              bool force_update = false)
                              : BlockDetectorInterface<3>(dimension_info, is_occupied, file_path, minimum_block_width) {
