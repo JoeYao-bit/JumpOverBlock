@@ -79,7 +79,9 @@ int zoom_rate = 1;
 // MapTestConfig_Milan_1_512
 //MapTestConfig_Sydney_1_256
 // MapTestConfig_Shanghai_0_512
-auto map_test_config = MapTestConfig_Shanghai_0_512;
+
+auto map_test_config = MapTestConfig_maze_32_32_4;
+
 std::string vis_file_path    = map_test_config.at("vis_path");
 
 TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
@@ -164,7 +166,7 @@ TEST(BlockDetector, BlockDetectorFull) {
     //MapDownSampler<2> down_sampled_map(is_occupied, dimension, total_sample_level - 1);
 
 
-    //zoom_rate = min(2560/dimension[0], 1280/dimension[1]);
+    zoom_rate = std::min(800./dimension[1], 1600./dimension[0]);
 //    Canvas canvas("RimJump::dist_map",
 //                  down_sampled_map.dimension_infos_.back()[0],
 //                  down_sampled_map.dimension_infos_.back()[1], .05, zoom_rate);
@@ -182,7 +184,7 @@ TEST(BlockDetector, BlockDetectorFull) {
     gettimeofday(&tv_pre, &tz);
 
     BlockDetectorGreedyPtr<2> block_detect = std::make_shared<BlockDetectorGreedy<2> >(
-            dimension, is_occupied_func, surface_processor->getSurfacePts(), 5);
+            dimension, is_occupied_func, surface_processor->getSurfacePts(), 2);
 
 //    BlockDetectorPtr<2> block_detect = std::make_shared<BlockDetector<2> >(
 //            dimension, is_occupied_func, surface_processor->getSurfaceGrids(), 40);
@@ -222,7 +224,9 @@ TEST(BlockDetector, BlockDetectorFull) {
          draw_block = false,
          draw_iso = false,
          draw_block_ptr = false,
-         draw_dist_map_updated = false;
+         draw_dist_map_updated = false,
+         draw_visited_grid = true,
+         draw_line = true;
     Pointis<1> neighbor = GetNeightborOffsetGrids<1>();
     std::vector<Pointi<2> > visited_pts;
     while(1) {
@@ -240,7 +244,7 @@ TEST(BlockDetector, BlockDetectorFull) {
                         int count_of_block = 0;
                         BlockDetectorInterfacePtr<2> block_detect_base = block_detect;
                         gettimeofday(&tv_pre, &tz);
-                        if (LineCrossObstacleWithBlockJumpFloat(pt1, pt2,
+                        if (LineCrossObstacleWithBlockJump(pt1.toInt(), pt2.toInt(),
                                                                 block_detect_base,
                                                                 visited_pts,
                                                                 count_of_block)) {
@@ -304,12 +308,20 @@ TEST(BlockDetector, BlockDetectorFull) {
                 canvas.draw_Block(block_ptr->min_, block_ptr->max_);
             }
         }
-        canvas.drawGrids(visited_pts);
+        if(draw_visited_grid) {
+            canvas.drawGrids(visited_pts);
+        }
         // color: BGR
-        if(!is_collide) {
-            canvas.drawLineInt(pt1[0], pt1[1], pt2[0], pt2[1], true, 2, cv::Vec3b(0, 255, 0));
-        } else {
-            canvas.drawLineInt(pt1[0], pt1[1], pt2[0], pt2[1], true, 2, cv::Vec3b(0, 0, 255));
+        if(draw_line) {
+            if(!is_collide) {
+//                canvas.drawLineInt(pt1[0], pt1[1], pt2[0], pt2[1],
+//                                   true, 2, cv::Vec3b(0, 255, 0));
+                canvas.drawLineFloat(pt1[0], pt1[1], pt2[0], pt2[1], false, 1, cv::Vec3b(0, 255, 0));
+            } else {
+//                canvas.drawLineInt(pt1[0], pt1[1], pt2[0], pt2[1],
+//                                   true, 2, cv::Vec3b(0, 0, 255));
+                canvas.drawLineFloat(pt1[0], pt1[1], pt2[0], pt2[1], false, 1, cv::Vec3b(0, 0, 255));
+            }
         }
         //canvas.drawCircleInt(pt1[0], pt1[1], 5, true, -1, COLOR_TABLE[0]);
         //canvas.drawCircleInt(pt2[0], pt2[1], 5, true, -1, COLOR_TABLE[1]);
@@ -335,6 +347,12 @@ TEST(BlockDetector, BlockDetectorFull) {
                 break;
             case 'u':
                 draw_dist_map_updated = !draw_dist_map_updated;
+                break;
+            case 'c':
+                draw_line = !draw_line;
+                break;
+            case 'v':
+                draw_visited_grid = !draw_visited_grid;
                 break;
             default:
                 break;

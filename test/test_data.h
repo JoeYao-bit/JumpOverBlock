@@ -21,6 +21,24 @@ namespace freeNav {
                     {"output_path", "../test/test_data/Shanghai_0_512.txt"}
             };
 
+    SingleMapTestConfig<2> MapTestConfig_maze_32_32_2 =
+            {
+                    {"map_name",    "maze_32_32_2"},
+                    {"map_path",    "../test/test_data/maze-32-32-2.map"},
+                    {"vis_path",    "../test/test_data/maze-32-32-2_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/maze-32-32-2.map.scen"},
+                    {"output_path", "../test/test_data/maze-32-32-2.txt"}
+            };
+
+    SingleMapTestConfig<2> MapTestConfig_maze_32_32_4 =
+            {
+                    {"map_name",    "maze_32_32_4"},
+                    {"map_path",    "../test/test_data/maze-32-32-4.map"},
+                    {"vis_path",    "../test/test_data/maze-32-32-4_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/maze-32-32-4.map.scen"},
+                    {"output_path", "../test/test_data/maze-32-32-4.txt"}
+            };
+
     // Simple_2D
     SingleMapTestConfig<2> MapTestConfig_Simple_2D =
             {
