@@ -35,7 +35,7 @@ public:
    * @param   sample_num  random sample points
    * @param   max_dist    max distance between sample points
    */
-  RRT(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check, int sample_num, double max_dist);
+  RRT(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check, int sample_num, double max_dist);
 
   /**
    * @brief RRT implementation
@@ -87,7 +87,7 @@ protected:
 };
 
     freeNav::Path<2> RRTRimJump(const unsigned char* global_costmap, freeNav::DimensionLength* dim, double resolution,
-                                freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check,
+                                freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check,
                                 const freeNav::Pointi<2>& start, const freeNav::Pointi<2>& target,
                                 int sample_num, double max_dist);
 

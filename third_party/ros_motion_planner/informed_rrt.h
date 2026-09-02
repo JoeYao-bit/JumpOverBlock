@@ -33,7 +33,7 @@ public:
    * @param   max_dist    max distance between sample points
    * @param   r           optimization radius
    */
-  InformedRRT(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check, int sample_num, double max_dist, double r);
+  InformedRRT(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check, int sample_num, double max_dist, double r);
 
   /**
    * @brief RRT implementation
@@ -68,7 +68,7 @@ protected:
 
     freeNav::Path<2> InformedRRTRimJump(const unsigned char* global_costmap, freeNav::DimensionLength* dim,
                                         double resolution,
-                                        freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check,
+                                        freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check,
                                         const freeNav::Pointi<2>& start, const freeNav::Pointi<2>& target,
                                         int sample_num, double max_dist, double r);
 

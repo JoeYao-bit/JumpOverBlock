@@ -115,7 +115,7 @@ int main() {
         return !sbt.lineCrossObstacleSBT(p1, p2, is_occupied, count_block);
     };
 
-    std::vector<std::pair<IS_LINE_COLLISION_FREE_FUNC<2>, std::string > >
+    std::vector<std::pair<IS_LINE_COLLISION_FREE_FUNC<int, 2>, std::string > >
                 los_funcs = {{is_line_free_raw, "raw LOS"},
                              {is_line_free_raw_sbt, "raw SBT LOS"},
                              {is_line_free_new_sbt, "new SBT LOS"}
@@ -127,7 +127,7 @@ int main() {
 
 
     auto theta_star = [&](const Pointi<2> & p1, const Pointi<2> & p2,
-                   const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                   const IS_LINE_COLLISION_FREE_FUNC<int, 2>& ilfr,
                    const std::string& identifier) -> Pointis<2> {
         LazyThetaStar::MyAdaptor2D my_adapter2D(dimension, is_occupied, ilfr);
         LazyThetaStar::ThetaStar pathfinder(my_adapter2D, 100.f /*weight*/);
@@ -146,7 +146,7 @@ int main() {
     };
 
     auto lazy_theta_star = [&](const Pointi<2> & p1, const Pointi<2> & p2,
-                   const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                   const IS_LINE_COLLISION_FREE_FUNC<int, 2>& ilfr,
                    const std::string& identifier) -> Pointis<2> {
         LazyThetaStar::MyAdaptor2D my_adapter2D(dimension, is_occupied, ilfr);
         LazyThetaStar::LazyThetaStar pathfinder(my_adapter2D, 100.f /*weight*/);
@@ -165,7 +165,7 @@ int main() {
     };
 
     auto pp_rrt = [&](const Pointi<2> & p1, const Pointi<2> & p2,
-                      const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                      const IS_LINE_COLLISION_FREE_FUNC<int, 2>& ilfr,
                       const std::string& identifier) -> Pointis<2> {
         USTimer ust;
         auto temp_path = global_planner::RRTRimJump(cost_move_base_2d,
@@ -186,7 +186,7 @@ int main() {
     };
 
     auto pp_rrt_star = [&](const Pointi<2> & p1, const Pointi<2> & p2,
-                           const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                           const IS_LINE_COLLISION_FREE_FUNC<int, 2>& ilfr,
                            const std::string& identifier) -> Pointis<2> {
         USTimer ust;
         auto temp_path = global_planner::RRTStarRimJump(cost_move_base_2d,
@@ -208,7 +208,7 @@ int main() {
     };
 
     auto pp_rrt_connect = [&](const Pointi<2> & p1, const Pointi<2> & p2,
-                              const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                              const IS_LINE_COLLISION_FREE_FUNC<int, 2>& ilfr,
                               const std::string& identifier) -> Pointis<2> {
         USTimer ust;
         auto temp_path = global_planner::RRTConnectRimJump(cost_move_base_2d,
@@ -230,7 +230,7 @@ int main() {
 
     // InformedRRT not ok
     auto pp_rrt_informed = [&](const Pointi<2> & p1, const Pointi<2> & p2,
-                               const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                               const IS_LINE_COLLISION_FREE_FUNC<int, 2>& ilfr,
                                const std::string& identifier) -> Pointis<2> {
         USTimer ust;
         auto temp_path = global_planner::InformedRRTRimJump(cost_move_base_2d,
@@ -252,7 +252,7 @@ int main() {
     };
 
     auto pp_theta_star = [&](const Pointi<2> & p1, const Pointi<2> & p2,
-                             const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                             const IS_LINE_COLLISION_FREE_FUNC<int, 2>& ilfr,
                              const std::string& identifier) -> Pointis<2> {
         USTimer ust;
         auto temp_path = global_planner::ThetaStarRimJump(cost_move_base_2d,
@@ -270,7 +270,7 @@ int main() {
     };
 
     auto pp_lazy_theta_star = [&](const Pointi<2> & p1, const Pointi<2> & p2,
-                                  const IS_LINE_COLLISION_FREE_FUNC<2>& ilfr,
+                                  const IS_LINE_COLLISION_FREE_FUNC<int, 2>& ilfr,
                                   const std::string& identifier) -> Pointis<2> {
         USTimer ust;
         auto temp_path = global_planner::ThetaStarRimJump(cost_move_base_2d,
@@ -308,7 +308,7 @@ int main() {
     Canvas canvas("2D planner test",dimension[0], dimension[1],
                   .05, zoom_ratio);
 
-    auto callback = [](int event, int x, int y, int flags, void *) {
+    auto callback = [](int event, float x, float y, int flags, void *) {
         if(event == cv::EVENT_LBUTTONDOWN) {
             if(set_pt1) {
                 pt1[0] = x;

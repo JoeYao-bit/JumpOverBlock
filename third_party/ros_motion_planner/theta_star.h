@@ -32,7 +32,7 @@ public:
    * @param ny          pixel number in costmap y direction
    * @param resolution  costmap resolution
    */
-  ThetaStar(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check);
+  ThetaStar(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check);
 
   /**
    * @brief Theta* implementation
@@ -68,7 +68,7 @@ private:
 };
 
 freeNav::Path<2> ThetaStarRimJump(const unsigned char* global_costmap, freeNav::DimensionLength* dim,
-                                  freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check,
+                                  freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check,
                                   const freeNav::Pointi<2>& start, const freeNav::Pointi<2>& target);
 
 }  // namespace global_planner

@@ -635,7 +635,7 @@ namespace freeNav::JOB {
     template <Dimension N>
     using PATH_PLANNING_FUNC_WITH_LINE = std::function<Pointis<N>(const Pointi<N>&,
                                                                   const Pointi<N>&,
-                                                                  const IS_LINE_COLLISION_FREE_FUNC<N>&,
+                                                                  const IS_LINE_COLLISION_FREE_FUNC<int, N>&,
                                                                   const std::string&)>;
 
 }

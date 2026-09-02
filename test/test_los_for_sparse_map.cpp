@@ -194,7 +194,7 @@ TEST(BlockDetector, BlockDetectorFull) {
     double build_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
     std::cout << "-- block detect end in " << build_cost << "ms" << std::endl;
 
-    auto callback = [](int event, int x, int y, int flags, void *) {
+    auto callback = [](int event, float x, float y, int flags, void *) {
         if(event == cv::EVENT_LBUTTONDOWN) {
             if(set_pt1) {
                 pt1[0] = x;
@@ -416,7 +416,7 @@ TEST(DistanceMapUpdate, test) {
     double build_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
     std::cout << "-- block detect end in " << build_cost << "ms" << std::endl;
 
-    auto callback = [](int event, int x, int y, int flags, void *) {
+    auto callback = [](int event, float x, float y, int flags, void *) {
         if(event == cv::EVENT_LBUTTONDOWN) {
             if(set_pt1) {
                 pt1[0] = x;

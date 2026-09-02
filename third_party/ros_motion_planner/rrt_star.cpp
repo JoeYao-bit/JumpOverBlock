@@ -27,7 +27,7 @@ namespace global_planner
  * @param   max_dist    max distance between sample points
  * @param   r           optimization radius
  */
-RRTStar::RRTStar(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check,
+RRTStar::RRTStar(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check,
                  int sample_num, double max_dist, double r)
   : RRT(nx, ny, resolution, line_collision_check, sample_num, max_dist), r_(r)
 {
@@ -170,7 +170,7 @@ Node RRTStar::_findNearestPoint(std::unordered_set<Node, NodeIdAsHash, compare_c
 }
 
     freeNav::Path<2> RRTStarRimJump(const unsigned char* global_costmap, freeNav::DimensionLength* dim, double resolution,
-                                    freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check,
+                                    freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check,
                                     const freeNav::Pointi<2>& start, const freeNav::Pointi<2>& target,
                                     int sample_num, double max_dist, double r) {
         RRTStar theta_star(dim[0] + 2, dim[1] + 2, resolution, line_collision_check, sample_num, max_dist, r);

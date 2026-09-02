@@ -21,7 +21,7 @@ namespace global_planner
  * @param ny          pixel number in costmap y direction
  * @param resolution  costmap resolution
  */
-LazyThetaStar::LazyThetaStar(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check) : ThetaStar(nx, ny, resolution, line_collision_check)
+LazyThetaStar::LazyThetaStar(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check) : ThetaStar(nx, ny, resolution, line_collision_check)
 {
   factor_ = 0.35;
 };
@@ -169,7 +169,7 @@ void LazyThetaStar::_setVertex(Node& node)
 }
 
     freeNav::Path<2> LazyThetaStarRimJump(const unsigned char* global_costmap, freeNav::DimensionLength* dim,
-                                          freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check,
+                                          freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check,
                                           const freeNav::Pointi<2>& start, const freeNav::Pointi<2>& target) {
         LazyThetaStar theta_star(dim[0] + 2, dim[1] + 2, 0.05, line_collision_check);
         Node si, ti;

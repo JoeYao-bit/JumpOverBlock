@@ -43,7 +43,7 @@ public:
    * @param ny          pixel number in costmap y direction
    * @param resolution  costmap resolution
    */
-  GlobalPlanner(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check);
+  GlobalPlanner(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check);
 
   /**
    * @brief Destroy the Global Planner object
@@ -155,7 +155,7 @@ public:
    */
   double angle(const Node& node1, const Node& node2);
 
-  freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check_;
+  freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check_;
 
 protected:
   /**
