@@ -5,7 +5,7 @@
 #ifndef FREENAV_JOB_LOCAL_DISTANCE_MAP_H
 #define FREENAV_JOB_LOCAL_DISTANCE_MAP_H
 
-#include "../freeNav-base/basic_elements/point.h"
+#include "freeNav-base/basic_elements/point.h"
 
 namespace freeNav::JOB {
 

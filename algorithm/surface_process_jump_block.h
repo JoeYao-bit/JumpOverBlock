@@ -5,7 +5,7 @@
 #ifndef FREENAV_JOB_SURFACE_PROCESS_JUMP_BLOCK_H
 #define FREENAV_JOB_SURFACE_PROCESS_JUMP_BLOCK_H
 
-#include "../freeNav-base/basic_elements/surface_process.h"
+#include "freeNav-base/basic_elements/surface_process.h"
 #include "../algorithm/line_of_sight_jump_between_block.h"
 #include "../algorithm/block_detect.h"
 #include "../algorithm/block_detector_greedy.h"

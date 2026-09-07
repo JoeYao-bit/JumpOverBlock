@@ -5,10 +5,10 @@
 #ifndef FREENAV_JOB_BLOCK_DETECT_H
 #define FREENAV_JOB_BLOCK_DETECT_H
 
-#include "../freeNav-base/basic_elements/map_down_sampler.h"
-#include "../freeNav-base/basic_elements/point.h"
-#include "../freeNav-base/dependencies/self_sorted_queue.h"
-#include "../freeNav-base/basic_elements/surface_process.h"
+#include "freeNav-base/basic_elements/map_down_sampler.h"
+#include "freeNav-base/basic_elements/point.h"
+#include "freeNav-base/dependencies/self_sorted_queue.h"
+#include "freeNav-base/basic_elements/surface_process.h"
 #include <fstream>
 #include "octomap/octomap.h"
 
