@@ -80,7 +80,9 @@ int zoom_rate = 1;
 //MapTestConfig_Sydney_1_256
 // MapTestConfig_Shanghai_0_512
 
-auto map_test_config = MapTestConfig_maze_32_32_4;
+// MapTestConfig_maze_32_32_4
+// MapTestConfig_den312d
+auto map_test_config = MapTestConfig_den312d;
 
 std::string vis_file_path    = map_test_config.at("vis_path");
 
@@ -160,6 +162,10 @@ TEST(BlockDetector, initAllDirectionLocalMoves) {
     }
 }
 
+bool is_collide = true;
+Pointis<1> neighbor = GetNeightborOffsetGrids<1>();
+std::vector<Pointi<2> > visited_pts;
+BlockDetectorInterfacePtr<2> block_detect_base = nullptr;
 
 TEST(BlockDetector, BlockDetectorFull) {
 
@@ -184,7 +190,7 @@ TEST(BlockDetector, BlockDetectorFull) {
     gettimeofday(&tv_pre, &tz);
 
     BlockDetectorGreedyPtr<2> block_detect = std::make_shared<BlockDetectorGreedy<2> >(
-            dimension, is_occupied_func, surface_processor->getSurfacePts(), 2);
+            dimension, is_occupied_func, surface_processor->getSurfacePts(), 1);
 
 //    BlockDetectorPtr<2> block_detect = std::make_shared<BlockDetector<2> >(
 //            dimension, is_occupied_func, surface_processor->getSurfaceGrids(), 40);
@@ -194,7 +200,7 @@ TEST(BlockDetector, BlockDetectorFull) {
     double build_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
     std::cout << "-- block detect end in " << build_cost << "ms" << std::endl;
 
-    bool is_collide = true;
+    block_detect_base = block_detect;
 
     auto callback = [](int event, float x, float y, int flags, void *) {
         if(event == cv::EVENT_LBUTTONDOWN) {
@@ -211,6 +217,25 @@ TEST(BlockDetector, BlockDetectorFull) {
                 std::cout << "get point " << x << ", " << y << std::endl;
                 new_pair = true;
                 plan_finish = false;
+
+                double mean_time_cost_jump = 0, mean_time_cost_raw = 0;
+                int total_count = 1;
+                for(int i=0; i<total_count; i++) {
+                    int count_of_block = 0;
+                    gettimeofday(&tv_pre, &tz);
+                    if (lineOfSightCheckAW(pt1, pt2,
+                                            dimension[0], dimension[1],
+                                            is_occupied,
+                                               block_detect_base,
+                                               visited_pts
+                                                            )) {
+                        std::cout << "jump block line collide " << std::endl;
+                        is_collide = true;
+                    } else {
+                        std::cout << "jump block line not collide " << std::endl;
+                        is_collide = false;
+                    }
+                }
             }
         }
     };
@@ -227,54 +252,13 @@ TEST(BlockDetector, BlockDetectorFull) {
          draw_dist_map_updated = false,
          draw_visited_grid = true,
          draw_line = true;
-    Pointis<1> neighbor = GetNeightborOffsetGrids<1>();
-    std::vector<Pointi<2> > visited_pts;
+
     while(1) {
         canvas.resetCanvas();
         canvas.drawEmptyGrid();
         //canvas.drawGridMap(down_sampled_map.dimension_infos_.back(), is_occupied_downsample_func);
         canvas.drawGridMap(dimension, is_occupied);
-        if(new_pair) {
-            new_pair = false;
-            if (tp.pool_[0].joinable() && !plan_finish)
-                tp.Schedule([&] {
-                    double mean_time_cost_jump = 0, mean_time_cost_raw = 0;
-                    int total_count = 1;
-                    for(int i=0; i<total_count; i++) {
-                        int count_of_block = 0;
-                        BlockDetectorInterfacePtr<2> block_detect_base = block_detect;
-                        gettimeofday(&tv_pre, &tz);
-                        if (LineCrossObstacleWithBlockJump(pt1.toInt(), pt2.toInt(),
-                                                                block_detect_base,
-                                                                visited_pts,
-                                                                count_of_block)) {
-                            std::cout << "jump block line collide " << std::endl;
-                            is_collide = true;
-                        } else {
-                            std::cout << "jump block line not collide " << std::endl;
-                            is_collide = false;
-                        }
-                        gettimeofday(&tv_after, &tz);
-                        build_cost =
-                                (tv_after.tv_sec - tv_pre.tv_sec) * 1e3 + (tv_after.tv_usec - tv_pre.tv_usec) / 1e3;
-                        mean_time_cost_jump = mean_time_cost_jump + build_cost;
-                        gettimeofday(&tv_pre, &tz);
-                        if (LineCrossObstacle(pt1.toInt(), pt2.toInt(), is_occupied_func, neighbor)) {
-                            std::cout << "raw check line collide " << std::endl;
-                        } else {
-                            std::cout << "raw check line not collide " << std::endl;
-                        }
-                        gettimeofday(&tv_after, &tz);
-                        build_cost =
-                                (tv_after.tv_sec - tv_pre.tv_sec) * 1e3 + (tv_after.tv_usec - tv_pre.tv_usec) / 1e3;
-                        mean_time_cost_raw = mean_time_cost_raw + build_cost;
-                    }
-                    std::cout << "-- repeat " << total_count << " times " << std::endl;
-                    std::cout << "-- los check with block detect end in " << mean_time_cost_jump/total_count << "ms" << std::endl;
-                    std::cout << "-- raw los check end in " << mean_time_cost_raw/total_count << "ms" << std::endl;
-                    std::cout << "-- jump block visit " << visited_pts.size() << " points " << std::endl;
-                });
-        }
+
         if(draw_node) {
             canvas.drawPointiCircles(block_detect->surface_nodes_, cv::Vec3b(0,255,0), 5, -1);
         }
@@ -309,7 +293,7 @@ TEST(BlockDetector, BlockDetectorFull) {
             }
         }
         if(draw_visited_grid) {
-            canvas.drawGrids(visited_pts);
+            canvas.drawGrids(visited_pts, COLOR_TABLE[1]);
         }
         // color: BGR
         if(draw_line) {

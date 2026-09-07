@@ -57,8 +57,8 @@ namespace freeNav::JOB {
     // return: current in the block or not
     // for a line that cross a block, find the point on it and leave obstacle
     // update inner index of line
-    template<Dimension N>
-    int findExitPointOfBlock(Line<int, N>& line, const Pointi<N>& current_pt, const int& index, const BlockPtr<N>& block_ptr) {
+    template<typename T, Dimension N>
+    int findExitPointOfBlock(Line<T, N>& line, const Pointi<N>& current_pt, const int& index, const BlockPtr<N>& block_ptr) {
         return findExitPointOfBlock(line, current_pt, index, block_ptr->min_, block_ptr->max_);
     }
 
@@ -92,6 +92,215 @@ namespace freeNav::JOB {
                 count_of_block ++;
             }
         }
+        return false;
+    }
+
+
+
+    //             if(block_detector_ptr->is_occupied_(pt)) {
+    //                return true;
+    //            }
+    //            //if(is_occupied(pt)) { return true; }
+    //            current_id = PointiToId(pt, block_detector_ptr->dimension_info_);
+    //            const auto& block_ptr = block_detector_ptr->block_ptr_map_[current_id];
+    template<typename T>
+    bool lineOfSightCheckAW(const Point<T,2>& start, const Point<T, 2>& end,
+                            int gridW, int gridH, const IS_OCCUPIED_FUNC<2>& isoc,
+                            JOB::BlockDetectorInterfacePtr<2> block_detector_ptr,
+                            std::vector<Pointi<2> >& visited_pt)
+    {
+        visited_pt.clear();
+        const float eps = 1e-6f;
+        Point<T,2> dir{end[0] - start[0], end[1] - start[1]};
+
+        // ====================== 新增：单独处理水平、垂直线段 ======================
+        // 1. 起点终点完全重合
+        if (std::fabs(dir[0]) < eps && std::fabs(dir[1]) < eps)
+        {
+            int x0 = static_cast<int>(std::floor(start[0]));
+            int y0 = static_cast<int>(std::floor(start[1]));
+            if (x0 >= 0 && x0 < gridW && y0 >= 0 && y0 < gridH) {
+                visited_pt.push_back(Pointi<2>{x0, y0});
+                if(isoc(Pointi<2>{x0, y0})) {
+                    return true;
+                }
+            }
+
+        }
+
+        // 2. 纯垂直线：x全程不变，只遍历y轴
+        if (std::fabs(dir[0]) < eps)
+        {
+            int fixedX = static_cast<int>(std::floor(start[0]));
+            float yMinF = std::min(start[1], end[1]);
+            float yMaxF = std::max(start[1], end[1]);
+            int yStart = static_cast<int>(std::floor(yMinF));
+            int yEnd = static_cast<int>(std::floor(yMaxF));
+
+            // for循环遍历所有y栅格
+            for (int y = yStart; y <= yEnd; ++y)
+            {
+                // 栅格边界校验
+                if (fixedX >= 0 && fixedX < gridW && y >= 0 && y < gridH)
+                {
+                    visited_pt.push_back(Pointi<2>{fixedX, y});
+                    if(isoc(Pointi<2>{fixedX, y})) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // 3. 纯水平线：y全程不变，只遍历x轴
+        if (std::fabs(dir[1]) < eps)
+        {
+            int fixedY = static_cast<int>(std::floor(start[1]));
+            float xMinF = std::min(start[0], end[0]);
+            float xMaxF = std::max(start[0], end[0]);
+            int xStart = static_cast<int>(std::floor(xMinF));
+            int xEnd = static_cast<int>(std::floor(xMaxF));
+
+            // for循环遍历所有x栅格
+            for (int x = xStart; x <= xEnd; ++x)
+            {
+                // 栅格边界校验
+                if (x >= 0 && x < gridW && fixedY >= 0 && fixedY < gridH)
+                {
+                    visited_pt.push_back(Pointi<2>{x, fixedY});
+                    if(isoc(Pointi<2>{x, fixedY})) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // 当为斜线时
+        // 当前栅格
+        int x = static_cast<int>(std::floor(start[0]));
+        int y = static_cast<int>(std::floor(start[1]));
+
+        // 步进方向 ±1
+        int stepX = dir[0] > 0.f ? 1 : -1;
+        int stepY = dir[1] > 0.f ? 1 : -1;
+
+        // tDelta：沿轴移动1格对应的t增量（t是沿射线的参数，0=起点，1=终点）
+        float tDeltaX = std::fabs(1.f / dir[0]);
+        float tDeltaY = std::fabs(1.f / dir[1]);
+
+        // tMax：首次穿过网格线的t值
+        float tMaxX, tMaxY;
+        if (dir[0] > 0.f)
+            tMaxX = (x + 1.f - start[0]) * tDeltaX;
+        else
+            tMaxX = (start[0] - x) * tDeltaX;
+
+        if (dir[1] > 0.f)
+            tMaxY = (y + 1.f - start[1]) * tDeltaY;
+        else
+            tMaxY = (start[1] - y) * tDeltaY;
+
+        // 核心：t ∈ [0, 1] 代表线段范围，t=1精准对应终点
+        Pointi<2> current_pt;
+        Id current_id;
+        Line<T, 2> line(start, end);
+        while (x >= 0 && x < gridW && y >= 0 && y < gridH)
+        {
+            //std::cout << "tMaxX/Y = " << tMaxX << "/" << tMaxY << std::endl;
+            current_pt = Pointi<2>{x, y};
+            visited_pt.push_back(current_pt);
+            if(isoc(current_pt)) {
+                return true;
+            }
+            current_id = PointiToId(current_pt, block_detector_ptr->dimension_info_);
+            BlockPtr<2> current_block = block_detector_ptr->block_ptr_map_[current_id];
+            if (current_block != nullptr) {
+                // ========== JOB加速逻辑：当前栅格位于完整空闲块，跳跃离开块 ==========
+                float bx0 = static_cast<float>(current_block->min_[0]);
+                float bx1 = static_cast<float>(current_block->max_[0]);
+                float by0 = static_cast<float>(current_block->min_[1]);
+                float by1 = static_cast<float>(current_block->max_[1]);
+
+                float t_exit = 1.0f;
+
+                if (dir[0] > eps)
+                {
+                    float t = (bx1 - start[0]) / dir[0];
+                    if(t > eps) t_exit = std::min(t_exit, t);
+                }
+                else if(dir[0] < -eps)
+                {
+                    float t = (bx0 - start[0]) / dir[0];
+                    if(t > eps) t_exit = std::min(t_exit, t);
+                }
+
+                if (dir[1] > eps)
+                {
+                    float t = (by1 - start[1]) / dir[1];
+                    if(t > eps) t_exit = std::min(t_exit, t);
+                }
+                else if(dir[1] < -eps)
+                {
+                    float t = (by0 - start[1]) / dir[1];
+                    if(t > eps) t_exit = std::min(t_exit, t);
+                }
+
+                t_exit = std::min(t_exit, 1.0f - eps);
+
+                // =========关键：如果跳跃已经到达线段终点，直接退出循环=========
+                if(t_exit < eps)
+                {
+                    // 退化成单步AW
+                    float tNext = std::min(tMaxX, tMaxY);
+                    if (tNext >= 1.f - eps) break;
+                    if (tMaxX < tMaxY) { tMaxX += tDeltaX; x += stepX; }
+                    else               { tMaxY += tDeltaY; y += stepY; }
+                    continue;
+                }
+                if(t_exit >= 1.0f - eps)
+                {
+                    // 跳跃直接抵达线段终点，不再遍历后续栅格
+                    break;
+                }
+
+                float px = start[0] + t_exit * dir[0];
+                float py = start[1] + t_exit * dir[1];
+
+                x = static_cast<int>(std::floor(px));
+                y = static_cast<int>(std::floor(py));
+
+                // 重新计算全局tMaxX、tMaxY，允许 >1，不要截断
+                if(dir[0] > 0.f)
+                    tMaxX = (static_cast<float>(x)+1.f - start[0]) * tDeltaX;
+                else
+                    tMaxX = (start[0] - static_cast<float>(x)) * tDeltaX;
+
+                if(dir[1] > 0.f)
+                    tMaxY = (static_cast<float>(y)+1.f - start[1]) * tDeltaY;
+                else
+                    tMaxY = (start[1] - static_cast<float>(y)) * tDeltaY;
+
+                // 这里不做任何步进；回到while循环头部；
+                // 下一轮循环先检查x,y地图边界，再处理当前跳跃落到的栅格
+            } else {
+                // 下一步跨网格的最小t值
+                float tNext = std::min(tMaxX, tMaxY);
+                // 到达终点区间，直接退出，不再前进
+                if (tNext >= 1.f - eps)
+                    break;
+
+                if (tMaxX < tMaxY)
+                {
+                    tMaxX += tDeltaX;
+                    x += stepX;
+                }
+                else
+                {
+                    tMaxY += tDeltaY;
+                    y += stepY;
+                }
+            }
+        }
+
         return false;
     }
 
