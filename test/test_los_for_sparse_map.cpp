@@ -165,6 +165,7 @@ TEST(BlockDetector, initAllDirectionLocalMoves) {
 bool is_collide = true;
 Pointis<1> neighbor = GetNeightborOffsetGrids<1>();
 std::vector<Pointi<2> > visited_pts;
+std::vector<Pointf<2> > visited_fpts;
 BlockDetectorInterfacePtr<2> block_detect_base = nullptr;
 
 TEST(BlockDetector, BlockDetectorFull) {
@@ -226,9 +227,9 @@ TEST(BlockDetector, BlockDetectorFull) {
                     if (lineOfSightCheckAW(pt1, pt2,
                                             dimension[0], dimension[1],
                                             is_occupied,
-                                               block_detect_base,
-                                               visited_pts
-                                                            )) {
+                                            block_detect_base,
+                                            visited_pts,
+                                            visited_fpts)) {
                         std::cout << "jump block line collide " << std::endl;
                         is_collide = true;
                     } else {
@@ -251,7 +252,8 @@ TEST(BlockDetector, BlockDetectorFull) {
          draw_block_ptr = false,
          draw_dist_map_updated = false,
          draw_visited_grid = true,
-         draw_line = true;
+         draw_line = true,
+         draw_visited_fpt = true;
 
     while(1) {
         canvas.resetCanvas();
@@ -307,6 +309,11 @@ TEST(BlockDetector, BlockDetectorFull) {
                 canvas.drawLineFloat(pt1[0], pt1[1], pt2[0], pt2[1], false, 1, cv::Vec3b(0, 0, 255));
             }
         }
+        if(draw_visited_fpt) {
+            for(const auto& fpt : visited_fpts) {
+                canvas.drawCircleFloat(fpt[0], fpt[1], 0.2, false, 1);
+            }
+        }
         //canvas.drawCircleInt(pt1[0], pt1[1], 5, true, -1, COLOR_TABLE[0]);
         //canvas.drawCircleInt(pt2[0], pt2[1], 5, true, -1, COLOR_TABLE[1]);
         char key = canvas.show(300);
@@ -337,6 +344,9 @@ TEST(BlockDetector, BlockDetectorFull) {
                 break;
             case 'v':
                 draw_visited_grid = !draw_visited_grid;
+                break;
+            case 'f':
+                draw_visited_fpt = !draw_visited_fpt;
                 break;
             default:
                 break;

@@ -95,21 +95,47 @@ namespace freeNav::JOB {
         return false;
     }
 
+    // 2026-09-08:发现引入跳过块后有tMaxX和tMaxY不更新的情况
+    //  dimension_info = 65 81
+//-- BlockDetector load blocks from  failed, try to detect
+//-- BlockDetector detect 19 blocks
+//-- save blocks failed
+//-- block detect end in 0.972ms
+//get point 21.6667, 19.7778
+//get point 23.8889, 36.5556
+//tMaxX/Y = 0.15/0.013245
+//tMaxX/Y = 0.6/0.430463
+//jump block line not collide
+//get point 28.6667, 37.8889
+//get point 27.7778, 56.7778
+//tMaxX/Y = 0.750001/0.00588233
+//tMaxX/Y = 0.750001/0.323529
+//tMaxX/Y = 0.750001/0.376471
+//tMaxX/Y = 0.750001/0.429412
+//tMaxX/Y = 0.750001/0.482353
+//tMaxX/Y = 0.750001/0.535294
+//tMaxX/Y = 0.750001/0.588235
+//tMaxX/Y = 0.750001/0.641177
+//tMaxX/Y = 0.750001/0.694118
+//tMaxX/Y = 0.750001/0.747059
+//jump block line not collide
+//get point 20.8889, 29.6667
+//get point 11.1111, 19.7778
+//tMaxX/Y = 0.0909091/0.0674157
+//tMaxX/Y = 0.193182/0.269663
+//tMaxX/Y = 0.193182/0.269663
+//test_los_for_sparse_map: /home/yaozhuo/code/JumpOverBlock/test/../algorithm/line_of_sight_jump_between_block.h:217: bool freeNav::JOB::lineOfSightCheckAW(const freeNav::Point<T, 2>&, const freeNav::Point<T, 2>&, int, int, freeNav::IS_OCCUPIED_FUNC<2>&, BlockDetectorInterfacePtr<2>, std::vector<freeNav::Point<int, 2>, std::allocator<freeNav::Point<int, 2> > >&, std::vector<freeNav::Point<float, 2> >&) [with T = float; freeNav::IS_OCCUPIED_FUNC<2> = std::function<bool(const freeNav::Point<int, 2>&)>; BlockDetectorInterfacePtr<2> = std::shared_ptr<BlockDetectorInterface<2> >]: Assertion `0' failed.
+//Signal: SIGABRT (Aborted)
 
-
-    //             if(block_detector_ptr->is_occupied_(pt)) {
-    //                return true;
-    //            }
-    //            //if(is_occupied(pt)) { return true; }
-    //            current_id = PointiToId(pt, block_detector_ptr->dimension_info_);
-    //            const auto& block_ptr = block_detector_ptr->block_ptr_map_[current_id];
     template<typename T>
     bool lineOfSightCheckAW(const Point<T,2>& start, const Point<T, 2>& end,
                             int gridW, int gridH, const IS_OCCUPIED_FUNC<2>& isoc,
                             JOB::BlockDetectorInterfacePtr<2> block_detector_ptr,
-                            std::vector<Pointi<2> >& visited_pt)
+                            std::vector<Pointi<2> >& visited_pt,
+                            std::vector<Pointf<2> >& visited_fpt)
     {
         visited_pt.clear();
+        visited_fpt.clear();
         const float eps = 1e-6f;
         Point<T,2> dir{end[0] - start[0], end[1] - start[1]};
 
@@ -201,92 +227,98 @@ namespace freeNav::JOB {
 
         // 核心：t ∈ [0, 1] 代表线段范围，t=1精准对应终点
         Pointi<2> current_pt;
+        Pointf<2> current_fpt;
         Id current_id;
         Line<T, 2> line(start, end);
+        float pre_tMaxX = 1e20, pre_tMaxY = 1e20;
         while (x >= 0 && x < gridW && y >= 0 && y < gridH)
         {
-            //std::cout << "tMaxX/Y = " << tMaxX << "/" << tMaxY << std::endl;
+            std::cout << "tMaxX/Y = " << tMaxX << "/" << tMaxY << std::endl;
+            if(pre_tMaxX == tMaxX && pre_tMaxY == tMaxY) {
+                assert(0);
+            }
+            pre_tMaxX = tMaxX; pre_tMaxY = tMaxY;
             current_pt = Pointi<2>{x, y};
             visited_pt.push_back(current_pt);
+            if(tMaxX < tMaxY) {
+                current_fpt = Pointf<2>{start[0] + tMaxX*dir[0], start[1] + tMaxX*dir[1]};
+            } else {
+                current_fpt = Pointf<2>{start[0] + tMaxY*dir[0], start[1] + tMaxY*dir[1]};
+            }
+            visited_fpt.push_back(current_fpt);
+
             if(isoc(current_pt)) {
                 return true;
             }
             current_id = PointiToId(current_pt, block_detector_ptr->dimension_info_);
             BlockPtr<2> current_block = block_detector_ptr->block_ptr_map_[current_id];
             if (current_block != nullptr) {
-                // ========== JOB加速逻辑：当前栅格位于完整空闲块，跳跃离开块 ==========
-                float bx0 = static_cast<float>(current_block->min_[0]);
-                float bx1 = static_cast<float>(current_block->max_[0]);
-                float by0 = static_cast<float>(current_block->min_[1]);
-                float by1 = static_cast<float>(current_block->max_[1]);
+                Pointi<2> block_min = current_block->min_;
+                Pointi<2> block_max = current_block->max_;
 
-                float t_exit = 1.0f;
+                float t_candidate_x = 1e20f;
+                float t_candidate_y = 1e20f;
 
-                if (dir[0] > eps)
+                if(std::fabs(dir[0]) > eps)
                 {
-                    float t = (bx1 - start[0]) / dir[0];
-                    if(t > eps) t_exit = std::min(t_exit, t);
-                }
-                else if(dir[0] < -eps)
-                {
-                    float t = (bx0 - start[0]) / dir[0];
-                    if(t > eps) t_exit = std::min(t_exit, t);
-                }
-
-                if (dir[1] > eps)
-                {
-                    float t = (by1 - start[1]) / dir[1];
-                    if(t > eps) t_exit = std::min(t_exit, t);
-                }
-                else if(dir[1] < -eps)
-                {
-                    float t = (by0 - start[1]) / dir[1];
-                    if(t > eps) t_exit = std::min(t_exit, t);
+                    float b_min_x = static_cast<float>(block_min[0]);
+                    float b_max_x = static_cast<float>(block_max[0]) + 1.0f;
+                    float t_x_low  = (b_min_x - start[0]) / dir[0];
+                    float t_x_high = (b_max_x - start[0]) / dir[0];
+                    if(dir[0] > 0)
+                        t_candidate_x = t_x_high;
+                    else
+                        t_candidate_x = t_x_low;
                 }
 
-                t_exit = std::min(t_exit, 1.0f - eps);
-
-                // =========关键：如果跳跃已经到达线段终点，直接退出循环=========
-                if(t_exit < eps)
+                if(std::fabs(dir[1]) > eps)
                 {
-                    // 退化成单步AW
-                    float tNext = std::min(tMaxX, tMaxY);
-                    if (tNext >= 1.f - eps) break;
-                    if (tMaxX < tMaxY) { tMaxX += tDeltaX; x += stepX; }
-                    else               { tMaxY += tDeltaY; y += stepY; }
-                    continue;
+                    float b_min_y = static_cast<float>(block_min[1]);
+                    float b_max_y = static_cast<float>(block_max[1]) + 1.0f;
+                    float t_y_low  = (b_min_y - start[1]) / dir[1];
+                    float t_y_high = (b_max_y - start[1]) / dir[1];
+                    if(dir[1] > 0)
+                        t_candidate_y = t_y_high;
+                    else
+                        t_candidate_y = t_y_low;
                 }
-                if(t_exit >= 1.0f - eps)
+
+                float t_block_exit = std::min(t_candidate_x, t_candidate_y);
+                if(t_block_exit >= 1.0f - eps)
                 {
-                    // 跳跃直接抵达线段终点，不再遍历后续栅格
                     break;
                 }
 
-                float px = start[0] + t_exit * dir[0];
-                float py = start[1] + t_exit * dir[1];
+                Pointf<2> exit_pt{
+                        start[0] + t_block_exit * dir[0],
+                        start[1] + t_block_exit * dir[1]
+                };
 
-                x = static_cast<int>(std::floor(px));
-                y = static_cast<int>(std::floor(py));
+                // 更新跳跃后栅格索引
+                x = static_cast<int>(std::floor(exit_pt[0]));
+                y = static_cast<int>(std::floor(exit_pt[1]));
 
-                // 重新计算全局tMaxX、tMaxY，允许 >1，不要截断
-                if(dir[0] > 0.f)
-                    tMaxX = (static_cast<float>(x)+1.f - start[0]) * tDeltaX;
+                // ========== 增量式更新全局 tMaxX、tMaxY ==========
+                float delta_tx, delta_ty;
+                if (dir[0] > 0.f)
+                    delta_tx = (static_cast<float>(x + 1) - exit_pt[0]) * tDeltaX;
                 else
-                    tMaxX = (start[0] - static_cast<float>(x)) * tDeltaX;
+                    delta_tx = (exit_pt[0] - static_cast<float>(x)) * tDeltaX;
 
-                if(dir[1] > 0.f)
-                    tMaxY = (static_cast<float>(y)+1.f - start[1]) * tDeltaY;
+                if (dir[1] > 0.f)
+                    delta_ty = (static_cast<float>(y + 1) - exit_pt[1]) * tDeltaY;
                 else
-                    tMaxY = (start[1] - static_cast<float>(y)) * tDeltaY;
+                    delta_ty = (exit_pt[1] - static_cast<float>(y)) * tDeltaY;
 
-                // 这里不做任何步进；回到while循环头部；
-                // 下一轮循环先检查x,y地图边界，再处理当前跳跃落到的栅格
+                tMaxX = t_block_exit + delta_tx;
+                tMaxY = t_block_exit + delta_ty;
+                // ================================================
             } else {
                 // 下一步跨网格的最小t值
                 float tNext = std::min(tMaxX, tMaxY);
                 // 到达终点区间，直接退出，不再前进
                 if (tNext >= 1.f - eps)
-                    break;
+                    return false;
 
                 if (tMaxX < tMaxY)
                 {
