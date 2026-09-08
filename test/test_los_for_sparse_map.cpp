@@ -206,16 +206,16 @@ TEST(BlockDetector, BlockDetectorFull) {
     auto callback = [](int event, float x, float y, int flags, void *) {
         if(event == cv::EVENT_LBUTTONDOWN) {
             if(set_pt1) {
-                pt1[0] = x;
-                pt1[1] = y;
+                pt1[0] = floor(x);
+                pt1[1] = floor(y);
                 set_pt1 = false;
                 plan_finish = false;
-                std::cout << "get point " << x << ", " << y << std::endl;
+                std::cout << "get point " << pt1[0] << ", " << pt1[1] << std::endl;
             } else {
-                pt2[0] = x;
-                pt2[1] = y;
+                pt2[0] = floor(x);
+                pt2[1] = floor(y);
                 set_pt1 = true;
-                std::cout << "get point " << x << ", " << y << std::endl;
+                std::cout << "get point " << pt2[0] << ", " << pt2[1] << std::endl;
                 new_pair = true;
                 plan_finish = false;
 

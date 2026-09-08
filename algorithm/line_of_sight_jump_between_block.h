@@ -139,10 +139,14 @@ namespace freeNav::JOB {
         const float eps = 1e-6f;
         Point<T,2> dir{end[0] - start[0], end[1] - start[1]};
 
-        // ====================== 新增：单独处理水平、垂直线段 ======================
+        Pointi<2> current_pt;
+        Pointf<2> current_fpt;
+        Id current_id;
+
         // 1. 起点终点完全重合
         if (std::fabs(dir[0]) < eps && std::fabs(dir[1]) < eps)
         {
+            std::cout << "case 0 " << std::endl;
             int x0 = static_cast<int>(std::floor(start[0]));
             int y0 = static_cast<int>(std::floor(start[1]));
             if (x0 >= 0 && x0 < gridW && y0 >= 0 && y0 < gridH) {
@@ -151,12 +155,13 @@ namespace freeNav::JOB {
                     return true;
                 }
             }
-
+            return false;
         }
 
         // 2. 纯垂直线：x全程不变，只遍历y轴
         if (std::fabs(dir[0]) < eps)
         {
+            std::cout << "case 1 " << std::endl;
             int fixedX = static_cast<int>(std::floor(start[0]));
             float yMinF = std::min(start[1], end[1]);
             float yMaxF = std::max(start[1], end[1]);
@@ -169,17 +174,31 @@ namespace freeNav::JOB {
                 // 栅格边界校验
                 if (fixedX >= 0 && fixedX < gridW && y >= 0 && y < gridH)
                 {
-                    visited_pt.push_back(Pointi<2>{fixedX, y});
+                    current_pt = Pointi<2>{fixedX, y};
+                    visited_pt.push_back(current_pt);
                     if(isoc(Pointi<2>{fixedX, y})) {
                         return true;
                     }
+                    current_id = PointiToId(current_pt, block_detector_ptr->dimension_info_);
+                    BlockPtr<2> current_block = block_detector_ptr->block_ptr_map_[current_id];
+                    if(current_block != nullptr) {
+                        if (current_block->max_[1]+1 > yEnd) {
+                            return false;
+                        } else {
+                            y = current_block->max_[1];
+                        }
+                    }
+                } else {
+                    return false;
                 }
             }
+            return false;
         }
 
         // 3. 纯水平线：y全程不变，只遍历x轴
         if (std::fabs(dir[1]) < eps)
         {
+            std::cout << "case 2 " << std::endl;
             int fixedY = static_cast<int>(std::floor(start[1]));
             float xMinF = std::min(start[0], end[0]);
             float xMaxF = std::max(start[0], end[0]);
@@ -192,13 +211,25 @@ namespace freeNav::JOB {
                 // 栅格边界校验
                 if (x >= 0 && x < gridW && fixedY >= 0 && fixedY < gridH)
                 {
-                    visited_pt.push_back(Pointi<2>{x, fixedY});
+                    current_pt = Pointi<2>{x, fixedY};
+                    visited_pt.push_back(current_pt);
                     if(isoc(Pointi<2>{x, fixedY})) {
                         return true;
                     }
+                    current_id = PointiToId(current_pt, block_detector_ptr->dimension_info_);
+                    BlockPtr<2> current_block = block_detector_ptr->block_ptr_map_[current_id];
+                    if(current_block != nullptr) {
+                        if (current_block->max_[0]+1 > xEnd) {
+                            return false;
+                        } else {
+                            x = current_block->max_[0];
+                        }
+                    }
                 }
             }
+            return false;
         }
+        std::cout << "case 3 " << std::endl;
 
         // 当为斜线时
         // 当前栅格
@@ -226,9 +257,7 @@ namespace freeNav::JOB {
             tMaxY = (start[1] - y) * tDeltaY;
 
         // 核心：t ∈ [0, 1] 代表线段范围，t=1精准对应终点
-        Pointi<2> current_pt;
-        Pointf<2> current_fpt;
-        Id current_id;
+
         Line<T, 2> line(start, end);
         float pre_tMaxX = 1e20, pre_tMaxY = 1e20;
         bool step_by_step = false;
