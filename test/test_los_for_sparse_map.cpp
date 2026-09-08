@@ -82,7 +82,7 @@ int zoom_rate = 1;
 
 // MapTestConfig_maze_32_32_4
 // MapTestConfig_den312d
-auto map_test_config = MapTestConfig_den312d;
+auto map_test_config = MapTestConfig_room_64_64_16;
 
 std::string vis_file_path    = map_test_config.at("vis_path");
 
@@ -228,8 +228,8 @@ TEST(BlockDetector, BlockDetectorFull) {
                 // get point 53.5556, 41.5556
                 // get point 27.4444, 40.8889
 
-                // pt1[0] = 53.5556; pt1[1] = 41.5556;
-                // pt2[0] = 27.4444; pt2[1] = 40.8889;
+                 pt1[0] = 1.5; pt1[1] = 0.5;
+                 pt2[0] = 2.5; pt2[1] = 17.5;
 
                 double mean_time_cost_jump = 0, mean_time_cost_raw = 0;
                 int total_count = 1;

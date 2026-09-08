@@ -285,7 +285,7 @@ namespace freeNav::JOB {
             BlockPtr<2> current_block = block_detector_ptr->block_ptr_map_[current_id];
             if (!step_by_step && current_block != nullptr) {
                 Pointi<2> block_min = current_block->min_;
-                Pointi<2> block_max = current_block->max_+Pointi<2>{1,1}; // the real boundary of current block
+                Pointi<2> block_max = current_block->max_; // the real boundary of current block
 
                 //std::cout << "block_max/min = " << block_max << "/" << block_min << std::endl;
 
@@ -516,7 +516,7 @@ namespace freeNav::JOB {
             BlockPtr<2> current_block = block_detector_ptr->block_ptr_map_[current_id];
             if (!step_by_step && current_block != nullptr) {
                 Pointi<2> block_min = current_block->min_;
-                Pointi<2> block_max = current_block->max_+Pointi<2>{1,1}; // the real boundary of current block
+                Pointi<2> block_max = current_block->max_; // the real boundary of current block
 
                 //std::cout << "block_max/min = " << block_max << "/" << block_min << std::endl;
 

@@ -49,6 +49,18 @@ namespace freeNav {
                     {"output_path", "../test/test_data/Simple_2D.txt"}
             };
 
+
+    // room_64_64_16
+    SingleMapTestConfig<2> MapTestConfig_room_64_64_16 =
+            {
+                    {"map_name",    "room_64_64_16"},
+                    {"map_path",    "../test/test_data/room-64-64-16.map"},
+                    {"vis_path",    "../test/test_data/room-64-64-16_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/room-64-64-16.map.scen"},
+                    {"output_path", "../test/test_data/room-64-64-16.txt"}
+            };
+
+
     // fr101.carmen.gfs.png
     SingleMapTestConfig<2> MapTestConfig_fr101 =
             {
