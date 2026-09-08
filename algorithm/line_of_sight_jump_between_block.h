@@ -146,7 +146,7 @@ namespace freeNav::JOB {
         // 1. 起点终点完全重合
         if (std::fabs(dir[0]) < eps && std::fabs(dir[1]) < eps)
         {
-            std::cout << "case 0 " << std::endl;
+            //std::cout << "case 0 " << std::endl;
             int x0 = static_cast<int>(std::floor(start[0]));
             int y0 = static_cast<int>(std::floor(start[1]));
             if (x0 >= 0 && x0 < gridW && y0 >= 0 && y0 < gridH) {
@@ -161,7 +161,7 @@ namespace freeNav::JOB {
         // 2. 纯垂直线：x全程不变，只遍历y轴
         if (std::fabs(dir[0]) < eps)
         {
-            std::cout << "case 1 " << std::endl;
+            //std::cout << "case 1 " << std::endl;
             int fixedX = static_cast<int>(std::floor(start[0]));
             float yMinF = std::min(start[1], end[1]);
             float yMaxF = std::max(start[1], end[1]);
@@ -198,7 +198,7 @@ namespace freeNav::JOB {
         // 3. 纯水平线：y全程不变，只遍历x轴
         if (std::fabs(dir[1]) < eps)
         {
-            std::cout << "case 2 " << std::endl;
+            //std::cout << "case 2 " << std::endl;
             int fixedY = static_cast<int>(std::floor(start[1]));
             float xMinF = std::min(start[0], end[0]);
             float xMaxF = std::max(start[0], end[0]);
@@ -229,7 +229,7 @@ namespace freeNav::JOB {
             }
             return false;
         }
-        std::cout << "case 3 " << std::endl;
+        //std::cout << "case 3 " << std::endl;
 
         // 当为斜线时
         // 当前栅格
@@ -263,7 +263,7 @@ namespace freeNav::JOB {
         bool step_by_step = false;
         while (x >= 0 && x < gridW && y >= 0 && y < gridH)
         {
-            std::cout << "tMaxX/Y = " << tMaxX << "/" << tMaxY << std::endl;
+            //std::cout << "tMaxX/Y = " << tMaxX << "/" << tMaxY << std::endl;
             step_by_step = false;
             if(pre_tMaxX == tMaxX && pre_tMaxY == tMaxY) {
                 step_by_step = true;
@@ -287,7 +287,7 @@ namespace freeNav::JOB {
                 Pointi<2> block_min = current_block->min_;
                 Pointi<2> block_max = current_block->max_+Pointi<2>{1,1}; // the real boundary of current block
 
-                std::cout << "block_max/min = " << block_max << "/" << block_min << std::endl;
+                //std::cout << "block_max/min = " << block_max << "/" << block_min << std::endl;
 
                 float t_candidate_x = 1e20f;
                 float t_candidate_y = 1e20f;
@@ -318,7 +318,7 @@ namespace freeNav::JOB {
 
                 float t_block_exit = std::min(t_candidate_x, t_candidate_y);
 
-                std::cout << "t_block_exit = " << t_block_exit << std::endl;
+                //std::cout << "t_block_exit = " << t_block_exit << std::endl;
 
                 if(t_block_exit >= 1.0f - eps)
                 {
