@@ -219,6 +219,18 @@ TEST(BlockDetector, BlockDetectorFull) {
                 new_pair = true;
                 plan_finish = false;
 
+                //get point 21.6667, 19.7778
+                //get point 23.8889, 36.5556
+
+                //pt1[0] = 21.6667; pt1[1] = 19.7778;
+                //pt2[0] = 23.8889; pt2[1] = 36.5556;
+
+                // get point 53.5556, 41.5556
+                // get point 27.4444, 40.8889
+
+                // pt1[0] = 53.5556; pt1[1] = 41.5556;
+                // pt2[0] = 27.4444; pt2[1] = 40.8889;
+
                 double mean_time_cost_jump = 0, mean_time_cost_raw = 0;
                 int total_count = 1;
                 for(int i=0; i<total_count; i++) {

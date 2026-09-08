@@ -231,11 +231,13 @@ namespace freeNav::JOB {
         Id current_id;
         Line<T, 2> line(start, end);
         float pre_tMaxX = 1e20, pre_tMaxY = 1e20;
+        bool step_by_step = false;
         while (x >= 0 && x < gridW && y >= 0 && y < gridH)
         {
             std::cout << "tMaxX/Y = " << tMaxX << "/" << tMaxY << std::endl;
+            step_by_step = false;
             if(pre_tMaxX == tMaxX && pre_tMaxY == tMaxY) {
-                assert(0);
+                step_by_step = true;
             }
             pre_tMaxX = tMaxX; pre_tMaxY = tMaxY;
             current_pt = Pointi<2>{x, y};
@@ -252,9 +254,11 @@ namespace freeNav::JOB {
             }
             current_id = PointiToId(current_pt, block_detector_ptr->dimension_info_);
             BlockPtr<2> current_block = block_detector_ptr->block_ptr_map_[current_id];
-            if (current_block != nullptr) {
+            if (!step_by_step && current_block != nullptr) {
                 Pointi<2> block_min = current_block->min_;
-                Pointi<2> block_max = current_block->max_;
+                Pointi<2> block_max = current_block->max_+Pointi<2>{1,1}; // the real boundary of current block
+
+                std::cout << "block_max/min = " << block_max << "/" << block_min << std::endl;
 
                 float t_candidate_x = 1e20f;
                 float t_candidate_y = 1e20f;
@@ -284,9 +288,12 @@ namespace freeNav::JOB {
                 }
 
                 float t_block_exit = std::min(t_candidate_x, t_candidate_y);
+
+                std::cout << "t_block_exit = " << t_block_exit << std::endl;
+
                 if(t_block_exit >= 1.0f - eps)
                 {
-                    break;
+                    return false;
                 }
 
                 Pointf<2> exit_pt{
