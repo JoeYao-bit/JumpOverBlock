@@ -6,8 +6,8 @@
 #define FREENAV_JOB_BASE_TEST_DATA_H
 #include <iostream>
 #include <map>
-#include "../freeNav-base/basic_elements/point.h"
-#include "../freeNav-base/dependencies/massive_test_interfaces.h"
+#include "freeNav-base/basic_elements/point.h"
+#include "freeNav-base/dependencies/massive_test_interfaces.h"
 
 namespace freeNav {
 

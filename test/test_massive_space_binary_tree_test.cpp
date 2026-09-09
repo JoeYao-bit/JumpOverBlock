@@ -8,13 +8,13 @@
 #include "../algorithm/space_binary_tree/space_binary_tree_shrink.h"
 
 #include "dynamic_obstacles.h"
-#include "../freeNav-base/visualization/canvas/canvas.h"
+#include "freeNav-base/visualization/canvas/canvas.h"
 #include "dependencies.h"
 
 #include <thread>
 #include "test_data.h"
 
-#include "../freeNav-base/dependencies/2d_grid/text_map_loader.h"
+#include "freeNav-base/dependencies/2d_grid/text_map_loader.h"
 
 
 // dynamic map

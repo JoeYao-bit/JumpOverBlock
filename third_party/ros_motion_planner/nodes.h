@@ -20,7 +20,7 @@
 #include <array>
 #include <vector>
 #include <map>
-#include "../../freeNav-base/basic_elements/point.h"
+#include "freeNav-base/basic_elements/point.h"
 
 namespace global_planner
 {

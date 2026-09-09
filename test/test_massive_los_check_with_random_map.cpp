@@ -2,7 +2,7 @@
 // Created by yaozhuo on 2023/7/24.
 //
 
-#include "../freeNav-base/dependencies/massive_test_interfaces.h"
+#include "freeNav-base/dependencies/massive_test_interfaces.h"
 #include "../algorithm/surface_process_jump_block.h"
 #include "../test/test_data.h"
 
