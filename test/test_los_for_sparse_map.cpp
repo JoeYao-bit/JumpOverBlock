@@ -84,7 +84,7 @@ int zoom_rate = 1;
 // MapTestConfig_den312d
 // MAPFTestConfig_warehouse_10_20_10_2_2
 
-auto map_test_config = MAPFTestConfig_warehouse_10_20_10_2_2;
+auto map_test_config = MapTestConfig_den312d;
 
 std::string vis_file_path    = map_test_config.at("vis_path");
 

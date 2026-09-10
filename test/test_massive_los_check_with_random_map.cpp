@@ -76,7 +76,6 @@ bool SingleMapLOSCheckAnyDimensionRandomMap(DimensionLength* dimension,
                     occ_voxels,
                     occ_voxel_ids,
                     shrink_level,//atoi(config.at("shrink_level").c_str()),
-                    min_block_width,//atof(config.at("minimum_block_width").c_str()),
                     block_file_path,
                     true);
 

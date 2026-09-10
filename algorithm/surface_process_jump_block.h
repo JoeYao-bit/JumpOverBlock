@@ -115,7 +115,6 @@ namespace freeNav::JOB {
                                                         const Pointis<N>& occ_grids,
                                                         const IdSet& occ_voxel_ids,
                                                         int shrink_level = 5,
-                                                        PathLen minimum_block_width = 10,
                                                         std::string block_file_path = "",
                                                         bool force_update = false
         ) : SurfaceProcessorSparse<N>(dimension_info, is_occupied, set_occupied, occ_grids, occ_voxel_ids) {
@@ -123,11 +122,14 @@ namespace freeNav::JOB {
             struct timezone tz;
             gettimeofday(&tv_pre, &tz);
             this->surfaceGridsDetection(true);
+            //         explicit BlockDetectorGreedyWithShrink(DimensionLength* dimension_info,
+            //                                               const IS_OCCUPIED_FUNC<N>& is_occupied,
+            //                                               int shrink_level = 5, //min_block_depth_width = pow(2, shrink_level)
+            //                                               const std::string& file_path = "",
+            //                                               bool force_update = false)
             block_detector_ = std::make_shared<BlockDetectorGreedyWithShrink<N> >(dimension_info,
                                                                                   is_occupied,
-                                                                                  occ_grids,
                                                                                   shrink_level,
-                                                                                  minimum_block_width,
                                                                                   block_file_path,
                                                                                   force_update);
             gettimeofday(&tv_after, &tz);

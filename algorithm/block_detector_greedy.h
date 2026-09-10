@@ -452,7 +452,7 @@ namespace freeNav::JOB {
 
             SET_OCCUPIED_FUNC<N> set_occupied_fake;
 
-            auto surface_processor_shrink = std::make_shared<SurfaceProcessor<2> >(shrink_dim, shrink_isoc, set_occupied_fake);
+            auto surface_processor_shrink = std::make_shared<SurfaceProcessor<N> >(shrink_dim, shrink_isoc, set_occupied_fake);
 
             surface_processor_shrink->surfaceGridsDetection();
 

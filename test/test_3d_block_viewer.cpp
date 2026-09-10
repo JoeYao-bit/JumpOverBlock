@@ -119,7 +119,6 @@ int main() {
                                                                                  oml_->occ_voxels_,
                                                                                  oml_->occ_voxel_ids_,
                                                                                  atoi(config.at("shrink_level").c_str()),
-                                                                                 atof(config.at("minimum_block_width").c_str()),
                                                                                  config.at("block_path").c_str(),
                                                                                  true);
 
