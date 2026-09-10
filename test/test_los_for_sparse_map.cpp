@@ -174,7 +174,7 @@ TEST(BlockDetector, BlockDetectorFull) {
 
 
 
-#if 0
+#if 1
     auto block_detect =
             std::make_shared<BlockDetectorGreedyWithShrink<2> >(dimension,
                                                                 is_occupied,

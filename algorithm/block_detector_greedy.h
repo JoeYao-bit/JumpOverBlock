@@ -476,18 +476,18 @@ namespace freeNav::JOB {
             }
 
             // expand plain that still not hit obstacle in it's direction, stop when hit obstacles/another block
-//            // TODO: what if expand those that far to obstacle first, rather expand all direction simultaneously
-//            BlockPtrs<N> expandable_block_ptrs = this->all_block_ptrs_;//{ all_block_ptrs_.front() };
-//            while(1) {
-//                BlockPtrs<N> next_expandable_block_ptrs;
-//                for(const auto& block_ptr : expandable_block_ptrs) {
-//                    if(expandBlockOneStep(block_ptr)) {
-//                        next_expandable_block_ptrs.push_back(block_ptr);
-//                    }
-//                }
-//                if(next_expandable_block_ptrs.empty()) break;
-//                std::swap(expandable_block_ptrs, next_expandable_block_ptrs);
-//            }
+            // TODO: what if expand those that far to obstacle first, rather expand all direction simultaneously
+            BlockPtrs<N> expandable_block_ptrs = this->all_block_ptrs_;//{ all_block_ptrs_.front() };
+            while(1) {
+                BlockPtrs<N> next_expandable_block_ptrs;
+                for(const auto& block_ptr : expandable_block_ptrs) {
+                    if(expandBlockOneStep(block_ptr)) {
+                        next_expandable_block_ptrs.push_back(block_ptr);
+                    }
+                }
+                if(next_expandable_block_ptrs.empty()) break;
+                std::swap(expandable_block_ptrs, next_expandable_block_ptrs);
+            }
         }
 
         virtual BlockPtr<N> inheritFromShrinkBlock(const BlockPtr<N>& shrink_block) {
