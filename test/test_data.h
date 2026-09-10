@@ -11,6 +11,17 @@
 
 namespace freeNav {
 
+    // warehouse-10-20-10-2-2
+    SingleMapTestConfig<2> MAPFTestConfig_warehouse_10_20_10_2_2 =
+
+            {
+                    {"map_name",     "warehouse-10-20-10-2-2"},
+                    {"map_path",     "../test/test_data/warehouse-10-20-10-2-2.map"},
+                    {"config_path",   "../test/test_data/warehouse-10-20-10-2-2-random-1.scen"},
+                    {"vis_path",   "../test/test_data/warehouse-10-20-10-2-2-random-1.vis"},
+                    {"output_path", "../test/test_data/warehouse-10-20-10-2-2-random-1.txt"}
+            };
+
     // Shanghai_0_512.map
     SingleMapTestConfig<2> MapTestConfig_Shanghai_0_512 =
             {

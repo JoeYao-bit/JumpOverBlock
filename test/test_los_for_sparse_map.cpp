@@ -82,7 +82,9 @@ int zoom_rate = 1;
 
 // MapTestConfig_maze_32_32_4
 // MapTestConfig_den312d
-auto map_test_config = MapTestConfig_room_64_64_16;
+// MAPFTestConfig_warehouse_10_20_10_2_2
+
+auto map_test_config = MAPFTestConfig_warehouse_10_20_10_2_2;
 
 std::string vis_file_path    = map_test_config.at("vis_path");
 
@@ -170,8 +172,36 @@ BlockDetectorInterfacePtr<2> block_detect_base = nullptr;
 
 TEST(BlockDetector, BlockDetectorFull) {
 
-    //MapDownSampler<2> down_sampled_map(is_occupied, dimension, total_sample_level - 1);
 
+
+#if 0
+    auto block_detect =
+            std::make_shared<BlockDetectorGreedyWithShrink<2> >(dimension,
+                                                                is_occupied,
+                                                                1,
+                                                                "",
+                                                                true);
+
+#else
+    auto surface_processor = std::make_shared<SurfaceProcessor<2> >(dimension, is_occupied_func, set_occupied_func);
+
+    surface_processor->surfaceGridsDetection();
+
+    gettimeofday(&tv_pre, &tz);
+
+    BlockDetectorGreedyPtr<2> block_detect = std::make_shared<BlockDetectorGreedy<2> >(
+            dimension, is_occupied_func, surface_processor->getSurfacePts(), 1);
+
+
+#endif
+    gettimeofday(&tv_after, &tz);
+
+    double build_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
+    std::cout << "-- block detect end in " << (float)build_cost/CLOCKS_PER_SEC << "s" << std::endl;
+
+    block_detect_base = block_detect;
+
+    //MapDownSampler<2> down_sampled_map(is_occupied, dimension, total_sample_level - 1);
 
     zoom_rate = std::min(800./dimension[1], 1600./dimension[0]);
 //    Canvas canvas("RimJump::dist_map",
@@ -184,24 +214,7 @@ TEST(BlockDetector, BlockDetectorFull) {
                   dimension[0],
                   dimension[1], .05, zoom_rate);
 
-    auto surface_processor = std::make_shared<SurfaceProcessor<2> >(dimension, is_occupied_func, set_occupied_func);
-
-    surface_processor->surfaceGridsDetection();
-
     gettimeofday(&tv_pre, &tz);
-
-    BlockDetectorGreedyPtr<2> block_detect = std::make_shared<BlockDetectorGreedy<2> >(
-            dimension, is_occupied_func, surface_processor->getSurfacePts(), 1);
-
-//    BlockDetectorPtr<2> block_detect = std::make_shared<BlockDetector<2> >(
-//            dimension, is_occupied_func, surface_processor->getSurfaceGrids(), 40);
-
-    gettimeofday(&tv_after, &tz);
-
-    double build_cost = (tv_after.tv_sec - tv_pre.tv_sec)*1e3 + (tv_after.tv_usec - tv_pre.tv_usec)/1e3;
-    std::cout << "-- block detect end in " << build_cost << "ms" << std::endl;
-
-    block_detect_base = block_detect;
 
     auto callback = [](int event, float x, float y, int flags, void *) {
         if(event == cv::EVENT_LBUTTONDOWN) {
@@ -227,9 +240,9 @@ TEST(BlockDetector, BlockDetectorFull) {
 
                 // get point 53.5556, 41.5556
                 // get point 27.4444, 40.8889
-
-                 pt1[0] = 1.5; pt1[1] = 0.5;
-                 pt2[0] = 2.5; pt2[1] = 17.5;
+                //(60, 2)/(8, 41)
+                 pt1[0] = 60.5; pt1[1] = 2.5;
+                 pt2[0] = 8.5; pt2[1] = 41.5;
 
                 double mean_time_cost_jump = 0, mean_time_cost_raw = 0;
                 int total_count = 1;
@@ -242,10 +255,10 @@ TEST(BlockDetector, BlockDetectorFull) {
                                             block_detect_base,
                                             visited_pts,
                                             visited_fpts)) {
-                        std::cout << "jump block line collide " << std::endl;
+                        std::cout << "jump block line " << pt1 << "<->" << pt2 << " collide " << std::endl;
                         is_collide = true;
                     } else {
-                        std::cout << "jump block line not collide " << std::endl;
+                        std::cout << "jump block line " << pt1 << "<->" << pt2 << " not collide " << std::endl;
                         is_collide = false;
                     }
                 }
@@ -272,23 +285,23 @@ TEST(BlockDetector, BlockDetectorFull) {
         canvas.drawEmptyGrid();
         //canvas.drawGridMap(down_sampled_map.dimension_infos_.back(), is_occupied_downsample_func);
         canvas.drawGridMap(dimension, is_occupied);
-
-        if(draw_node) {
-            canvas.drawPointiCircles(block_detect->surface_nodes_, cv::Vec3b(0,255,0), 5, -1);
-        }
-        if(draw_local_minimal) {
-            canvas.drawPointiCircles(block_detect->local_maximal_pts_, cv::Vec3b(255,0,0), 7, -1);
-        }
-        if(draw_iso) {
-            //canvas.drawGrids(block_detect->isolated_minimal_pts_, cv::Vec3b(255,0,255));
-            canvas.drawPointiCircles(block_detect->isolated_minimal_pts_, cv::Vec3b(255,0,255), 7, -1);
-        }
-        if(draw_dist_map) {
-            canvas.draw_DistMap(block_detect->dimension_info_, block_detect->dist_map_);
-        }
-        if(draw_dist_map_updated) {
-            canvas.draw_DistMap(block_detect->dimension_info_, block_detect->dist_map_updated_);
-        }
+        //canvas.drawGridMap(dimension, block_detect->block_detector_ptr_shrink_->is_occupied_);
+//        if(draw_node) {
+//            canvas.drawPointiCircles(block_detect->surface_nodes_, cv::Vec3b(0,255,0), 5, -1);
+//        }
+//        if(draw_local_minimal) {
+//            canvas.drawPointiCircles(block_detect->local_maximal_pts_, cv::Vec3b(255,0,0), 7, -1);
+//        }
+//        if(draw_iso) {
+//            //canvas.drawGrids(block_detect->isolated_minimal_pts_, cv::Vec3b(255,0,255));
+//            canvas.drawPointiCircles(block_detect->isolated_minimal_pts_, cv::Vec3b(255,0,255), 7, -1);
+//        }
+//        if(draw_dist_map) {
+//            canvas.draw_DistMap(block_detect->dimension_info_, block_detect->dist_map_);
+//        }
+//        if(draw_dist_map_updated) {
+//            canvas.draw_DistMap(block_detect->dimension_info_, block_detect->dist_map_updated_);
+//        }
         if(draw_block_ptr) {
             //canvas.draw_DistMap(block_detect.dimension_info_, block_detect.dist_map_);
             int total_count = getTotalIndexOfSpace<2>(dimension);

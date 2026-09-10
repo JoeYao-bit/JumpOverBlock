@@ -15,12 +15,12 @@ namespace freeNav::JOB {
     public:
         explicit BlockDetectorGreedy(DimensionLength* dimension_info,
                                const IS_OCCUPIED_FUNC<N>& is_occupied,
-                               const Pointis<N>& corner_grids,
-                               PathLen minimum_block_width = 10, // pow(2, min_block_depth_width)
+                               const Pointis<N>& surface_nodes,
+                               PathLen min_block_depth_width,
                                const std::string& file_path = "",
                                bool force_update = false) :
-                BlockDetectorInterface<N>(dimension_info, is_occupied, file_path, minimum_block_width, force_update) {
-            corner_grids_ = corner_grids;
+                BlockDetectorInterface<N>(dimension_info, is_occupied, file_path, min_block_depth_width, force_update) {
+            surface_nodes_ = surface_nodes;
             if(!force_update && this->deserialize(file_path)) {
                 std::cout << "-- load " << this->all_block_ptrs_.size() << " blocks from " << file_path << " success " << std::endl;
             } else {
@@ -228,8 +228,7 @@ namespace freeNav::JOB {
         void detectBlock() override {
             std::cout << "-- BlockDetector load blocks from " << this->file_path_ << " failed, try to detect" << std::endl;
             this->all_direction_local_moves_ = initAllDirectionLocalMoves<N>();
-            surface_nodes_ = corner_grids_;
-            //std::cout << " this->corner_grids_ size " << corner_grids_.size() << " / " << surface_nodes_.size() << std::endl;
+            //std::cout << " this->surface_nodes_ size " << surface_nodes_.size() << " / " << surface_nodes_.size() << std::endl;
             waveFront();
             dist_map_updated_.clear();
             std::swap(dist_map_updated_, dist_map_);
@@ -330,7 +329,7 @@ namespace freeNav::JOB {
             return true;
         }
 
-        DimensionLength* dimension_length_shrink_;
+        //DimensionLength* dimension_length_shrink_;
 
         Pointis<N> surface_nodes_;
 
@@ -344,12 +343,10 @@ namespace freeNav::JOB {
 
         std::vector<Pointi<N> > closet_pt_map_updated_;
 
-        Pointis<N> local_maximal_pts_;
+        //Pointis<N> local_maximal_pts_;
 
         // some local minimal are very close, merge them to a isolated local minimal pt
-        Pointis<N> isolated_minimal_pts_;
-
-        Pointis<N> corner_grids_;
+        //Pointis<N> isolated_minimal_pts_;
 
 
     };
@@ -363,14 +360,11 @@ namespace freeNav::JOB {
     public:
         explicit BlockDetectorGreedyWithShrink(DimensionLength* dimension_info,
                                                const IS_OCCUPIED_FUNC<N>& is_occupied,
-                                               const Pointis<N>& occ_grids,
-                                               int shrink_level,
-                                               PathLen minimum_block_width = 10, // pow(2, min_block_depth_width)
+                                               int shrink_level = 5, //min_block_depth_width = pow(2, shrink_level)
                                                const std::string& file_path = "",
                                                bool force_update = false)
-             : BlockDetectorInterface<N>(dimension_info, is_occupied, file_path, minimum_block_width, force_update) {
+             : BlockDetectorInterface<N>(dimension_info, is_occupied, file_path, pow(2, shrink_level), force_update) {
             shrink_level_ = shrink_level;
-            occ_grids_ = occ_grids;
             if(!force_update && this->deserialize(file_path)) {
                 std::cout << "-- load " << this->all_block_ptrs_.size() << " blocks from " << file_path << " success " << std::endl;
             } else {
@@ -392,38 +386,83 @@ namespace freeNav::JOB {
                                const std::string& file_path = "",
                                bool force_update = false)
              * */
-            std::cout << "-- raw " << __FUNCTION__ << " shrink_level_ = " << shrink_level_ << ", with minimum_block_width = " << this->min_block_width_ << std::endl;
-            MapDownSamplerSparse<N> shrink_space(this->dimension_info_, occ_grids_, shrink_level_);
-            PathLen min_block_length_of_shrink_space = this->min_block_width_/shrink_level_;//std::max(this->min_block_width_/shrink_level_, (PathLen)2.);
-            std::cout << "-- min block of shrink space = " << min_block_length_of_shrink_space << std::endl;
-            auto dimension_shrink = shrink_space.getDimensionLengthShrink();
-            Id total_index_shrink = getTotalIndexOfSpace<N>(dimension_shrink);
-            std::vector<bool> grid_map_shrink(total_index_shrink, false);
-            for(const auto& pt : shrink_space.getOccPtsShrink()) {
-                if(isOutOfBoundary(pt, dimension_shrink)) {
-                    std::cout << " error, out of boundary " << pt << std::endl;
-                    continue;
-                }
-                Id id = PointiToId(pt, dimension_shrink);
-                grid_map_shrink[id] = true;
+            std::cout << "-- " << __FUNCTION__ << ", with shrink level = " << shrink_level_ << std::endl;
+
+
+            // initialize
+            // get max dimension length
+            DimensionLength max_dim = 0;
+            for (int i = 0; i < N; i++) {
+                max_dim = std::max(max_dim, this->dimension_info_[i]);
             }
-            IS_OCCUPIED_FUNC<N> is_occupied_func;
-            auto is_occupied = [&](const Pointi<N> &pt) -> bool {
-                if(isOutOfBoundary(pt, dimension_shrink)) { return true; }
-                Id id = PointiToId(pt, shrink_space.getDimensionLengthShrink());
-                return grid_map_shrink[id];
+            int max_depth = 1;
+            while (true) {
+                if (pow(2, max_depth) < max_dim) {
+                    max_depth++;
+                } else {
+                    break;
+                }
+            }
+            std::cout << "max_depth = " << max_depth << std::endl;
+            std::vector<int> pow_2; // precomputation of pow(2, x)
+            // precomputation of pow(2, x)
+            for (int dp = 0; dp <= max_depth * (int) N; dp++) {
+                pow_2.push_back(pow(2, dp));
+            }
+
+            std::vector<bool> raw_map(getTotalIndexOfSpace<N>(this->dimension_info_), true);
+
+            for(int i=0; i<raw_map.size(); i++) {
+                raw_map[i] = this->is_occupied_(IdToPointi<N>(i, this->dimension_info_));
+            }
+            DimensionLength local_dim[N];
+            for(int d=0; d<N; d++) {
+                local_dim[d] = pow_2[shrink_level_];
+            }
+            int local_total_index = getTotalIndexOfSpace<N>(local_dim);
+
+            DimensionLength shrink_dim[N];
+            for(int i=0 ;i<N; i++) {
+                shrink_dim[i] = pow_2[max_depth - shrink_level_];
+            }
+
+            std::vector<bool> shrink_map(getTotalIndexOfSpace<N>(shrink_dim), true);
+
+            for(int i=0; i<shrink_map.size(); i++) {
+                Pointi<N> base_pt = IdToPointi<N>(i, shrink_dim);
+                bool is_occupied_temp = false;
+                //std::cout << "base pt = " << base_pt << ": ";
+                for(int j=0; j<local_total_index; j++) {
+                    Pointi<N> pt = IdToPointi<N>(j, local_dim);
+                    Pointi<N> global_pt = base_pt*pow_2[shrink_level_] + pt;
+                    //std::cout << "global pt = " << global_pt << ", ";
+                    if(this->is_occupied_(global_pt)) {
+                        is_occupied_temp = true;
+                        break;
+                    }
+                }
+                //std::cout << ", is occupied = " << is_occupied << std::endl;
+                shrink_map[i] = is_occupied_temp;
+            }
+
+            auto shrink_isoc = [&](const Pointi<N> & pt) -> bool {
+                if(isOutOfBoundary(pt, shrink_dim)) { return true; }
+                return shrink_map[PointiToId(pt, shrink_dim)];
             };
 
-            is_occupied_func = is_occupied;
-            SET_OCCUPIED_FUNC<N> set_occupied_func;
-            SurfaceProcessor<N> surface_shrink(dimension_shrink, is_occupied_func, set_occupied_func);
-            surface_shrink.surfaceGridsDetection(true);
-            BlockDetectorGreedyPtr<N> block_detector_ptr_shrink = std::make_shared<BlockDetectorGreedy<N> >(dimension_shrink,
-                                                                is_occupied_func,
-                                                                surface_shrink.getSurfacePts(),
-                                                                min_block_length_of_shrink_space,
-                                                                "",
-                                                                false);
+            SET_OCCUPIED_FUNC<N> set_occupied_fake;
+
+            auto surface_processor_shrink = std::make_shared<SurfaceProcessor<2> >(shrink_dim, shrink_isoc, set_occupied_fake);
+
+            surface_processor_shrink->surfaceGridsDetection();
+
+            BlockDetectorGreedyPtr<N> block_detector_ptr_shrink = std::make_shared<BlockDetectorGreedy<N> >(
+                    shrink_dim,
+                    shrink_isoc,
+                    surface_processor_shrink->getSurfacePts(),
+                    1,
+                    "",
+                    false);
             return block_detector_ptr_shrink;
         }
 
@@ -437,25 +476,25 @@ namespace freeNav::JOB {
             }
 
             // expand plain that still not hit obstacle in it's direction, stop when hit obstacles/another block
-            // TODO: what if expand those that far to obstacle first, rather expand all direction simultaneously
-            BlockPtrs<N> expandable_block_ptrs = this->all_block_ptrs_;//{ all_block_ptrs_.front() };
-            while(1) {
-                BlockPtrs<N> next_expandable_block_ptrs;
-                for(const auto& block_ptr : expandable_block_ptrs) {
-                    if(expandBlockOneStep(block_ptr)) {
-                        next_expandable_block_ptrs.push_back(block_ptr);
-                    }
-                }
-                if(next_expandable_block_ptrs.empty()) break;
-                std::swap(expandable_block_ptrs, next_expandable_block_ptrs);
-            }
+//            // TODO: what if expand those that far to obstacle first, rather expand all direction simultaneously
+//            BlockPtrs<N> expandable_block_ptrs = this->all_block_ptrs_;//{ all_block_ptrs_.front() };
+//            while(1) {
+//                BlockPtrs<N> next_expandable_block_ptrs;
+//                for(const auto& block_ptr : expandable_block_ptrs) {
+//                    if(expandBlockOneStep(block_ptr)) {
+//                        next_expandable_block_ptrs.push_back(block_ptr);
+//                    }
+//                }
+//                if(next_expandable_block_ptrs.empty()) break;
+//                std::swap(expandable_block_ptrs, next_expandable_block_ptrs);
+//            }
         }
 
         virtual BlockPtr<N> inheritFromShrinkBlock(const BlockPtr<N>& shrink_block) {
             BlockPtr<N> block_ptr = std::make_shared<Block<N> >();
 
-            block_ptr->min_ = shrink_block->min_ * shrink_level_;
-            Pointi<N> up_bound = shrink_block->max_ * shrink_level_;
+            block_ptr->min_ = shrink_block->min_ * (int)pow(2, shrink_level_);
+            Pointi<N> up_bound = shrink_block->max_ * (int)pow(2, shrink_level_);
             // boundary limitation
             for(int dim=0; dim<N; dim++) {
                 block_ptr->max_[dim] = std::min((DimensionLength)up_bound[dim], this->dimension_info_[dim]-1);
@@ -537,13 +576,11 @@ namespace freeNav::JOB {
             return is_expanded;
         }
 
-    private:
+    //private:
 
         BlockDetectorGreedyPtr<N> block_detector_ptr_shrink_;
 
         int shrink_level_ = 0;
-
-        Pointis<N> occ_grids_;
 
     };
 
