@@ -7,7 +7,7 @@
 
 #include <auto_ptr.h>
 #include <vector>
-#include "../../freeNav-base/basic_elements/point.h"
+#include "freeNav-base/basic_elements/point.h"
 #include <chrono>
 
 namespace freeNav::JOB {

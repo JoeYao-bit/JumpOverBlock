@@ -22,7 +22,7 @@ namespace global_planner
  * @param ny          pixel number in costmap y direction
  * @param resolution  costmap resolution
  */
-ThetaStar::ThetaStar(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check) : GlobalPlanner(nx, ny, resolution, line_collision_check)
+ThetaStar::ThetaStar(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check) : GlobalPlanner(nx, ny, resolution, line_collision_check)
 {
   factor_ = 0.35;
 };
@@ -209,7 +209,7 @@ bool ThetaStar::_lineOfSight(const Node& parent, const Node& child, const unsign
 }
 
 freeNav::Path<2> ThetaStarRimJump(const unsigned char* global_costmap, freeNav::DimensionLength* dim,
-                                  freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check,
+                                  freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check,
                                   const freeNav::Pointi<2>& start, const freeNav::Pointi<2>& target) {
     ThetaStar theta_star(dim[0] + 2, dim[1] + 2, 0.05, line_collision_check);
     Node si, ti;

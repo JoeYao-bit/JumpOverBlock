@@ -15,7 +15,10 @@ namespace freeNav::JOB {
 
     public:
 
-        SpaceBinaryTreeShrink(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim, int min_block_depth_width = 2) :
+        SpaceBinaryTreeShrink(const IS_OCCUPIED_FUNC<N>& isoc,
+                              DimensionLength* dim,
+                              int min_block_depth_width = 2 // pow(2, min_block_depth_width)
+                                      ) :
                 dim_(dim), isoc_(isoc), min_block_depth_width_(min_block_depth_width) {
 
             // initialize
@@ -168,7 +171,7 @@ namespace freeNav::JOB {
 
         bool lineCrossObstacleRaw(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied) {
             if(pt1 == pt2) return true;
-            Line<N> line(pt1, pt2);
+            Line<int, N> line(pt1, pt2);
             int check_step = line.step;
             Pointi<N> pt;
             //std::cout << __FUNCTION__ << std::endl;
@@ -221,7 +224,7 @@ namespace freeNav::JOB {
             if(pt1 == pt2) { return is_occupied(pt1); }
             //visited_pt.clear();
             //count_of_block = 0;
-            Line<N> line(pt1, pt2);
+            Line<int, N> line(pt1, pt2);
             int check_step = line.step;
             Pointi<N> pt;
             Id id;

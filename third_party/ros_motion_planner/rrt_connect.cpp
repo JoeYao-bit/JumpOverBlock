@@ -24,7 +24,7 @@ namespace global_planner
  * @param   sample_num  andom sample points
  * @param   max_dist    max distance between sample points
  */
-RRTConnect::RRTConnect(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check, int sample_num, double max_dist)
+RRTConnect::RRTConnect(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check, int sample_num, double max_dist)
   : RRT(nx, ny, resolution, line_collision_check, sample_num, max_dist)
 {
     factor_ = .35;
@@ -169,7 +169,7 @@ std::vector<Node> RRTConnect::_convertClosedListToPath(const Node& boundary)
 }
 
     freeNav::Path<2> RRTConnectRimJump(const unsigned char* global_costmap, freeNav::DimensionLength* dim, double resolution,
-                                       freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check,
+                                       freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check,
                                        const freeNav::Pointi<2>& start, const freeNav::Pointi<2>& target,
                                        int sample_num, double max_dist) {
         RRTConnect theta_star(dim[0] + 2, dim[1] + 2, resolution, line_collision_check, sample_num, max_dist);

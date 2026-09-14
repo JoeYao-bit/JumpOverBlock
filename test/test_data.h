@@ -6,10 +6,21 @@
 #define FREENAV_JOB_BASE_TEST_DATA_H
 #include <iostream>
 #include <map>
-#include "../freeNav-base/basic_elements/point.h"
-#include "../freeNav-base/dependencies/massive_test_interfaces.h"
+#include "freeNav-base/basic_elements/point.h"
+#include "freeNav-base/dependencies/massive_test_interfaces.h"
 
 namespace freeNav {
+
+    // warehouse-10-20-10-2-2
+    SingleMapTestConfig<2> MAPFTestConfig_warehouse_10_20_10_2_2 =
+
+            {
+                    {"map_name",     "warehouse-10-20-10-2-2"},
+                    {"map_path",     "../test/test_data/warehouse-10-20-10-2-2.map"},
+                    {"config_path",   "../test/test_data/warehouse-10-20-10-2-2-random-1.scen"},
+                    {"vis_path",   "../test/test_data/warehouse-10-20-10-2-2-random-1.vis"},
+                    {"output_path", "../test/test_data/warehouse-10-20-10-2-2-random-1.txt"}
+            };
 
     // Shanghai_0_512.map
     SingleMapTestConfig<2> MapTestConfig_Shanghai_0_512 =
@@ -21,6 +32,24 @@ namespace freeNav {
                     {"output_path", "../test/test_data/Shanghai_0_512.txt"}
             };
 
+    SingleMapTestConfig<2> MapTestConfig_maze_32_32_2 =
+            {
+                    {"map_name",    "maze_32_32_2"},
+                    {"map_path",    "../test/test_data/maze-32-32-2.map"},
+                    {"vis_path",    "../test/test_data/maze-32-32-2_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/maze-32-32-2.map.scen"},
+                    {"output_path", "../test/test_data/maze-32-32-2.txt"}
+            };
+
+    SingleMapTestConfig<2> MapTestConfig_maze_32_32_4 =
+            {
+                    {"map_name",    "maze_32_32_4"},
+                    {"map_path",    "../test/test_data/maze-32-32-4.map"},
+                    {"vis_path",    "../test/test_data/maze-32-32-4_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/maze-32-32-4.map.scen"},
+                    {"output_path", "../test/test_data/maze-32-32-4.txt"}
+            };
+
     // Simple_2D
     SingleMapTestConfig<2> MapTestConfig_Simple_2D =
             {
@@ -30,6 +59,18 @@ namespace freeNav {
                     {"config_path", "../test/test_data/Simple_2D.map.scen"},
                     {"output_path", "../test/test_data/Simple_2D.txt"}
             };
+
+
+    // room_64_64_16
+    SingleMapTestConfig<2> MapTestConfig_room_64_64_16 =
+            {
+                    {"map_name",    "room_64_64_16"},
+                    {"map_path",    "../test/test_data/room-64-64-16.map"},
+                    {"vis_path",    "../test/test_data/room-64-64-16_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/room-64-64-16.map.scen"},
+                    {"output_path", "../test/test_data/room-64-64-16.txt"}
+            };
+
 
     // fr101.carmen.gfs.png
     SingleMapTestConfig<2> MapTestConfig_fr101 =
@@ -124,6 +165,46 @@ namespace freeNav {
                     {"vis_path",    "../test/test_data/ost003d_ENLSVG.vis"},
                     {"config_path", "../test/test_data/ost003d.map.scen"},
                     {"output_path", "../test/test_data/ost003d.txt"}
+            };
+
+    // new_map1.png
+    SingleMapTestConfig<2> MapTestConfig_new_map1 =
+            {
+                    {"map_name",    "new_map1"},
+                    {"map_path",    "../test/test_data/new_map1.png"},
+                    {"vis_path",    "../test/test_data/new_map1._ENLSVG.vis"},
+                    {"config_path", "../test/test_data/new_map1.map.scen"},
+                    {"output_path", "../test/test_data/new_map1.txt"}
+            };
+
+    // new_map2.png
+    SingleMapTestConfig<2> MapTestConfig_new_map2 =
+            {
+                    {"map_name",    "new_map1"},
+                    {"map_path",    "../test/test_data/new_map2.png"},
+                    {"vis_path",    "../test/test_data/new_map2._ENLSVG.vis"},
+                    {"config_path", "../test/test_data/new_map2.map.scen"},
+                    {"output_path", "../test/test_data/new_map2.txt"}
+            };
+
+    // new_map1.png
+    SingleMapTestConfig<2> MapTestConfig_new_map3 =
+            {
+                    {"map_name",    "new_map1"},
+                    {"map_path",    "../test/test_data/new_map3.png"},
+                    {"vis_path",    "../test/test_data/new_map3_ENLSVG.vis"},
+                    {"config_path", "../test/test_data/new_map3.map.scen"},
+                    {"output_path", "../test/test_data/new_map3.txt"}
+            };
+
+    // new_map1.png
+    SingleMapTestConfig<2> MapTestConfig_new_map4 =
+            {
+                    {"map_name",    "new_map1"},
+                    {"map_path",    "../test/test_data/new_map4.png"},
+                    {"vis_path",    "../test/test_data/new_map4._ENLSVG.vis"},
+                    {"config_path", "../test/test_data/new_map4.map.scen"},
+                    {"output_path", "../test/test_data/new_map4.txt"}
             };
 
     SingleMapTestConfig<3> MapTestConfig_Simple =

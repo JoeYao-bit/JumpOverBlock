@@ -20,7 +20,7 @@ namespace LazyThetaStar {
 
 
         MyAdaptor2D(freeNav::DimensionLength* dim, const freeNav::IS_OCCUPIED_FUNC<2>& isoc,
-                    const freeNav::IS_LINE_COLLISION_FREE_FUNC<2>& lsfr)
+                    const freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2>& lsfr)
         : mMapSize(Vectori(dim[0],dim[1])), isoc_(isoc), lsfr_(lsfr), dim_(dim) {
         }
 
@@ -81,7 +81,7 @@ namespace LazyThetaStar {
 
         freeNav::IS_OCCUPIED_FUNC<2> isoc_;
 
-        freeNav::IS_LINE_COLLISION_FREE_FUNC<2> lsfr_;
+        freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> lsfr_;
 
         freeNav::DimensionLength* dim_;
 

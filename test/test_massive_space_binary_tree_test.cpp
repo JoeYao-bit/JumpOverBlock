@@ -5,6 +5,7 @@
 #include "gtest/gtest.h"
 #include "../algorithm/space_binary_tree/space_binary_tree_raw.h"
 #include "../algorithm/space_binary_tree/space_binary_tree.h"
+#include "../algorithm/space_binary_tree/space_binary_tree_shrink.h"
 
 #include "dynamic_obstacles.h"
 #include "dependencies.h"
@@ -12,7 +13,7 @@
 #include <thread>
 #include "test_data.h"
 
-#include "../freeNav-base/dependencies/2d_grid/text_map_loader.h"
+#include "freeNav-base/dependencies/2d_grid/text_map_loader.h"
 
 
 // dynamic map
@@ -54,9 +55,9 @@ auto is_char_occupied1 = [](const char& value) -> bool {
 // MapTestConfig_mexico // ok
 // MapTestConfig_fhw_rec_001 // ok
 
+// MapTestConfig_new_map2_1
 
 auto map_test_config = MapTestConfig_Shanghai_0_512;
-
 
 #if 0
 PictureLoader loader(map_test_config.at("map_path"), is_grid_occupied2);
@@ -65,32 +66,14 @@ TextMapLoader loader(map_test_config.at("map_path"), is_char_occupied1);
 #endif
 
 
-
 // statistic about time cost of initialization of SBT / dynamic update of SBT / raw LOS / SBT's LOS
 
-//int main() {
-//    //dynamic_obstacles_2D<SpaceBinaryTreeAnyDimensionRaw<2>, TreeNode<2>>();
-//    dynamic_obstacles_2D<SpaceBinaryTreeAnyDimension<2>, TreeNodeNew<2>>();
-//    return 0;
-//}
 
-std::string file_path = "../test/SBT_LOS";
+std::string file_path = "../test/SBT_LOS.txt";
 
-// 1. 在Ubuntu下使用Valgrind的Massif工具分析CMake编译的C++程序内存占用，需按以下步骤操作：
-// set(CMAKE_BUILD_TYPE Debug)  # 在CMakeLists.txt中设置
-//# 或通过命令行指定
-//cmake -DCMAKE_BUILD_TYPE=Debug ..
-
-
-// 2. 使用Valgrind Massif运行程序
-// valgrind --tool=massif --massif-out-file=massif.out ./your_program [参数]
-
-
-// 3. 图形界面可直观展示内存分配趋势和热点函数。
-// massif-visualizer massif.out
 int main() {
 //TEST(massiveSBTLOSCompareTest, test) {
-    for(int i=0; i<100; i++) {
+    for(int i=0; i<1; i++) {
 
 //        massiveSBTLOSCompareTest2D(10, 100, {200, 300, 400}, {10, 20, 40});
 //        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(10, 100,
@@ -100,73 +83,50 @@ int main() {
 //        massiveSBTLOSCompareTest2D(1, 1, {600}, {40});
 
         //massiveSBTLOSCompareTest<3>(10, 10, {50}, {10});
- 
-    //   massiveSBTLOSCompareTest<2>(1,
-    //                                                  1,
-    //                                                  {200, 400, 600, 800, 1000},
-    //                                                  {10,20,30,40,50,60,70,80},
-    //                                                  file_path,
-    //                                                  1e5,
-    //                                                  1e3,
-    //                                                  {1, 2, 4, 16},
-    //                                                  true,
-    //                                                  4);
 
-//       massiveSBTLOSCompareTest<3>(5,
-//                                                      1,
-//                                                      {400, 600, 800},
-//                                                      {20, 40},
-//                                                      file_path,
-//                                                      1e5,
-//                                                      1e3,
-//                                                      {16},
-//                                                      true,
-//                                                      4);
+//        massiveSBTLOSCompareTest<2, SpaceBinaryTree2D>(10,
+//                                                       1,
+//                                                       {200, 300, 400, 500, 700, 800, 900, 1000},
+//                                                       {10,20,30,40,50,60,70,80},
+//                                                       file_path,
+//                                                       1e5,
+//                                                       1e3,
+//                                                       1,
+//                                                       true,
+//                                                       4);
 
-        // massiveSBTLOSCompareTest<2>(5,
-        //                               1,
-        //                               {200,400,600,800,1000}, // 200,400,600,800,1000
-        //                               {1, 5, 10, 20, 40, 80, 160}, // 1, 5, 10, 20, 40, 80, 160
-        //                               file_path,
-        //                               1e4,
-        //                               1e3,
-        //                               {1, 4, 16, 64, 0}, // {1, 4, 16, 64, 0}
-        //                               true,
-        //                               4);
+//        massiveSBTLOSCompareTest<3, SpaceBinaryTree3D>(5,
+//                                                       1,
+//                                                       {200, 300, 400, 500, 600, 700, 800},
+//                                                       {10, 20, 40, 60, 80},
+//                                                       file_path,
+//                                                       1e5,
+//                                                       1e3,
+//                                                       {1,2,4,6,8,10,20,40},
+//                                                       true,
+//                                                       4);
 
-        // massiveSBTLOSCompareTest<3>(1,
-        //                                              1,
-        //                                              {400, 600, 800, 1000}, // {200, 400, 600, 800, 1000}
-        //                                              {5, 40, 80, 160, 320},
-        //                                              file_path,
-        //                                              1e5,
-        //                                              1e3,
-        //                                              {1,4,16,64,0},
-        //                                              true,
-        //                                              4);
+        massiveSBTLOSCompareTest<2>(5,
+                                    1e4,
+                                    {200, 400, 600, 800, 1000}, // 200,300,400,500,700,800,900, 1000
+                                    {1, 8, 16, 0},
+                                    file_path,
+                                    1e5,
+                                    1e3,
+                                    {4, 8, 16, 0},
+                                    true,
+                                    4);
 
-        int width_of_space = 200;
-        massiveSBTLOSCompareTest<2>(1,
-                                                     10,
-                                                     {800},
-                                                     {10, 20, 40, 80, 160, 240, 320, 640},
-                                                     file_path,
-                                                     1e5,
-                                                     1e3,
-                                                     {2},
-                                                     true,
-                                                     4);
-
-//         massiveSBTLOSCompareTest<3>(1,
-//                                                      1,
-//                                                      {800}, // {200, 400, 600, 800, 1000}
-//                                                      {10, 40, 160, 320, 640, 960, 1280},
-//                                                      file_path,
-//                                                      1e5,
-//                                                      1e3,
-//                                                      {2},
-//                                                      true,
-//                                                      4);
+//        massiveSBTLOSCompareTest<3>(1,
+//                                                       1,
+//                                                       {50, 100},
+//                                                       {10, 20},
+//                                                       file_path,
+//                                                       1e5,
+//                                                       1e3,
+//                                                       {1,4,16,0},
+//                                                       true,
+//                                                       4);
 
     }
 }

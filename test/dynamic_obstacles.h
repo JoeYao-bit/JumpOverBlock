@@ -190,7 +190,7 @@ namespace freeNav::JOB {
 
         // update each obstacle's center to random point in the space
         void random(int max_random_move_distance = 0) {
-            //std::cout << "-- max_random_move_distance = " << max_random_move_distance << std::endl;
+            std::cout << "-- max_random_move_distance = " << max_random_move_distance << std::endl;
             previous_center_pts_ = current_center_pts_;
             //pre_map_ = current_map_;
             pre_occ_ids_ = cur_occ_ids_;
@@ -233,7 +233,7 @@ namespace freeNav::JOB {
                         center_pt[d] = center_pt[d] % dim_[d];
                     }
                 }
-                //std::cout << center_pt << std::endl;
+                std::cout << center_pt << std::endl;
                 current_center_pts_.push_back(center_pt);
             }
 

@@ -2,7 +2,7 @@
 // Created by yaozhuo on 2023/7/24.
 //
 
-#include "../freeNav-base/dependencies/massive_test_interfaces.h"
+#include "freeNav-base/dependencies/massive_test_interfaces.h"
 #include "../algorithm/surface_process_jump_block.h"
 #include "../test/test_data.h"
 
@@ -76,7 +76,6 @@ bool SingleMapLOSCheckAnyDimensionRandomMap(DimensionLength* dimension,
                     occ_voxels,
                     occ_voxel_ids,
                     shrink_level,//atoi(config.at("shrink_level").c_str()),
-                    min_block_width,//atof(config.at("minimum_block_width").c_str()),
                     block_file_path,
                     true);
 
@@ -140,7 +139,7 @@ bool SingleMapLOSCheckAnyDimensionRandomMap(DimensionLength* dimension,
         for(int dim=0; dim<N; dim++) {
             ss << target[dim]  << " ";
         }
-        Line<N> line(start, target);
+        Line<int, N> line(start, target);
         ss << los_cost << " " << line.step << " " << count_of_block << " " << (is_collide ? 1 : 0) << " ";
         output_stream = ss.str();
     };

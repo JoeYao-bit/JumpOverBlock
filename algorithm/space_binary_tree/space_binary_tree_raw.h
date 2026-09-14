@@ -19,7 +19,7 @@ namespace freeNav::JOB {
     public:
 
         SpaceBinaryTreeRaw(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim,
-                           int min_block_depth_width = 2,
+                           int min_block_depth_width = 2, // pow(2, min_block_depth_width)
                            int external_min_block_depth_width = 0)
         : isoc_(isoc), dim_(dim), min_block_depth_width_(min_block_depth_width),
           external_min_block_depth_width_(external_min_block_depth_width) {
@@ -658,7 +658,7 @@ namespace freeNav::JOB {
 
         bool lineCrossObstacleRaw(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied) {
             if(pt1 == pt2) return is_occupied(pt1);
-            Line<N> line(pt1, pt2);
+            Line<int, N> line(pt1, pt2);
             int check_step = line.step;
             Pointi<N> pt;
             for(int i=1; i<check_step; i++) {
@@ -679,7 +679,7 @@ namespace freeNav::JOB {
             if(pt1 == pt2) return is_occupied(pt1);
             //visited_pt.clear();
             //count_of_block = 0;
-            Line<N> line(pt1, pt2);
+            Line<int, N> line(pt1, pt2);
             int check_step = line.step;
             Pointi<N> pt;
             Id id;
@@ -719,7 +719,7 @@ namespace freeNav::JOB {
             if(pt1 == pt2) return is_occupied(pt1);
             //visited_pt.clear();
             //count_of_block = 0;
-            Line<N> line(pt1, pt2);
+            Line<int, N> line(pt1, pt2);
             int check_step = line.step;
             Pointi<N> pt;
             Id id;
@@ -879,7 +879,7 @@ namespace freeNav::JOB {
     public:
 
         SpaceBinaryTreeAnyDimensionRaw(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim,
-                                       int min_block_depth_width = 1,
+                                       int min_block_depth_width = 1, // pow(2, min_block_depth_width)
                                        int external_min_block_depth_width = 0)
                 : SpaceBinaryTreeRaw<N>(isoc, dim, min_block_depth_width, external_min_block_depth_width) {
             Id total_index = getTotalIndexOfSpace<N>(this->dim_);
@@ -922,7 +922,7 @@ namespace freeNav::JOB {
     public:
 
         SpaceBinaryTree2DRaw(const IS_OCCUPIED_FUNC<2>& isoc, DimensionLength* dim,
-                             int min_block_depth_width = 4,
+                             int min_block_depth_width = 4,// pow(2, min_block_depth_width)
                              int external_min_block_depth_width = 0)
                 : SpaceBinaryTreeRaw<2>(isoc, dim, min_block_depth_width, external_min_block_depth_width) {
             //std::vector<bool> base_occ_map(dim[1], true);
@@ -970,7 +970,7 @@ namespace freeNav::JOB {
     public:
 
         SpaceBinaryTree3DRAW(const IS_OCCUPIED_FUNC<3>& isoc, DimensionLength* dim,
-                             int min_block_depth_width = 3,
+                             int min_block_depth_width = 3,// pow(2, min_block_depth_width)
                              int external_min_block_depth_width = 0)
                 : SpaceBinaryTreeRaw<3>(isoc, dim, min_block_depth_width, external_min_block_depth_width) {
             //std::vector<bool> base_occ_map(dim[1], true);

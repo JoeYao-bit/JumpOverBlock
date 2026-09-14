@@ -21,7 +21,7 @@ namespace global_planner
  * @param ny          pixel number in costmap y direction
  * @param resolution  costmap resolution
  */
-GlobalPlanner::GlobalPlanner(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check)
+GlobalPlanner::GlobalPlanner(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check)
   : lethal_cost_(LETHAL_COST), neutral_cost_(NEUTRAL_COST), factor_(OBSTACLE_FACTOR)
 {
   setSize(nx, ny);

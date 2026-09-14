@@ -210,7 +210,7 @@ namespace freeNav::JOB {
                 Pointis<2> pts_raw;
 
                 std::cout << "Raw LOS visited_pt = ";
-                Line<N> line(pt1, pt2);
+                Line<int, N> line(pt1, pt2);
                 int check_step = line.step;
                 Pointi<N> pt, occ_pt;
                 for(int i=1; i<check_step; i++) {
@@ -345,7 +345,7 @@ namespace freeNav::JOB {
                 Pointis<2> pts_raw;
 
                 std::cout << "Raw LOS visited_pt = ";
-                Line<N> line(pt1, pt2);
+                Line<int, N> line(pt1, pt2);
                 int check_step = line.step;
                 Pointi<N> pt;
                 for(int i=1; i<check_step; i++) {
@@ -410,15 +410,10 @@ namespace freeNav::JOB {
             for(const auto& count : number_of_obstacles) {
                 for(const auto& max_obs_move_distance : max_obs_move_distances) {
                     // debug: do not use external config of obstacles
-//                    int local_min_radius = width / 20,
-//                            local_max_radius = width / 10,
-//                            local_min_block_width = width / 20,
-//                            local_max_block_width = width / 10;
-
-                    int local_min_radius = width / 50,
-                            local_max_radius = width / 40,
-                            local_min_block_width = width / 50,
-                            local_max_block_width = width / 40;
+                    int local_min_radius = width / 20,
+                            local_max_radius = width / 10,
+                            local_min_block_width = width / 20,
+                            local_max_block_width = width / 10;
 
                     ObstaclePtrs<N> obs = generateRandomObstacles<N>(count,
                                                                      local_min_radius,
@@ -457,21 +452,26 @@ namespace freeNav::JOB {
                     dynamic_obstacles.random();
 
                     for (int i = 0; i < random_times; i++) {
-                        mst.reset();
-                        std::cout << getTimeInYMD<2>() << " try get " << obs.size() << " random obstcales" << std::endl;
+
                         dynamic_obstacles.random(max_obs_move_distance);
-                        std::cout << getTimeInYMD<2>() << " finish get " << obs.size() << " random obstcales in " << mst.elapsed()/1e6 << "s" << std::endl;
-                        
-                        std::cout << getTimeInYMD<2>() << " start raw SBT update " << std::endl; 
+
                         mst.reset();
+//                        // only update changed node
+//                        for (const auto &new_free : dynamic_obstacles.getNewPassablePoints()) {
+//                            sbt_raw->setOccupiedState(new_free, false, update_block_ptr_realtime);
+//                        }
+//                        for (const auto &new_occ : dynamic_obstacles.getNewOccupiedPoints()) {
+//                            sbt_raw->setOccupiedState(new_occ, true, update_block_ptr_realtime);
+//                        }
+//                        if (!update_block_ptr_realtime) {
+//                            sbt_raw->initBlockPtrMap();
+//                        }
                         sbt_raw->setNewOccAndPassablePts(dynamic_obstacles.getNewPassablePoints(),
                                                          dynamic_obstacles.getNewOccupiedPoints());
                         double time_cost_update_raw = mst.elapsed()/1e3;
-                        std::cout << getTimeInYMD<2>() << " finish raw SBT update time_cost " << time_cost_update_raw/1e3 << " s" << std::endl;
 
                         //std::cout << "raw dynamicUpdateTimeCost " << time_cost_update_raw << " ms" << std::endl;
 //                    SpaceBinaryTreeVarify(dim, dynamic_obstacles.isoc_, sbt);
-                        std::cout << getTimeInYMD<2>() << " start raw SBT init " << std::endl;
                         mst.reset();
                         SpaceBinaryTreeRawPtr<N> temp_sbt_raw =
                                 std::make_shared<SpaceBinaryTreeAnyDimensionRaw<N>>(dynamic_obstacles.isoc_, dim,
@@ -479,24 +479,23 @@ namespace freeNav::JOB {
                         temp_sbt_raw->initialize();
 
                         double time_cost_init_raw = mst.elapsed()/1e3;
-                        std::cout << getTimeInYMD<2>() << " finish raw SBT_init_time_cost " << time_cost_init_raw/1e3 << " s" << std::endl;
+                        //std::cout << "raw SBT_init_time_cost " << time_cost_init_raw << " ms" << std::endl;
 
-                        std::cout << getTimeInYMD<2>() << " start new SBT update " << std::endl;
+
                         mst.reset();
                         sbt->setNewOccAndPassablePts(dynamic_obstacles.getNewPassablePoints(),
                                                      dynamic_obstacles.getNewOccupiedPoints());
                         double time_cost_update_new = mst.elapsed()/1e3;
-                        std::cout << getTimeInYMD<2>() << " finish new SBT update time_cost " << time_cost_update_new/1e3 << " s" << std::endl;
+
 
 //                    SpaceBinaryTreeVarify(dim, dynamic_obstacles.isoc_, sbt);
-                        std::cout << getTimeInYMD<2>() << " start new SBT init " << std::endl;
                         mst.reset();
                         SpaceBinaryTreeShrinkPtr<N> temp_sbt =
                                 std::make_shared<SpaceBinaryTreeShrink<N> >(dynamic_obstacles.isoc_, dim,
                                                                               min_block_depth_width);
 //                        temp_sbt->initialize();
                         double time_cost_init_new = mst.elapsed()/1e3;
-                        std::cout << getTimeInYMD<2>() << " finish new SBT_init_time_cost " << time_cost_init_new/1e3 << " s" << std::endl;
+                        //std::cout << "new SBT_init_time_cost " << time_cost_init_new << " ms" << std::endl;
 
 
                         std::cout << "raw SBT / new SBT  init  time cost compare = "
@@ -513,11 +512,8 @@ namespace freeNav::JOB {
 //                            writeToFile<N>(strs, file_path);
 //                            std::cout << "write test data to " << file_path << std::endl;
 //                        }
-                        float success_count = 0, occ_count = 0;
-                        mst.reset();
-                        std::cout << "try get " << time_of_test << " LOS test case" << std::endl;
-                        auto test_cases = getLOSTestCases<N>(dim, sbt->isoc_dynamic_, time_of_test, max_sample_times);
-                        std::cout <<  "get " << test_cases.size() << " LOS test case in " << mst.elapsed()/1e3 << "s" << std::endl;
+                        int success_count = 0, occ_count = 0;
+                        auto test_cases = getLOSTestCases<N>(dim, sbt->isoc_dynamic_, repeat_times);
                         std::cout << "times_of_LOS_compare_test  = " << test_cases.size() << std::endl;
                         if(test_cases.empty()) { continue; }
                         double sum_1 = 0, sum_2 = 0, sum_3 = 0;
@@ -543,8 +539,8 @@ namespace freeNav::JOB {
                             bool isoc2 = sbt->lineCrossObstacleSBT(pt1, pt2, sbt_raw->isoc_dynamic_, sum_count_of_block_2);
                             sum_3 = sum_3 + ust.elapsed();
 
-                            //assert(isoc == isoc1);
-                            //assert(isoc == isoc2);
+                            assert(isoc == isoc1);
+                            assert(isoc == isoc2);
 
                             if(isoc) { occ_count ++; }
                             success_count++;
@@ -623,12 +619,8 @@ namespace freeNav::JOB {
                                 ;
                         strs.push_back(ss3.str());
                         if (!file_path.empty()) {
-                            std::stringstream ss;
-                            ss << width << ".txt";
-                            //ss << ".txt";
-                            std::string full_path = file_path+ss.str();
-                            writeToFile<N>(strs, full_path);
-                            std::cout << "write test data to " << full_path << std::endl;
+                            writeToFile<N>(strs, file_path);
+                            std::cout << "write test data to " << file_path << std::endl;
                         }
                     }
                 }
@@ -643,7 +635,7 @@ namespace freeNav::JOB {
     template <Dimension N>
     using PATH_PLANNING_FUNC_WITH_LINE = std::function<Pointis<N>(const Pointi<N>&,
                                                                   const Pointi<N>&,
-                                                                  const IS_LINE_COLLISION_FREE_FUNC<N>&,
+                                                                  const IS_LINE_COLLISION_FREE_FUNC<int, N>&,
                                                                   const std::string&)>;
 
 }

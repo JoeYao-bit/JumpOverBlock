@@ -14,7 +14,10 @@ namespace freeNav::JOB {
     class SpaceBinaryTree {
     public:
 
-        SpaceBinaryTree(const IS_OCCUPIED_FUNC <N> &isoc, DimensionLength *dim, int min_block_depth_width = 0)
+        SpaceBinaryTree(const IS_OCCUPIED_FUNC <N> &isoc,
+                        DimensionLength *dim,
+                        int min_block_depth_width = 0 // pow(2, min_block_depth_width)
+                                )
                 : isoc_(isoc), dim_(dim), min_block_depth_width_(min_block_depth_width) {
 
             //std::cout << "min_block_depth_width = " << min_block_depth_width_ << std::endl;
@@ -561,11 +564,11 @@ namespace freeNav::JOB {
         }
 
         void printTree() const {
-            std::cout << "-- " << __FUNCTION__ << std::endl;
+            //std::cout << "-- " << __FUNCTION__ << std::endl;
             TreeNodePtrs<N> nodes = { root_ }, next_nodes;
             int dp = 0;
             while (!nodes.empty()) {
-                std::cout << " depth = " << dp << ": " << std::endl;
+                //std::cout << " depth = " << dp << ": " << std::endl;
                 for(int i=0; i<nodes.size(); i++) {
                     assert(nodes[i]->depth_ == dp);
                     if(nodes[i]->depth_ < max_depth_) {
@@ -586,7 +589,7 @@ namespace freeNav::JOB {
                             }
                         }
                     }
-                    std::cout << std::endl;
+                    //std::cout << std::endl;
                 }
                 nodes.clear();
                 std::swap(nodes, next_nodes);
@@ -620,7 +623,7 @@ namespace freeNav::JOB {
                 origin_of_plain[dim / 2] -= 1;
             }
             // the block in the surface must form a plain that have exact the size of the plain
-            std::cout << "new plain total index = " << total_plain_index << std::endl;
+            //std::cout << "new plain total index = " << total_plain_index << std::endl;
             //std::cout << "new plain pt at direct " << dim << ": ";
             bool expandable = true;
             BlockWithTreePtr<N> neighbor_block_ptr = nullptr;
@@ -629,17 +632,17 @@ namespace freeNav::JOB {
             for (Id id = 0; id < total_plain_index; id++) {
                 plain_pt = IdToPointi<N - 1>(id, plain);
                 new_plain_pt = origin_of_plain.addPlainOffset(plain_pt, dim);
-                std::cout << new_plain_pt << " " << std::endl;
+                //std::cout << new_plain_pt << " " << std::endl;
                 // if out of boundary, cannot expand
                 if(isOutOfBoundary(new_plain_pt, dim_)) {
                     expandable = false;
-                    std::cout << "out of bound, expand failed " << std::endl;
+                    //std::cout << "out of bound, expand failed " << std::endl;
                     break;
                 }
                 BlockWithTreePtr<N> temp_block_ptr = getInternalBlockPtr(new_plain_pt);
                 if(temp_block_ptr == nullptr) {
                     expandable = false;
-                    std::cout << "not in block ptr, expand failed " << std::endl;
+                    //std::cout << "not in block ptr, expand failed " << std::endl;
                     break;
                 }
                 const auto& temp_tree_ptr = temp_block_ptr->tree_node_;
@@ -648,13 +651,13 @@ namespace freeNav::JOB {
                 // if tree ptr is mixed state or occ is true, cannot expand
                 if(temp_tree_ptr->mixed_state_ || temp_tree_ptr->occ_ == true || leave_merged_map.at(temp_block_ptr) == true) {
                     expandable = false;
-                    std::cout << "not in leaf node or have been expand, expand failed " << std::endl;
+                    //std::cout << "not in leaf node or have been expand, expand failed " << std::endl;
                     break;
                 }
                 // cannot exceed current block's range
                 if(temp_block_ptr->max_ > block_node->max_pt_ || temp_block_ptr->min_ < block_node->min_pt_) {
                     expandable = false;
-                    std::cout << "neighbor area out of range, expand failed " << std::endl;
+                    //std::cout << "neighbor area out of range, expand failed " << std::endl;
                     break;
                 }
                 if(neighbor_block_ptr == nullptr) {
@@ -665,7 +668,7 @@ namespace freeNav::JOB {
                     neighbor_block_ptrs.insert(neighbor_block_ptr);
                 } else {
                     if(neighbor_block_ptr->tree_node_->depth_ != temp_tree_ptr->depth_) {
-                        std::cout << "neighbor block have not same size , expand failed " << std::endl;
+                        //std::cout << "neighbor block have not same size , expand failed " << std::endl;
                         expandable = false;
                         break;
                     } else {
@@ -677,12 +680,12 @@ namespace freeNav::JOB {
             if(!expandable) {
                 return {};
             }
-            std::cout << "expected_num_of_neighbor_block = " << expected_num_of_neighbor_block << std::endl;
-            std::cout << "neighbor_block_ptrs.size() = " << neighbor_block_ptrs.size() << std::endl;
+            //std::cout << "expected_num_of_neighbor_block = " << expected_num_of_neighbor_block << std::endl;
+            //std::cout << "neighbor_block_ptrs.size() = " << neighbor_block_ptrs.size() << std::endl;
             if(expected_num_of_neighbor_block == neighbor_block_ptrs.size()) {
                 return neighbor_block_ptrs;
             } else {
-                std::cout << "number of neighbor block not meet expected size , expand failed " << std::endl;
+                //std::cout << "number of neighbor block not meet expected size , expand failed " << std::endl;
                 return {};
             }
         }
@@ -725,14 +728,14 @@ namespace freeNav::JOB {
                 while(!buffer.empty()) {
                     next_buffer.clear();
                     for(const auto& block_node : buffer) {
-                        std::cout << "block (" << block_node->min_pt_ << ", " << block_node->max_pt_ << ") try expand" << std::endl;
+                        //std::cout << "block (" << block_node->min_pt_ << ", " << block_node->max_pt_ << ") try expand" << std::endl;
                         // expand current block until cannot expand
                         for (int dim = 0; dim < 2 * N; dim++) {
                             // if there are required number of tree node in this direction
                             // we say we found a legal expansion
                             auto neighbor_block_ptrs = tryExpandBlockInDirection(dim, block_node, leave_merged_map);
                             if(!neighbor_block_ptrs.empty()) {
-                                std::cout << "expand in dir " << dim << " success" << std::endl;
+                                //std::cout << "expand in dir " << dim << " success" << std::endl;
                                 MergedBlockPtr<N> new_block_node = std::make_shared<MergedBlock<N> >();
                                 new_block_node->min_pt_ = block_node->min_pt_;
                                 new_block_node->max_pt_ = block_node->max_pt_;
@@ -756,10 +759,10 @@ namespace freeNav::JOB {
                                     largest_merged_block_ptr = new_block_node;
                                     largest_size = new_size;
                                 }
-                                std::cout << "merged block from " << block_node->min_pt_ << "<->" << block_node->max_pt_ << " to "
-                                          << new_block_node->min_pt_ << "<->" << new_block_node->max_pt_ << std::endl;
+                               //std::cout << "merged block from " << block_node->min_pt_ << "<->" << block_node->max_pt_ << " to "
+                                          //<< new_block_node->min_pt_ << "<->" << new_block_node->max_pt_ << std::endl;
                             } else {
-                                std::cout << "expand in dir " << dim << " failed" << std::endl;
+                               //std::cout << "expand in dir " << dim << " failed" << std::endl;
                             }
                             //std::cout << std::endl;
                         }
@@ -784,7 +787,7 @@ namespace freeNav::JOB {
 
         bool lineCrossObstacleRaw(const Pointi<N>& pt1, const Pointi<N>& pt2, IS_OCCUPIED_FUNC<N> is_occupied) {
             if(pt1 == pt2) return true;
-            Line<N> line(pt1, pt2);
+            Line<int, N> line(pt1, pt2);
             int check_step = line.step;
             Pointi<N> pt;
             //std::cout << __FUNCTION__ << std::endl;
@@ -836,7 +839,7 @@ namespace freeNav::JOB {
             if(pt1 == pt2) return is_occupied(pt1);
             //visited_pt.clear();
             //count_of_block = 0;
-            Line<N> line(pt1, pt2);
+            Line<int, N> line(pt1, pt2);
             int check_step = line.step;
             Pointi<N> pt;
             Id id;
@@ -944,7 +947,10 @@ namespace freeNav::JOB {
     class SpaceBinaryTreeAnyDimension : public SpaceBinaryTree<N> {
     public:
 
-        SpaceBinaryTreeAnyDimension(const IS_OCCUPIED_FUNC<N>& isoc, DimensionLength* dim, int min_block_depth_width = 1)
+        SpaceBinaryTreeAnyDimension(const IS_OCCUPIED_FUNC<N>& isoc,
+                                    DimensionLength* dim,
+                                    int min_block_depth_width = 1 // pow(2, min_block_depth_width)
+                                            )
                 : SpaceBinaryTree<N>(isoc, dim, min_block_depth_width) {
             Id total_index = getTotalIndexOfSpace<N>(this->dim_);
             occ_map_.resize(total_index, true);
@@ -986,13 +992,16 @@ namespace freeNav::JOB {
     class SpaceBinaryTree2D : public SpaceBinaryTree<2> {
     public:
 
-        SpaceBinaryTree2D(const IS_OCCUPIED_FUNC<2>& isoc, DimensionLength* dim, int min_block_depth_width = 4)
+        SpaceBinaryTree2D(const IS_OCCUPIED_FUNC<2>& isoc,
+                          DimensionLength* dim,
+                          int min_block_depth_width = 4 // pow(2, min_block_depth_width)
+                                  )
                 : SpaceBinaryTree<2>(isoc, dim, min_block_depth_width) {
             //std::vector<bool> base_occ_map(dim[1], true);
             occ_map_.resize(dim[0]*dim[1], true);
             //std::vector<BlockPtrRaw<2> > base_block_map(dim[1], nullptr);
             block_ptr_map_.resize(dim[0]*dim[1], nullptr);
-            std::cout << "start initialize of SBT2D" << std::endl;
+            //std::cout << "start initialize of SBT2D" << std::endl;
         }
 
         virtual void setInternalOccState(const Pointi<2>& pt, bool occ_state) override {
@@ -1032,13 +1041,16 @@ namespace freeNav::JOB {
     class SpaceBinaryTree3D : public SpaceBinaryTree<3> {
     public:
 
-        SpaceBinaryTree3D(const IS_OCCUPIED_FUNC<3>& isoc, DimensionLength* dim, int min_block_depth_width = 3)
+        SpaceBinaryTree3D(const IS_OCCUPIED_FUNC<3>& isoc,
+                          DimensionLength* dim,
+                          int min_block_depth_width = 3 // pow(2, min_block_depth_width)
+                                  )
                 : SpaceBinaryTree<3>(isoc, dim, min_block_depth_width) {
             //std::vector<bool> base_occ_map(dim[1], true);
             occ_map_.resize(dim[0]*dim[1]*dim[2], true);
             //std::vector<BlockPtrRaw<2> > base_block_map(dim[1], nullptr);
             block_ptr_map_.resize(dim[0]*dim[1]*dim[2], nullptr);
-            std::cout << "start initialize of SBT3D" << std::endl;
+            //std::cout << "start initialize of SBT3D" << std::endl;
         }
 
         virtual void setInternalOccState(const Pointi<3>& pt, bool occ_state) override {

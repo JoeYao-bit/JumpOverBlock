@@ -24,7 +24,7 @@ namespace global_planner
  * @param   sample_num  andom sample points
  * @param   max_dist    max distance between sample points
  */
-InformedRRT::InformedRRT(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check,
+InformedRRT::InformedRRT(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check,
                          int sample_num, double max_dist, double r)
   : RRTStar(nx, ny, resolution, line_collision_check, sample_num, max_dist, r)
 {
@@ -170,7 +170,7 @@ Node InformedRRT::_transform(double x, double y)
 }
 
 freeNav::Path<2> InformedRRTRimJump(const unsigned char* global_costmap, freeNav::DimensionLength* dim,
-                                    double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check,
+                                    double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check,
                                     const freeNav::Pointi<2>& start, const freeNav::Pointi<2>& target,
                                     int sample_num, double max_dist, double r) {
     InformedRRT theta_star(dim[0] + 2, dim[1] + 2, resolution, line_collision_check, sample_num, max_dist, r);

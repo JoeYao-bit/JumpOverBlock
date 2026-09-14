@@ -25,7 +25,7 @@ namespace global_planner
  * @param   sample_num  andom sample points
  * @param   max_dist    max distance between sample points
  */
-RRT::RRT(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check, int sample_num, double max_dist)
+RRT::RRT(int nx, int ny, double resolution, freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check, int sample_num, double max_dist)
   : GlobalPlanner(nx, ny, resolution, line_collision_check), sample_num_(sample_num), max_dist_(max_dist)
 {
     factor_ = 0.35;
@@ -218,7 +218,7 @@ bool RRT::_checkGoal(const Node& new_node)
 }
     // max_dist is based on pixel distance
     freeNav::Path<2> RRTRimJump(const unsigned char* global_costmap, freeNav::DimensionLength* dim, double resolution,
-                                freeNav::IS_LINE_COLLISION_FREE_FUNC<2> line_collision_check,
+                                freeNav::IS_LINE_COLLISION_FREE_FUNC<int, 2> line_collision_check,
                                 const freeNav::Pointi<2>& start, const freeNav::Pointi<2>& target,
                                 int sample_num, double max_dist) {
         RRT planner(dim[0] + 2, dim[1] + 2, resolution, line_collision_check, sample_num, max_dist);
