@@ -31,6 +31,7 @@ endif()
 
 add_subdirectory(freeNav-base)
 
+INSTALL(DIRECTORY algorithm DESTINATION include/JumpOverBlock)
 
 add_executable(test_massive_los_check_with_random_map test/test_massive_los_check_with_random_map.cpp)
 target_link_libraries(test_massive_los_check_with_random_map freeNav-base)
